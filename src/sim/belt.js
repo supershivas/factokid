@@ -12,14 +12,25 @@ import { centreCellule } from './grid.js';
 const VITESSE = MACHINES.convoyeur.vitesse;
 const ESPACEMENT = MACHINES.convoyeur.espacement;
 
+// Cellule qui suit la dernière, dans le sens de circulation. Sert de point de
+// fuite quand le convoyeur ne débouche sur rien : les items s'y arrêtent.
+function apres(chemin) {
+  const n = chemin.length;
+  const avant = n >= 2 ? chemin[n - 2] : { cx: chemin[0].cx - 1, cy: chemin[0].cy };
+  return {
+    cx: chemin[n - 1].cx + (chemin[n - 1].cx - avant.cx),
+    cy: chemin[n - 1].cy + (chemin[n - 1].cy - avant.cy),
+  };
+}
+
 // Polyligne parcourue par les items : demi-cellule d'entrée, centres, demi-cellule
 // de sortie. Longueur totale = nombre de cellules × CELLULE.
-function polyligne(chemin, celluleSource, celluleCible) {
+function polyligne(chemin, celluleEntree, celluleSortie) {
   const centres = chemin.map((c) => centreCellule(c.cx, c.cy));
   const premier = centres[0];
   const dernier = centres[centres.length - 1];
-  const entree = centreCellule(celluleSource.cx, celluleSource.cy);
-  const sortie = centreCellule(celluleCible.cx, celluleCible.cy);
+  const entree = centreCellule(celluleEntree.cx, celluleEntree.cy);
+  const sortie = centreCellule(celluleSortie.cx, celluleSortie.cy);
   return [
     { x: (entree.x + premier.x) / 2, y: (entree.y + premier.y) / 2 },
     ...centres,
@@ -27,10 +38,16 @@ function polyligne(chemin, celluleSource, celluleCible) {
   ];
 }
 
+// `cible` peut être nul : un convoyeur lâché en cours de tracé reste construit,
+// mais ne débouche sur rien et les items s'y accumulent.
 export function creerConvoyeur(chemin, source, cible) {
+  // Sans machine à l'arrivée, la sortie vise la cellule suivante : le rendu et
+  // la géométrie n'ont ainsi jamais à se demander si la cible existe.
+  const celluleSortie = cible || apres(chemin);
   return {
     chemin,
-    points: polyligne(chemin, source, cible),
+    celluleSortie,
+    points: polyligne(chemin, source, celluleSortie),
     longueur: chemin.length * CELLULE,
     items: [],
     queue: 0, // distance sortie -> dernier item (= somme des écarts)

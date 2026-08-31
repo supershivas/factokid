@@ -37,6 +37,37 @@ export const INDEX_PALETTE = [
   PALETTE.orange, PALETTE.jaune, PALETTE.vert, PALETTE.bleu,
 ];
 
+// Barre d'outils : deux boutons à la cible tactile pleine, et les bulles des
+// éléments constructibles qui sortent au-dessus du bouton construction.
+export const BOUTON = CIBLE_TACTILE;
+export const BOUTON_Y = GRILLE_Y + LIGNES * CELLULE + 16;
+export const BOUTON_X = 12;
+export const BOUTON_ECART = 8;
+export const BULLE = CIBLE_TACTILE; // jamais en dessous de la cible tactile
+export const BULLE_ECART = 8;
+export const BULLE_ANIMATION = 0.18; // secondes
+
+// Géométrie partagée par le rendu et l'entrée : une seule source de vérité,
+// sinon le bouton dessiné et le bouton touché finissent par diverger.
+export function rectBouton(i) {
+  return { x: BOUTON_X + i * (BOUTON + BOUTON_ECART), y: BOUTON_Y, l: BOUTON, h: BOUTON };
+}
+
+export function rectBulle(j, progression) {
+  const base = rectBouton(0);
+  const distance = (j + 1) * (BULLE + BULLE_ECART) * progression;
+  return {
+    x: base.x + (BOUTON - BULLE) / 2,
+    y: base.y + (BOUTON - BULLE) / 2 - distance,
+    l: BULLE,
+    h: BULLE,
+  };
+}
+
+export function dansRect(r, x, y) {
+  return x >= r.x && y >= r.y && x < r.x + r.l && y < r.y + r.h;
+}
+
 // Deux tailles de texte seulement.
 export const TEXTE_GRAND = 3; // facteur sur la fonte 3×5
 export const TEXTE_PETIT = 2;

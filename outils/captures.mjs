@@ -1,5 +1,8 @@
 // Capture les deux cibles d'affichage, toujours ensemble.
-// Usage : node outils/captures.mjs <dossier> [secondes d'attente] [base]
+// Usage : node outils/captures.mjs <dossier> [secondes] [base] [depart]
+//
+// Avec « depart » en dernier argument, on ne trace rien : on capture la partie
+// telle que le joueur la trouve, avec son chemin pré-tracé.
 //
 // Trace un convoyeur au pointeur depuis le producteur jusqu'au consommateur,
 // puis capture mobile et aperçu desktop. Sans base, sert le dépôt localement ;
@@ -16,6 +19,7 @@ const SORTIE = process.argv[2] || '.';
 const ATTENTE = Number(process.argv[3] || 3) * 1000;
 const PORT = 8123;
 const BASE = process.argv[4] || `http://127.0.0.1:${PORT}/`;
+const DEPART = process.argv[5] === 'depart';
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
@@ -55,7 +59,14 @@ async function capturer(nom, page, url) {
     y: geo.top + (80 + cy * 48 + 24) * geo.echelle,
   });
 
-  // Serpentin : toutes les cellules libres, du producteur au consommateur.
+  if (!DEPART) await tracerSerpentin(page, centre);
+  await page.waitForTimeout(ATTENTE);
+  await page.screenshot({ path: join(SORTIE, nom) });
+  console.log(nom, '— échelle ×' + geo.echelle);
+}
+
+// Serpentin : toutes les cellules libres, du producteur au consommateur.
+async function tracerSerpentin(page, centre) {
   const chemin = [];
   for (let cx = 0; cx < 7; cx++) {
     for (let i = 0; i < 10; i++) {
@@ -71,10 +82,6 @@ async function capturer(nom, page, url) {
   const arrivee = centre(6, 9);
   await page.mouse.move(arrivee.x, arrivee.y);
   await page.mouse.up();
-
-  await page.waitForTimeout(ATTENTE);
-  await page.screenshot({ path: join(SORTIE, nom) });
-  console.log(nom, '— échelle ×' + geo.echelle);
 }
 
 const options = BASE.startsWith('http://127.') ? {} : { ignoreHTTPSErrors: true };

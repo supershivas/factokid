@@ -2,8 +2,10 @@
 
 import {
   PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, LIGNES, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
+  BOUTON, BULLE, rectBouton, rectBulle,
 } from '../design.js';
-import { ICONES, spriteItem, TAILLE_ITEM } from './sprites.js';
+import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
+import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
 import { nombreItems } from '../sim/world.js';
 
 // Fonte bitmap 3 × 5, chiffres seuls.
@@ -40,7 +42,7 @@ export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {
   }
 }
 
-export function dessinerHud(ctx, monde, fps) {
+export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   const producteur = monde.machines.find((m) => m.type === 'producteur');
   const consommateur = monde.machines.find((m) => m.type === 'consommateur');
 
@@ -53,17 +55,49 @@ export function dessinerHud(ctx, monde, fps) {
   ctx.fillRect(LARGEUR_LOGIQUE - 12 - largeurFps - 14, 26, 8, 8);
   dessinerNombre(ctx, fps, LARGEUR_LOGIQUE - 12 - largeurFps, 24, TEXTE_PETIT, PALETTE.creme);
 
-  // Bandeau bas : produits et consommés.
+  // Bandeau bas : la barre d'outils à gauche, les compteurs à droite.
   const basY = GRILLE_Y + LIGNES * CELLULE + 24;
-  ctx.drawImage(ICONES.producteur, 12, basY - 8, 32, 32);
-  dessinerNombre(ctx, producteur.produits, 52, basY, TEXTE_PETIT, PALETTE.jaune);
+  ctx.drawImage(ICONES.producteur, 140, basY - 8, 32, 32);
+  dessinerNombre(ctx, producteur.produits, 180, basY, TEXTE_PETIT, PALETTE.jaune);
 
   const largeurC = largeurNombre(consommateur.consommes, TEXTE_PETIT);
   ctx.drawImage(ICONES.consommateur, LARGEUR_LOGIQUE - 44, basY - 8, 32, 32);
   dessinerNombre(ctx, consommateur.consommes, LARGEUR_LOGIQUE - 52 - largeurC, basY, TEXTE_PETIT, PALETTE.vert);
 
+  dessinerOutils(ctx, interfaceJeu);
+
   // Séparations discrètes des bandeaux.
   ctx.fillStyle = PALETTE.ardoise;
   ctx.fillRect(12, GRILLE_Y - 10, LARGEUR_LOGIQUE - 24, 1);
   ctx.fillRect(12, GRILLE_Y + LIGNES * CELLULE + 10, LARGEUR_LOGIQUE - 24, 1);
+}
+
+// Barre d'outils, et bulles des éléments constructibles qui en sortent.
+function dessinerOutils(ctx, interfaceJeu) {
+  for (let i = 0; i < OUTILS.length; i++) {
+    const r = rectBouton(i);
+    const actif = OUTILS[i].id === interfaceJeu.outil;
+    ctx.drawImage(actif ? INTERFACE.boutonActif : INTERFACE.bouton, r.x, r.y, r.l, r.h);
+    ctx.drawImage(INTERFACE[OUTILS[i].icone], r.x, r.y, r.l, r.h);
+  }
+
+  if (interfaceJeu.menu <= 0) return;
+
+  // Le plateau s'assombrit : les bulles se lisent comme un choix posé
+  // par-dessus le jeu, pas comme une pièce de plus sur la grille.
+  ctx.globalAlpha = 0.55 * interfaceJeu.menu;
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(0, 0, LARGEUR_LOGIQUE, GRILLE_Y + LIGNES * CELLULE);
+  ctx.globalAlpha = 1;
+
+  // Ease in : la bulle part lentement du bouton et finit vite à sa place.
+  const p = interfaceJeu.menu * interfaceJeu.menu;
+  for (let j = 0; j < CONSTRUCTIBLES.length; j++) {
+    const r = rectBulle(j, p);
+    const taille = Math.round(BULLE * p);
+    const dx = Math.round(r.x + (BULLE - taille) / 2);
+    const dy = Math.round(r.y + (BULLE - taille) / 2);
+    ctx.drawImage(INTERFACE.bulleFond, dx, dy, taille, taille);
+    ctx.drawImage(INTERFACE[CONSTRUCTIBLES[j].icone], dx, dy, taille, taille);
+  }
 }

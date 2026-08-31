@@ -153,6 +153,8 @@ src/
   data/
     items.js        table des items
     machines.js     table des machines
+    depart.js       disposition de départ, chemin pré-tracé
+    outils.js       outils et éléments constructibles
     recipes.js      table des recettes
     progression.js  paliers de déblocage, courbe
   render/
@@ -201,6 +203,9 @@ Rien d'autre que ceci tant que ce n'est pas validé :
 4. Une machine consommatrice.
 5. Items visibles qui circulent et **s'accumulent quand le consommateur est
    saturé**.
+6. Deux outils : construction et destruction. Toucher « construction » fait
+   sortir les éléments constructibles en bulles. Un convoyeur lâché en cours
+   de tracé reste construit et ne débouche sur rien.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
 

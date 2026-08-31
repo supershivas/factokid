@@ -5,7 +5,7 @@ export const MACHINES = {
   producteur: {
     id: 'producteur',
     ticksParItem: 30,   // un item toutes les 30 ticks (0,5 s à 60 Hz)
-                        // reste sous le débit du convoyeur (2,25 items/s)
+                        // reste sous le débit du convoyeur (3,55 items/s)
     sortie: 'boulon',
   },
   consommateur: {
@@ -16,8 +16,9 @@ export const MACHINES = {
   },
   convoyeur: {
     id: 'convoyeur',
-    vitesse: 36,        // unités logiques par seconde
-    espacement: 16,     // distance minimale entre deux items
+    vitesse: 96,        // unités logiques par seconde, soit 2 cellules/s
+    espacement: 27,     // distance minimale entre deux items : un demi-item de
+                        // vide entre deux, la file reste lisible une par une
   },
 };
 

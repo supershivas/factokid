@@ -6,26 +6,26 @@ import { creerVue } from './render/canvas.js';
 import { dessinerScene, bordureGrille } from './render/sprites.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
-import { brancherPointeur } from './input/pointer.js';
+import { brancherPointeur, majInterface } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
 
 const canvas = document.getElementById('jeu');
 const vue = creerVue(canvas);
 const monde = creerMonde();
-const trace = brancherPointeur(canvas, vue, monde);
+const interfaceJeu = brancherPointeur(canvas, vue, monde);
 const ctx = vue.ctx;
 
 // Sonde de test : laisse les outils lire l'état sans passer par le rendu.
 // Rien dans le jeu ne la lit.
-globalThis.sonde = { monde, trace };
+globalThis.sonde = { monde, interface: interfaceJeu };
 
 demarrerBoucle(
-  (dt) => majMonde(monde, dt),
+  (dt) => { majMonde(monde, dt); majInterface(interfaceJeu, dt); },
   (fps) => {
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
-    dessinerScene(ctx, monde, trace);
+    dessinerScene(ctx, monde, interfaceJeu.trace);
     bordureGrille(ctx);
-    dessinerHud(ctx, monde, fps);
+    dessinerHud(ctx, monde, fps, interfaceJeu);
   },
 );
