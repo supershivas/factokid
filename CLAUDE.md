@@ -125,6 +125,14 @@ Toute vérification visuelle produit **les deux captures, systématiquement** :
 la cible mobile et l'aperçu desktop. Jamais l'une sans l'autre. `outils/captures.mjs`
 les génère toutes les deux.
 
+Toute livraison fournit aussi **les deux URL à essayer**, jamais les captures
+seules :
+
+- mobile — <https://supershivas.github.io/factokid/>
+- aperçu desktop — <https://supershivas.github.io/factokid/preview.html>
+
+Elles sont publiées par `.github/workflows/pages.yml`.
+
 ---
 
 ## 5. Structure des modules
