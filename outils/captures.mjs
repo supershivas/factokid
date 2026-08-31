@@ -1,8 +1,10 @@
 // Capture les deux cibles d'affichage, toujours ensemble.
-// Usage : node outils/captures.mjs <dossier de sortie> [secondes d'attente]
+// Usage : node outils/captures.mjs <dossier> [secondes d'attente] [base]
 //
-// Sert un serveur statique local, trace un convoyeur au pointeur depuis le
-// producteur jusqu'au consommateur, puis capture mobile et aperçu desktop.
+// Trace un convoyeur au pointeur depuis le producteur jusqu'au consommateur,
+// puis capture mobile et aperçu desktop. Sans base, sert le dépôt localement ;
+// avec une base (ex. https://supershivas.github.io/factokid/), capture la
+// version publiée.
 
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -13,6 +15,7 @@ const RACINE = new URL('..', import.meta.url).pathname;
 const SORTIE = process.argv[2] || '.';
 const ATTENTE = Number(process.argv[3] || 3) * 1000;
 const PORT = 8123;
+const BASE = process.argv[4] || `http://127.0.0.1:${PORT}/`;
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
@@ -28,10 +31,19 @@ const serveur = createServer(async (req, res) => {
 });
 await new Promise((r) => serveur.listen(PORT, r));
 
-const navigateur = await pw.chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+// Avec une base distante, le navigateur doit passer par le proxy sortant.
+// Note : ne fonctionne pas depuis un bac à sable dont le relais TLS refuse
+// le trafic du navigateur ; dans ce cas, capturer en local.
+const proxy = process.env.HTTPS_PROXY;
+const navigateur = await pw.chromium.launch({
+  executablePath: '/opt/pw-browsers/chromium',
+  ...(BASE.startsWith('http://127.') || !proxy
+    ? {}
+    : { proxy: { server: proxy }, args: ['--ignore-certificate-errors', '--disable-quic'] }),
+});
 
 async function capturer(nom, page, url) {
-  await page.goto(`http://127.0.0.1:${PORT}/${url}`);
+  await page.goto(new URL(url, BASE).href);
   await page.waitForTimeout(400);
   const geo = await page.evaluate(() => {
     const c = document.getElementById('jeu');
@@ -65,12 +77,14 @@ async function capturer(nom, page, url) {
   console.log(nom, '— échelle ×' + geo.echelle);
 }
 
+const options = BASE.startsWith('http://127.') ? {} : { ignoreHTTPSErrors: true };
 const mobile = await navigateur.newPage({
+  ...options,
   viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true,
 });
 await capturer('mobile.png', mobile, 'index.html');
 
-const desktop = await navigateur.newPage({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1 });
+const desktop = await navigateur.newPage({ ...options, viewport: { width: 1200, height: 900 }, deviceScaleFactor: 1 });
 await capturer('apercu-desktop.png', desktop, 'preview.html');
 
 await navigateur.close();
