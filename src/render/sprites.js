@@ -113,6 +113,8 @@ export { TAILLE_ITEM };
 // --- orientation des convoyeurs ------------------------------------------
 
 const EST = { dx: 1, dy: 0 };
+const OUEST = { dx: -1, dy: 0 };
+const SUD = { dx: 0, dy: 1 };
 
 function tourner(v, quarts) {
   let { dx, dy } = v;
@@ -121,16 +123,27 @@ function tourner(v, quarts) {
 }
 
 function memeSens(a, b) { return a.dx === b.dx && a.dy === b.dy; }
+function oppose(v) { return { dx: -v.dx, dy: -v.dy }; }
+
+function memesBords(a, b) {
+  return (memeSens(a[0], b[0]) && memeSens(a[1], b[1]))
+      || (memeSens(a[0], b[1]) && memeSens(a[1], b[0]));
+}
 
 // Rotation de la tuile de base pour une entrée et une sortie données.
 function orientation(entree, sortie) {
   if (memeSens(entree, sortie)) {
-    for (let q = 0; q < 4; q++) if (memeSens(tourner(EST, q), sortie)) return { sprite: convoyeurDroit, quarts: q };
+    for (let q = 0; q < 4; q++) {
+      if (memeSens(tourner(EST, q), sortie)) return { sprite: convoyeurDroit, quarts: q };
+    }
   }
-  const baseEntree = { dx: 1, dy: 0 };  // arrive de l'ouest
-  const baseSortie = { dx: 0, dy: 1 };  // repart vers le sud
+  // Un virage ne relie que deux bords de la cellule. Le sens de circulation ne
+  // change pas la tuile : seul le couple de bords compte. Les quatre rotations
+  // de la tuile de base (ouest + sud) couvrent les quatre couples possibles,
+  // virages à gauche compris.
+  const bords = [oppose(entree), sortie];
   for (let q = 0; q < 4; q++) {
-    if (memeSens(tourner(baseEntree, q), entree) && memeSens(tourner(baseSortie, q), sortie)) {
+    if (memesBords([tourner(OUEST, q), tourner(SUD, q)], bords)) {
       return { sprite: convoyeurVirage, quarts: q };
     }
   }
