@@ -12,8 +12,10 @@ codée, pas après.
 
 Ne pas rediscuter ces points sans me le demander explicitement.
 
-- **Temps réel, écran allumé uniquement.** Pas d'idle, pas de production hors
-  ligne. Rien ne progresse quand l'app est fermée.
+- **Temps réel.** La simulation continue quand la fenêtre n'est pas visible :
+  au retour, le temps écoulé est rattrapé, dans la limite de `RATTRAPAGE_MAX`.
+  Rien ne progresse en revanche quand l'app est fermée : pas d'idle, pas de
+  production hors ligne.
 - **Grille avec convoyeurs.** Les objets transportés sont discrets et visibles :
   ils défilent un par un et s'accumulent quand l'aval est saturé.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.

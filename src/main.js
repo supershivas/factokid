@@ -15,6 +15,10 @@ const monde = creerMonde();
 const trace = brancherPointeur(canvas, vue, monde);
 const ctx = vue.ctx;
 
+// Sonde de test : laisse les outils lire l'état sans passer par le rendu.
+// Rien dans le jeu ne la lit.
+globalThis.sonde = { monde, trace };
+
 demarrerBoucle(
   (dt) => majMonde(monde, dt),
   (fps) => {

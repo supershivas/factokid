@@ -22,3 +22,9 @@ export const MACHINES = {
 };
 
 export const TICKS_PAR_SECONDE = 60;
+
+// La simulation continue quand la fenêtre n'est pas visible. Au retour, on
+// rattrape au plus ce temps-là d'un coup : au-delà, on abandonne le retard
+// plutôt que de figer l'écran pour rattraper une absence d'une heure.
+export const RATTRAPAGE_MAX = 60;      // secondes
+export const PERIODE_HORS_ECRAN = 250; // millisecondes entre deux pas hors écran
