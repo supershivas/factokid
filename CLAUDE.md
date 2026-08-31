@@ -48,7 +48,7 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Résolution logique | 360 × 640 |
 | Pixel art natif | 16 × 16 par tuile |
 | Cellule de grille | 48 unités logiques |
-| Grille de départ | 10 × 10 cellules |
+| Grille de départ | 7 × 10 cellules |
 | Cible tactile minimale | 48 unités logiques |
 | Mise à l'échelle | entière uniquement (×1, ×2, ×3), jamais fractionnaire |
 | Rendu | `image-rendering: pixelated`, pas d'interpolation |
