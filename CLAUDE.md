@@ -121,7 +121,9 @@ Jamais deux mises en page distinctes, jamais deux chemins de code.
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
-Toute capture d'écran ou vérification visuelle se fait dans l'aperçu desktop.
+Toute vérification visuelle produit **les deux captures, systématiquement** :
+la cible mobile et l'aperçu desktop. Jamais l'une sans l'autre. `outils/captures.mjs`
+les génère toutes les deux.
 
 ---
 
