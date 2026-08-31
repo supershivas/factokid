@@ -1,0 +1,27 @@
+// Point d'entrée : sélection du conteneur, câblage boucle / rendu / entrée.
+// Une seule base de code, un seul canvas, deux cibles d'affichage.
+
+import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
+import { creerVue } from './render/canvas.js';
+import { dessinerScene, bordureGrille } from './render/sprites.js';
+import { dessinerHud } from './render/hud.js';
+import { creerMonde, majMonde } from './sim/world.js';
+import { brancherPointeur } from './input/pointer.js';
+import { demarrerBoucle } from './loop.js';
+
+const canvas = document.getElementById('jeu');
+const vue = creerVue(canvas);
+const monde = creerMonde();
+const trace = brancherPointeur(canvas, vue, monde);
+const ctx = vue.ctx;
+
+demarrerBoucle(
+  (dt) => majMonde(monde, dt),
+  (fps) => {
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
+    dessinerScene(ctx, monde, trace);
+    bordureGrille(ctx);
+    dessinerHud(ctx, monde, fps);
+  },
+);

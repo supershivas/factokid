@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usine — aperçu</title>
+<style>
+  :root { --noir: #1a1c2c; --ardoise: #566c86; }
+  html, body { margin: 0; height: 100%; background: #0e0f1a; overflow: hidden; }
+  body { display: flex; align-items: center; justify-content: center;
+         touch-action: none; -webkit-user-select: none; user-select: none; }
+  /* Même jeu, même canvas : seuls le conteneur et le facteur d'échelle changent. */
+  #scene { width: min(92vw, 92vh * 0.5625); height: 92vh;
+           display: flex; align-items: center; justify-content: center;
+           background: var(--noir); border: 6px solid var(--ardoise);
+           border-radius: 18px; box-shadow: 0 12px 40px #0008; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+</style>
+</head>
+<body>
+  <div id="scene"><canvas id="jeu"></canvas></div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

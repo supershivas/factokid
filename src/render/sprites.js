@@ -1,0 +1,212 @@
+// Atlas de tuiles et dessin de la scène. Ne modifie jamais l'état.
+// Toutes les tuiles sont peintes sur une grille de 16 × 16 pixels d'art,
+// puis affichées à l'échelle entière PIXEL (3 unités logiques par pixel).
+
+import {
+  PALETTE, TUILE_PX, CELLULE, COLONNES, LIGNES, GRILLE_X, GRILLE_Y,
+} from '../design.js';
+import { ITEMS } from '../data/items.js';
+import { centreCellule, coinCellule } from '../sim/grid.js';
+import { parcourirItems } from '../sim/belt.js';
+
+const TAILLE_ITEM_PX = 6;
+const TAILLE_ITEM = TAILLE_ITEM_PX * (CELLULE / TUILE_PX); // 18 unités logiques
+
+function toile(taille, peindre) {
+  const c = document.createElement('canvas');
+  c.width = taille;
+  c.height = taille;
+  const g = c.getContext('2d');
+  const rect = (x, y, w, h, couleur) => { g.fillStyle = couleur; g.fillRect(x, y, w, h); };
+  const disque = (cx, cy, r, couleur) => {
+    g.fillStyle = couleur;
+    for (let y = 0; y < taille; y++) {
+      for (let x = 0; x < taille; x++) {
+        const dx = x + 0.5 - cx, dy = y + 0.5 - cy;
+        if (dx * dx + dy * dy <= r * r) g.fillRect(x, y, 1, 1);
+      }
+    }
+  };
+  peindre(rect, disque, g);
+  return c;
+}
+
+// --- tuiles ---------------------------------------------------------------
+
+const sol = toile(TUILE_PX, (rect) => {
+  rect(0, 0, TUILE_PX, TUILE_PX, PALETTE.noir);
+  // Coins de cellule marqués : la grille se lit sans lignes pleines.
+  const a = PALETTE.ardoise;
+  rect(0, 0, 3, 1, a);   rect(0, 0, 1, 3, a);
+  rect(13, 0, 3, 1, a);  rect(15, 0, 1, 3, a);
+  rect(0, 15, 3, 1, a);  rect(0, 13, 1, 3, a);
+  rect(13, 15, 3, 1, a); rect(15, 13, 1, 3, a);
+});
+
+// Convoyeur droit : flux vers l'est.
+const convoyeurDroit = toile(TUILE_PX, (rect) => {
+  rect(0, 3, 16, 1, PALETTE.noir);
+  rect(0, 4, 16, 8, PALETTE.ardoise);
+  rect(0, 12, 16, 1, PALETTE.noir);
+  for (let x = 1; x < 16; x += 4) {
+    rect(x, 5, 2, 1, PALETTE.bleu);
+    rect(x, 10, 2, 1, PALETTE.bleu);
+  }
+});
+
+// Convoyeur en virage : entre par l'ouest, sort par le sud.
+const convoyeurVirage = toile(TUILE_PX, (rect) => {
+  rect(0, 3, 13, 10, PALETTE.noir);
+  rect(3, 3, 10, 13, PALETTE.noir);
+  rect(0, 4, 12, 8, PALETTE.ardoise);
+  rect(4, 4, 8, 12, PALETTE.ardoise);
+  rect(1, 5, 2, 1, PALETTE.bleu);
+  rect(9, 9, 2, 1, PALETTE.bleu);
+});
+
+const producteur = toile(TUILE_PX, (rect) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+  rect(2, 2, 12, 4, PALETTE.jaune);
+  for (let i = 0; i < 5; i++) rect(4 + i, 8 + i, 8 - 2 * i, 1, PALETTE.creme);
+  rect(2, 14, 3, 2, PALETTE.noir);
+  rect(11, 14, 3, 2, PALETTE.noir);
+});
+
+const consommateur = toile(TUILE_PX, (rect, disque) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+  disque(8, 8, 5.2, PALETTE.creme);
+  disque(8, 8, 4.2, PALETTE.noir);
+  rect(2, 13, 12, 2, PALETTE.vert);
+});
+
+export const ICONES = { producteur, consommateur };
+
+// --- items ----------------------------------------------------------------
+
+const formes = {
+  carre: (rect, _d, couleur) => {
+    rect(0, 0, 6, 6, PALETTE.noir);
+    rect(1, 1, 4, 4, couleur);
+    rect(1, 1, 1, 1, PALETTE.creme);
+  },
+  losange: (rect, _d, couleur) => {
+    const n = PALETTE.noir;
+    rect(2, 0, 2, 1, n);
+    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
+    rect(0, 2, 1, 2, n); rect(1, 2, 4, 2, couleur); rect(5, 2, 1, 2, n);
+    rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
+    rect(2, 5, 2, 1, n);
+  },
+};
+
+const spritesItems = {};
+for (const item of Object.values(ITEMS)) {
+  spritesItems[item.id] = toile(TAILLE_ITEM_PX, (rect, disque) => {
+    formes[item.forme](rect, disque, PALETTE[item.couleur]);
+  });
+}
+export function spriteItem(id) { return spritesItems[id]; }
+export { TAILLE_ITEM };
+
+// --- orientation des convoyeurs ------------------------------------------
+
+const EST = { dx: 1, dy: 0 };
+
+function tourner(v, quarts) {
+  let { dx, dy } = v;
+  for (let i = 0; i < quarts; i++) { const t = dx; dx = -dy; dy = t; }
+  return { dx, dy };
+}
+
+function memeSens(a, b) { return a.dx === b.dx && a.dy === b.dy; }
+
+// Rotation de la tuile de base pour une entrée et une sortie données.
+function orientation(entree, sortie) {
+  if (memeSens(entree, sortie)) {
+    for (let q = 0; q < 4; q++) if (memeSens(tourner(EST, q), sortie)) return { sprite: convoyeurDroit, quarts: q };
+  }
+  const baseEntree = { dx: 1, dy: 0 };  // arrive de l'ouest
+  const baseSortie = { dx: 0, dy: 1 };  // repart vers le sud
+  for (let q = 0; q < 4; q++) {
+    if (memeSens(tourner(baseEntree, q), entree) && memeSens(tourner(baseSortie, q), sortie)) {
+      return { sprite: convoyeurVirage, quarts: q };
+    }
+  }
+  return { sprite: convoyeurDroit, quarts: 0 };
+}
+
+function sens(depuis, vers) {
+  return { dx: Math.sign(vers.cx - depuis.cx), dy: Math.sign(vers.cy - depuis.cy) };
+}
+
+// --- scène ----------------------------------------------------------------
+
+function tuile(ctx, sprite, cx, cy, quarts) {
+  const c = centreCellule(cx, cy);
+  if (quarts === 0) {
+    ctx.drawImage(sprite, c.x - CELLULE / 2, c.y - CELLULE / 2, CELLULE, CELLULE);
+    return;
+  }
+  ctx.save();
+  ctx.translate(c.x, c.y);
+  ctx.rotate((Math.PI / 2) * quarts);
+  ctx.drawImage(sprite, -CELLULE / 2, -CELLULE / 2, CELLULE, CELLULE);
+  ctx.restore();
+}
+
+export function dessinerScene(ctx, monde, trace) {
+  for (let cy = 0; cy < LIGNES; cy++) {
+    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, sol, cx, cy, 0);
+  }
+
+  for (const convoyeur of monde.convoyeurs) {
+    const chemin = convoyeur.chemin;
+    for (let i = 0; i < chemin.length; i++) {
+      const avant = i === 0 ? convoyeur.source : chemin[i - 1];
+      const apres = i === chemin.length - 1 ? convoyeur.cible : chemin[i + 1];
+      const o = orientation(sens(avant, chemin[i]), sens(chemin[i], apres));
+      tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);
+    }
+  }
+
+  for (const convoyeur of monde.convoyeurs) {
+    parcourirItems(convoyeur, (item, p) => {
+      ctx.drawImage(
+        spritesItems[item.type],
+        Math.round(p.x - TAILLE_ITEM / 2), Math.round(p.y - TAILLE_ITEM / 2),
+        TAILLE_ITEM, TAILLE_ITEM,
+      );
+    });
+  }
+
+  for (const machine of monde.machines) {
+    tuile(ctx, ICONES[machine.type], machine.cx, machine.cy, 0);
+    if (machine.bloquee) {
+      const coin = coinCellule(machine.cx, machine.cy);
+      ctx.fillStyle = PALETTE.rouge;
+      ctx.fillRect(coin.x + CELLULE - 12, coin.y + 3, 9, 9);
+    }
+  }
+
+  if (trace && trace.actif) dessinerTrace(ctx, trace);
+}
+
+function dessinerTrace(ctx, trace) {
+  ctx.fillStyle = PALETTE.creme;
+  const depart = coinCellule(trace.source.cx, trace.source.cy);
+  ctx.globalAlpha = 0.35;
+  ctx.fillRect(depart.x, depart.y, CELLULE, CELLULE);
+  for (const c of trace.chemin) {
+    const coin = coinCellule(c.cx, c.cy);
+    ctx.fillRect(coin.x + 6, coin.y + 6, CELLULE - 12, CELLULE - 12);
+  }
+  ctx.globalAlpha = 1;
+}
+
+export function bordureGrille(ctx) {
+  ctx.strokeStyle = PALETTE.ardoise;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(GRILLE_X - 0.5, GRILLE_Y - 0.5, COLONNES * CELLULE + 1, LIGNES * CELLULE + 1);
+}
