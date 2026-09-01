@@ -21,6 +21,7 @@ import { poserMine, retirerMine } from '../sim/carte.js';
 import { aUneSortie, attendus, maxEntrees } from '../sim/machine.js';
 
 const APPUI_LONG = 0.42 * 1000; // millisecondes
+const SEUIL_GLISSE = 6;         // unités logiques au-delà desquelles c'est un tracé
 
 export function brancherPointeur(canvas, vue, monde) {
   const etat = {
@@ -42,6 +43,7 @@ export function brancherPointeur(canvas, vue, monde) {
   let actionsBulles = [];
   let actionsBoutons = [];
   let departCellule = null;
+  let departPoint = null;
   let minuterie = null;
   let appuiLongFait = false;
   let animMenu = null;
@@ -250,6 +252,7 @@ export function brancherPointeur(canvas, vue, monde) {
     trace.chemin = [];
     trace.reprise = null;
     departCellule = null;
+    departPoint = null;
     clearTimeout(minuterie);
     minuterie = null;
   }
@@ -267,13 +270,13 @@ export function brancherPointeur(canvas, vue, monde) {
     pointeur = e.pointerId;
     canvas.setPointerCapture(pointeur);
     departCellule = c;
+    departPoint = p;
 
-    // L'appui long montre les informations, quel que soit l'élément.
+    // L'appui long montre les informations sans rien annuler : si le doigt
+    // repart, le panneau se referme et le tracé continue. Un enfant qui hésite
+    // avant de tirer son convoyeur ne doit rien perdre.
     minuterie = setTimeout(() => {
       appuiLongFait = true;
-      trace.actif = false;
-      trace.chemin = [];
-      trace.reprise = null;
       ouvrirPanneau(machineEn(scene(), c.cx, c.cy), convoyeurEn(scene(), c.cx, c.cy));
     }, APPUI_LONG);
 
@@ -315,9 +318,13 @@ export function brancherPointeur(canvas, vue, monde) {
     e.preventDefault();
     const c = celluleDepuisPoint(point(e).x, point(e).y);
     if (!c) return;
-    if (departCellule && (c.cx !== departCellule.cx || c.cy !== departCellule.cy)) {
-      clearTimeout(minuterie); // le doigt bouge : ce n'est plus un appui long
+    // Le moindre déplacement fait d'un appui un tracé : on annule l'attente,
+    // et on referme le panneau s'il avait déjà eu le temps de sortir.
+    const p = point(e);
+    if (departPoint && Math.hypot(p.x - departPoint.x, p.y - departPoint.y) > SEUIL_GLISSE) {
+      clearTimeout(minuterie);
       minuterie = null;
+      if (appuiLongFait) { etat.panneau = null; appuiLongFait = false; }
     }
     if (etat.outil === 'destruction') { detruire(c); return; }
     if (trace.actif && !machineEn(scene(), c.cx, c.cy)) relier(c);
