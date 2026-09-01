@@ -3,7 +3,8 @@
 // la couleur ne fait que confirmer ce que la forme dit déjà.
 
 export const ITEMS = {
-  boulon: { id: 'boulon', nom: 'boulon', forme: 'carre', couleur: 'rouge' },
-  plaque: { id: 'plaque', nom: 'plaque', forme: 'triangle', couleur: 'orange' },
-  moteur: { id: 'moteur', nom: 'moteur', forme: 'rond', couleur: 'jaune' },
+  sucre: { id: 'sucre', nom: 'sucre', forme: 'carre', couleur: 'creme' },
+  fraise: { id: 'fraise', nom: 'fraise', forme: 'rond', couleur: 'rouge' },
+  menthe: { id: 'menthe', nom: 'menthe', forme: 'triangle', couleur: 'vert' },
+  bonbon: { id: 'bonbon', nom: 'bonbon', forme: 'bonbon', couleur: 'orange' },
 };

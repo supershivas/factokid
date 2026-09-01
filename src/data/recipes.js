@@ -3,10 +3,10 @@
 // Une nouvelle fabrication est une entrée de plus, jamais du code en plus.
 
 export const RECETTES = {
-  moteur: {
-    id: 'moteur',
-    entrees: { boulon: 1, plaque: 1 },
-    sortie: 'moteur',
+  bonbon: {
+    id: 'bonbon',
+    entrees: { sucre: 1, fraise: 1, menthe: 1 },
+    sortie: 'bonbon',
     ticksParItem: 60,
   },
 };

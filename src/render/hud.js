@@ -104,11 +104,11 @@ export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const assembleur = monde.machines.find((m) => m.recette);
-  const consommateur = monde.machines.find((m) => m.def.entree);
+  const confiserie = monde.machines.find((m) => m.recette);
+  const livraison = monde.machines.find((m) => m.def.entree);
 
   // Bandeau haut : items en circulation, et fréquence d'images.
-  ctx.drawImage(spriteItem('moteur'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
+  ctx.drawImage(spriteItem('bonbon'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
   dessinerNombre(ctx, nombreItems(monde), 12 + TAILLE_ITEM + 9, 21, TEXTE_GRAND, PALETTE.creme);
 
   const largeurFps = largeurNombre(fps, TEXTE_PETIT);
@@ -118,12 +118,12 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
 
   // Bandeau bas : la barre d'outils à gauche, les compteurs à droite.
   const basY = GRILLE_Y + LIGNES * CELLULE + 24;
-  ctx.drawImage(ICONES.assembleur, 140, basY - 8, 32, 32);
-  dessinerNombre(ctx, assembleur.produits, 180, basY, TEXTE_PETIT, PALETTE.jaune);
+  ctx.drawImage(ICONES.confiserie, 140, basY - 8, 32, 32);
+  dessinerNombre(ctx, confiserie.produits, 180, basY, TEXTE_PETIT, PALETTE.jaune);
 
-  const largeurC = largeurNombre(consommateur.consommes, TEXTE_PETIT);
-  ctx.drawImage(ICONES.consommateur, LARGEUR_LOGIQUE - 44, basY - 8, 32, 32);
-  dessinerNombre(ctx, consommateur.consommes, LARGEUR_LOGIQUE - 52 - largeurC, basY, TEXTE_PETIT, PALETTE.vert);
+  const largeurC = largeurNombre(livraison.consommes, TEXTE_PETIT);
+  ctx.drawImage(ICONES.livraison, LARGEUR_LOGIQUE - 44, basY - 8, 32, 32);
+  dessinerNombre(ctx, livraison.consommes, LARGEUR_LOGIQUE - 52 - largeurC, basY, TEXTE_PETIT, PALETTE.vert);
 
   dessinerOutils(ctx, interfaceJeu);
   dessinerPanneau(ctx, interfaceJeu);

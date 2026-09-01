@@ -10,7 +10,9 @@ import { MACHINES, TICKS_PAR_SECONDE } from '../data/machines.js';
 import { RECETTES } from '../data/recipes.js';
 import { pousser, peutAccepter } from './belt.js';
 
-export function creerMachine(type, cx, cy) {
+// `carte` n'est donné que pour un téléporteur : c'est elle qui dit quelles
+// matières il stocke.
+export function creerMachine(type, cx, cy, carte) {
   const def = MACHINES[type];
   const recette = def.recette ? RECETTES[def.recette] : null;
   const ticks = recette ? recette.ticksParItem : def.ticksParItem;
@@ -22,6 +24,7 @@ export function creerMachine(type, cx, cy) {
     cy,
     periode: ticks ? ticks / TICKS_PAR_SECONDE : 0,
     horloge: 0,
+    carte,          // pour un téléporteur : la carte dont il est la sortie
     stocks: {},
     sorties: [],   // convoyeurs qui partent de la machine
     entrees: [],   // convoyeurs qui arrivent sur la machine
@@ -47,7 +50,7 @@ export function attendus(machine) {
 // stocke sans rien accepter d'un tapis : il est rempli par les cartes.
 export function jauges(machine) {
   if (machine.def.source) {
-    return machine.def.source.map((item) => ({ item, capacite: machine.def.capacite }));
+    return machine.carte.items.map((item) => ({ item, capacite: machine.def.capacite }));
   }
   return attendus(machine);
 }

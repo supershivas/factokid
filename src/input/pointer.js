@@ -13,7 +13,8 @@ import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
-  prolongerConvoyeur, designerSurCarte,
+  prolongerConvoyeur, designerSurCarte, poserMineSurCarte, retirerMineSurCarte,
+  gisementSurCarte,
 } from '../sim/world.js';
 import { aUneSortie, attendus } from '../sim/machine.js';
 import { coinCellule } from '../sim/grid.js';
@@ -49,18 +50,26 @@ export function brancherPointeur(canvas, vue, monde) {
   // La barre d'outils dépend de l'écran : dans une carte, on ne construit pas,
   // on revient.
   function majBoutons() {
-    if (etat.vue < 0) {
-      etat.boutons = OUTILS.map((o) => ({ icone: o.icone, actif: o.id === etat.outil }));
-      actionsBoutons = OUTILS.map((o) => () => {
+    // Les outils suivent l'écran : dans une carte, on revient aussi.
+    const outils = OUTILS.map((o) => ({
+      icone: o.icone,
+      actif: o.id === etat.outil,
+      action: () => {
         etat.outil = o.id;
-        if (o.id === 'construction') ouvrirMenu(bullesConstructibles(), rectBouton(0));
+        if (o.id === 'construction') ouvrirMenu(bullesConstructibles(), rectBouton(etat.vue < 0 ? 0 : 1));
         else fermerMenu();
         majBoutons();
+      },
+    }));
+    if (etat.vue >= 0) {
+      outils.unshift({
+        icone: 'outilRetour',
+        actif: false,
+        action: () => { etat.vue = -1; etat.panneau = null; fermerMenu(); majBoutons(); },
       });
-      return;
     }
-    etat.boutons = [{ icone: 'outilRetour', actif: false }];
-    actionsBoutons = [() => { etat.vue = -1; fermerMenu(); majBoutons(); }];
+    etat.boutons = outils.map((o) => ({ icone: o.icone, actif: o.actif }));
+    actionsBoutons = outils.map((o) => o.action);
   }
 
   function ouvrirMenu(contenu, ancre) {
@@ -88,11 +97,15 @@ export function brancherPointeur(canvas, vue, monde) {
       etat.panneau = {
         nom: machine.def.nom,
         icone: machine.type,
-        options: machine.def.source
-          ? monde.cartes.map((carte, i) => ({
-            icone: 'bulleCarte_' + carte.item,
-            action: () => { etat.vue = i; etat.panneau = null; majBoutons(); },
-          }))
+        options: machine.carte
+          ? [{
+            icone: 'bulleCarte_' + machine.carte.items[0],
+            action: () => {
+              etat.vue = monde.cartes.indexOf(machine.carte);
+              etat.panneau = null;
+              majBoutons();
+            },
+          }]
           : [],
       };
       surgirPanneau();
@@ -128,7 +141,8 @@ export function brancherPointeur(canvas, vue, monde) {
   }
 
   function bullesConstructibles() {
-    return CONSTRUCTIBLES.map((c) => ({
+    const ici = etat.vue < 0 ? 'usine' : 'carte';
+    return CONSTRUCTIBLES.filter((c) => c.ou === ici).map((c) => ({
       icone: c.icone,
       action: () => { etat.constructible = c.id; etat.outil = 'construction'; fermerMenu(); majBoutons(); },
     }));
@@ -198,6 +212,28 @@ export function brancherPointeur(canvas, vue, monde) {
     return false;
   }
 
+  // Sur une carte : le téléporteur ramène à l'usine, la mine se pose sur un
+  // gisement, et tout le reste désigne ce que le héros ira chercher.
+  function gesteSurCarte(c) {
+    const carte = monde.cartes[etat.vue];
+    if (c.cx === carte.teleporteur.cx && c.cy === carte.teleporteur.cy) {
+      etat.vue = -1;
+      etat.panneau = null;
+      fermerMenu();
+      majBoutons();
+      return;
+    }
+    if (etat.outil === 'destruction') { retirerMineSurCarte(monde, etat.vue, c.cx, c.cy); return; }
+    if (etat.outil === 'construction' && etat.constructible === 'mine'
+        && gisementSurCarte(monde, etat.vue, c.cx, c.cy)) {
+      // Une mine à la fois : on repasse en désignation, personne ne reste
+      // coincé dans un mode.
+      if (poserMineSurCarte(monde, etat.vue, c.cx, c.cy)) etat.constructible = 'convoyeur';
+      return;
+    }
+    designerSurCarte(monde, etat.vue, c.cx, c.cy);
+  }
+
   function detruire(c) {
     const convoyeur = convoyeurEn(monde, c.cx, c.cy);
     if (convoyeur) couperConvoyeur(monde, convoyeur, c.cx, c.cy);
@@ -218,8 +254,7 @@ export function brancherPointeur(canvas, vue, monde) {
     canvas.setPointerCapture(pointeur);
     tapSur = null;
 
-    // Dans une carte, le seul geste est de ramasser.
-    if (etat.vue >= 0) { designerSurCarte(monde, etat.vue, c.cx, c.cy); return; }
+    if (etat.vue >= 0) { gesteSurCarte(c); return; }
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 

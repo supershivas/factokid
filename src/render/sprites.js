@@ -58,6 +58,14 @@ const formes = {
     rect(0, 4, 1, 1, n); rect(1, 4, 4, 1, couleur); rect(5, 4, 1, 1, n);
     rect(0, 5, 6, 1, n);
   },
+  bonbon: (rect, couleur) => {
+    const n = PALETTE.noir;
+    rect(2, 0, 2, 1, n);
+    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
+    rect(0, 2, 6, 2, couleur);
+    rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
+    rect(2, 5, 2, 1, n);
+  },
   rond: (rect, couleur) => {
     const n = PALETTE.noir;
     rect(2, 0, 2, 1, n);
@@ -136,29 +144,28 @@ const trieur = toile(TUILE_PX, (rect) => {
   rect(11, 8, 2, 5, PALETTE.creme);
 });
 
-// Un assembleur : deux blocs qui entrent en haut, un seul qui sort en bas.
-const assembleur = toile(TUILE_PX, (rect) => {
+// La confiserie : deux entonnoirs qui versent, et un bonbon sur la façade.
+const confiserie = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
   rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(3, 2, 3, 3, PALETTE.creme);
-  rect(10, 2, 3, 3, PALETTE.creme);
-  rect(5, 5, 2, 2, PALETTE.creme);
-  rect(9, 5, 2, 2, PALETTE.creme);
-  rect(6, 7, 4, 2, PALETTE.creme);
-  rect(4, 9, 8, 3, PALETTE.jaune);
+  rect(3, 2, 3, 2, PALETTE.creme);
+  rect(10, 2, 3, 2, PALETTE.creme);
+  rect(4, 4, 8, 1, PALETTE.creme);
+  rect(2, 10, 12, 4, PALETTE.noir);
+  formes.bonbon(decale(rect, 5, 10), PALETTE.orange);
 });
 
-const consommateur = toile(TUILE_PX, (rect, disque) => {
+// La livraison : un bocal ouvert où tombent les bonbons.
+const livraison = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
   rect(1, 1, 14, 14, PALETTE.ardoise);
-  disque(8, 8, 5.2, PALETTE.creme);
-  disque(8, 8, 4.2, PALETTE.noir);
-  // La bande du bas est laissée vide : c'est la jauge de stock, dessinée par
-  // la scène puisqu'elle dépend de l'état.
-  rect(2, 13, 12, 2, PALETTE.noir);
+  rect(3, 2, 10, 2, PALETTE.creme);
+  rect(4, 4, 8, 9, PALETTE.noir);
+  rect(5, 5, 6, 7, PALETTE.vert);
+  rect(5, 5, 6, 2, PALETTE.noir);
 });
 
-export const ICONES = { teleporteur, trieur, assembleur, consommateur };
+export const ICONES = { teleporteur, trieur, confiserie, livraison };
 
 // --- cartes ---------------------------------------------------------------
 
@@ -200,6 +207,16 @@ const heros = toile(TUILE_PX, (rect) => {
   rect(9, 12, 2, 3, PALETTE.noir);
 });
 
+// Une mine : un chevalet posé sur le gisement, qui le récolte tout seul.
+const mine = toile(TUILE_PX, (rect) => {
+  rect(2, 12, 12, 3, PALETTE.ardoise);
+  rect(2, 15, 12, 1, PALETTE.noir);
+  rect(7, 3, 2, 9, PALETTE.creme);
+  rect(4, 6, 8, 2, PALETTE.noir);
+  rect(4, 6, 8, 1, PALETTE.jaune);
+  rect(3, 3, 3, 2, PALETTE.jaune);
+});
+
 const spritesGisements = {};
 for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(item);
 
@@ -214,6 +231,12 @@ export function dessinerCarte(ctx, carte) {
 
   for (const g of carte.gisements) {
     const coin = coinCellule(g.cx, g.cy);
+    if (g.present && g.mine) {
+      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
+      tuile(ctx, mine, g.cx, g.cy, 0);
+      continue;
+    }
+    if (g.mine) { tuile(ctx, mine, g.cx, g.cy, 0); continue; }
     if (g.present) {
       // Désigné : un cadre clair dit que le héros viendra le chercher.
       if (estDesigne(carte, g)) {
@@ -221,7 +244,7 @@ export function dessinerCarte(ctx, carte) {
         ctx.lineWidth = 3;
         ctx.strokeRect(coin.x + 4.5, coin.y + 4.5, CELLULE - 9, CELLULE - 9);
       }
-      tuile(ctx, spritesGisements[carte.item], g.cx, g.cy, 0);
+      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
       continue;
     }
     tuile(ctx, gisementVide, g.cx, g.cy, 0);
@@ -242,9 +265,9 @@ function dessinerHeros(ctx, carte) {
   const y = Math.round(h.y - CELLULE / 2);
   ctx.drawImage(heros, x, y, CELLULE, CELLULE);
   // Ce qu'il porte, au-dessus de sa tête.
-  for (let i = 0; i < h.sac; i++) {
+  for (let i = 0; i < h.sac.length; i++) {
     ctx.drawImage(
-      spritesItems[carte.item],
+      spritesItems[h.sac[i]],
       x + 6 + i * (TAILLE_ITEM - 6), y - 6, TAILLE_ITEM, TAILLE_ITEM,
     );
   }
@@ -289,6 +312,13 @@ const outilDestruction = toile(TUILE_PX, (rect) => {
   }
 });
 
+const bulleMine = toile(TUILE_PX, (rect) => {
+  rect(2, 11, 12, 3, PALETTE.ardoise);
+  rect(7, 3, 2, 8, PALETTE.creme);
+  rect(4, 6, 8, 1, PALETTE.jaune);
+  rect(3, 3, 3, 2, PALETTE.jaune);
+});
+
 const bulleConvoyeur = toile(TUILE_PX, (rect) => {
   rect(2, 5, 12, 1, PALETTE.noir);
   rect(2, 6, 12, 5, PALETTE.ardoise);
@@ -307,7 +337,7 @@ function bulleCarte(item) {
 }
 
 export const INTERFACE = {
-  bouton, boutonActif, bulleFond, bulleConvoyeur,
+  bouton, boutonActif, bulleFond, bulleConvoyeur, bulleMine,
   outilConstruction, outilDestruction, outilRetour,
 };
 for (const item of Object.values(ITEMS)) INTERFACE['bulleCarte_' + item.id] = bulleCarte(item);
@@ -423,8 +453,8 @@ export function dessinerScene(ctx, monde, trace) {
 // Jauge de stock : une rangée de pastilles par ingrédient attendu, à la
 // couleur de l'item. Le bouchon se voit sur la machine, pas seulement sur le
 // convoyeur.
-const PASTILLE = 6;
-const PAS_PASTILLE = 10;
+const PASTILLE = 4;
+const PAS_PASTILLE = 6;
 
 function dessinerStock(ctx, machine, coin) {
   const rangees = attendus(machine);
@@ -432,11 +462,11 @@ function dessinerStock(ctx, machine, coin) {
     const { item, capacite } = rangees[r];
     const largeur = capacite * PASTILLE + (capacite - 1) * (PAS_PASTILLE - PASTILLE);
     const x = coin.x + Math.round((CELLULE - largeur) / 2);
-    const y = coin.y + CELLULE - 9 - r * (PASTILLE + 3);
+    const y = coin.y + CELLULE - 7 - r * (PASTILLE + 2);
     // Fond sombre derrière la rangée : les places vides doivent se voir autant
     // que les pleines, sinon on ne lit pas combien il en reste.
     ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(x - 2, y - 2, largeur + 4, PASTILLE + 4);
+    ctx.fillRect(x - 2, y - 1, largeur + 4, PASTILLE + 2);
     for (let i = 0; i < capacite; i++) {
       ctx.fillStyle = i < machine.stocks[item] ? PALETTE[ITEMS[item].couleur] : PALETTE.ardoise;
       ctx.fillRect(x + i * PAS_PASTILLE, y, PASTILLE, PASTILLE);

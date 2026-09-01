@@ -7,6 +7,8 @@ export const OUTILS = [
   { id: 'destruction', icone: 'outilDestruction' },
 ];
 
+// `ou` dit où l'élément se pose : dans l'usine, ou sur une carte.
 export const CONSTRUCTIBLES = [
-  { id: 'convoyeur', icone: 'bulleConvoyeur' },
+  { id: 'convoyeur', icone: 'bulleConvoyeur', ou: 'usine' },
+  { id: 'mine', icone: 'bulleMine', ou: 'carte' },
 ];

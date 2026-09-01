@@ -6,7 +6,7 @@ import { DEPART } from '../data/depart.js';
 import {
   creerMachine, majMachine, deposer, deposerDepuisCarte, attendus, maxSorties,
 } from './machine.js';
-import { creerCartes, majCarte, designer } from './carte.js';
+import { creerCartes, majCarte, designer, poserMine, retirerMine, gisementEn } from './carte.js';
 import { creerConvoyeur, avancer, reconstruire } from './belt.js';
 
 export function creerMonde() {
@@ -15,25 +15,25 @@ export function creerMonde() {
     machines: [],
     convoyeurs: [],
     cartes: [],
-    teleporteur: null,
   };
   monde.cartes = creerCartes();
   const machines = DEPART.machines.map((m) => {
-    const machine = ajouterMachine(monde, m.type, m.cx, m.cy);
+    const carte = m.carte === undefined ? undefined : monde.cartes[m.carte];
+    const machine = ajouterMachine(monde, m.type, m.cx, m.cy, carte);
+    if (carte) carte.machine = machine;
     for (const [item, n] of Object.entries(m.stock || {})) {
       if (item in machine.stocks) machine.stocks[item] = n;
     }
     return machine;
   });
-  monde.teleporteur = machines.find((m) => m.def.source);
   for (const c of DEPART.convoyeurs) {
     poserConvoyeur(monde, c.chemin.map((p) => ({ ...p })), machines[c.source], machines[c.cible]);
   }
   return monde;
 }
 
-function ajouterMachine(monde, type, cx, cy) {
-  const machine = creerMachine(type, cx, cy);
+function ajouterMachine(monde, type, cx, cy, carte) {
+  const machine = creerMachine(type, cx, cy, carte);
   monde.machines.push(machine);
   poser(monde.grille, cx, cy, { genre: 'machine', machine });
   return machine;
@@ -124,28 +124,57 @@ export function poserConvoyeur(monde, chemin, source, cible) {
   return convoyeur;
 }
 
+// Ce qu'une machine est capable d'envoyer sur un tapis.
+function itemsEmis(machine) {
+  if (machine.def.tri) return machine.def.tri;
+  if (machine.def.source) return machine.carte.items;
+  if (machine.recette) return [machine.recette.sortie];
+  return [];
+}
+
 // Un trieur range : la matière d'un convoyeur sortant est celle qu'attend la
-// machine à l'arrivée et que ce trieur ne sert pas déjà. Le joueur ne configure
-// rien, il relie.
+// machine à l'arrivée et que rien ne lui apporte encore. Le joueur ne configure
+// rien, il relie. Une machine qui n'envoie qu'une matière n'a pas de filtre :
+// son tapis prend tout ce qu'elle sort.
 function matiereSortante(source, cible) {
-  if (!source.def.tri) return null;
-  if (!cible) return null;
-  const dejaServies = source.sorties.map((c) => c.matiere);
-  const attendu = attendus(cible).map((e) => e.item).filter((i) => source.def.tri.includes(i));
-  return attendu.find((i) => !dejaServies.includes(i)) || attendu[0] || null;
+  // Seul un trieur range. Un téléporteur qui sort deux matières les envoie
+  // mélangées : c'est justement ce qui rend un trieur nécessaire.
+  if (!source.def.tri || !cible) return null;
+  const emis = itemsEmis(source);
+  const servies = new Set();
+  for (const c of cible.entrees) {
+    if (c.matiere) servies.add(c.matiere);
+    else for (const i of itemsEmis(c.source)) servies.add(i);
+  }
+  const possibles = attendus(cible).map((e) => e.item).filter((i) => emis.includes(i));
+  return possibles.find((i) => !servies.has(i)) || possibles[0] || null;
 }
 
 // On désigne un gisement : le héros ira le chercher. Le joueur ne déplace
 // jamais le héros lui-même, il lui montre quoi rapporter.
 export function designerSurCarte(monde, indexCarte, cx, cy) {
   const carte = monde.cartes[indexCarte];
-  if (!carte) return false;
-  return designer(carte, cx, cy);
+  return carte ? designer(carte, cx, cy) : false;
+}
+
+export function poserMineSurCarte(monde, indexCarte, cx, cy) {
+  const carte = monde.cartes[indexCarte];
+  return carte ? poserMine(carte, cx, cy) : false;
+}
+
+export function retirerMineSurCarte(monde, indexCarte, cx, cy) {
+  const carte = monde.cartes[indexCarte];
+  return carte ? retirerMine(carte, cx, cy) : false;
+}
+
+export function gisementSurCarte(monde, indexCarte, cx, cy) {
+  const carte = monde.cartes[indexCarte];
+  return carte ? gisementEn(carte, cx, cy) : null;
 }
 
 export function majMonde(monde, dt) {
   for (const carte of monde.cartes) {
-    majCarte(carte, dt, (item) => deposerDepuisCarte(monde.teleporteur, item));
+    majCarte(carte, dt, (item) => carte.machine && deposerDepuisCarte(carte.machine, item));
   }
   for (const convoyeur of monde.convoyeurs) {
     avancer(convoyeur, dt, (type) => (convoyeur.cible ? deposer(convoyeur.cible, type) : false));

@@ -28,9 +28,15 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   machine qui produit à partir de rien : chaque matière brute a sa carte. Le
   joueur touche un gisement, le héros le ramasse, la matière arrive au
   téléporteur. Un gisement repousse après un délai.
-- **Un seul téléporteur, posé sur la grille de l'usine.** Il sort tout ce qui
-  a été ramassé, mélangé, sur un seul convoyeur. Le toucher fait sortir les
-  cartes en bulles ; en toucher une bascule l'écran sur cette carte.
+- **Un téléporteur par carte**, posé sur la grille de l'usine, et le même en
+  bas de la carte. Une carte peut porter plusieurs matières : son téléporteur
+  les sort mélangées sur un seul convoyeur. Le toucher côté usine ouvre son
+  panneau et mène à sa carte ; le toucher côté carte ramène à l'usine.
+- **Le héros ramasse, la mine automatise.** On désigne des gisements, le héros
+  les fait dans l'ordre et rapporte au téléporteur. Une mine posée sur un
+  gisement le récolte seule, plus lentement qu'un joueur attentif.
+- **L'usine fabrique des bonbons.** Sucre, fraise et menthe entrent, un bonbon
+  sort.
 - **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur reçoit le
   mélange et range : une sortie par matière, un convoyeur par sortie. La
   matière d'un convoyeur sortant du trieur est déduite de ce qu'attend la

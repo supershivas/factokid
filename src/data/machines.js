@@ -5,27 +5,27 @@ export const MACHINES = {
   teleporteur: {
     id: 'teleporteur',
     nom: 'téléporteur',
-    source: ['boulon', 'plaque'], // rempli par les cartes, jamais par un tapis
+    source: true,       // rempli par sa carte, jamais par un tapis
     capacite: 8,
-    ticksParItem: 20,             // cadence à laquelle il verse sur le tapis
+    ticksParItem: 20,   // cadence à laquelle il verse sur le tapis
   },
   trieur: {
     id: 'trieur',
     nom: 'trieur',
-    tri: ['boulon', 'plaque'],    // une sortie par matière rangée
+    tri: ['sucre', 'fraise', 'menthe'], // une sortie par matière rangée
     capacite: 4,
     ticksParItem: 15,
   },
-  assembleur: {
-    id: 'assembleur',
-    nom: 'assembleur',
-    recette: 'moteur',  // a + b = c
+  confiserie: {
+    id: 'confiserie',
+    nom: 'confiserie',
+    recette: 'bonbon',
     capacite: 4,
   },
-  consommateur: {
-    id: 'consommateur',
+  livraison: {
+    id: 'livraison',
     nom: 'livraison',
-    entree: 'moteur',
+    entree: 'bonbon',
     ticksParItem: 60,
     capacite: 4,
   },
