@@ -30,6 +30,14 @@
     rendu que le jeu : ce qui est choisi ici se transporte tel quel.
   </p>
 
+  <h2>Retenues — intégrées au jeu</h2>
+  <p class="note">
+    Le jaillissement suivi d'une secousse pour la bulle, la poussière mêlée aux
+    rayons pour la pose. Ces deux vignettes appellent le code du jeu, pas une
+    copie : ce que tu vois ici est ce qui tourne dans l'usine.
+  </p>
+  <div class="grille" id="retenus"></div>
+
   <h2>Bulle d'alerte — dix apparitions</h2>
   <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
   <div class="grille" id="bulles"></div>
@@ -42,6 +50,10 @@
     import { poserVignette } from './atelier.js';
     import { BULLES } from './bulles.js';
     import { POSES } from './poses.js';
+    import { RETENUS } from './retenu.js';
+
+    const retenus = document.getElementById('retenus');
+    for (const v of RETENUS) poserVignette(retenus, v.titre, v.note, v.dessiner.bind(v), v.duree);
 
     const bulles = document.getElementById('bulles');
     for (const v of BULLES) poserVignette(bulles, v.titre, v.note, v.dessiner, v.duree);

@@ -8,7 +8,9 @@ import {
 import { ITEMS } from '../data/items.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
+import { dessinerAlerte } from './alerte.js';
 import { estDesigne } from '../sim/carte.js';
+import { chutePose } from './pose.js';
 import { parcourirItems, celluleDe } from '../sim/belt.js';
 
 const TAILLE_ITEM_PX = 6;
@@ -337,35 +339,6 @@ function bulleCarte(item) {
   });
 }
 
-// Bulle d'alerte : une bulle de bande dessinée en éclats, avec ses « !!! ».
-// Elle sort de l'endroit bloqué et ne dit qu'une chose : ça ne passe plus.
-const bulleAlerte = toile(TUILE_PX, (rect) => {
-  const cx = 7.5;
-  const cy = 6.5;
-  for (let y = 0; y < TUILE_PX; y++) {
-    for (let x = 0; x < TUILE_PX; x++) {
-      const dx = x + 0.5 - cx;
-      const dy = y + 0.5 - cy;
-      const r = Math.hypot(dx, dy);
-      // Huit pointes : le rayon varie avec l'angle.
-      const seuil = 5.1 + 1.7 * Math.cos(8 * Math.atan2(dy, dx));
-      if (r <= seuil) rect(x, y, 1, 1, PALETTE.creme);
-      else if (r <= seuil + 1.1) rect(x, y, 1, 1, PALETTE.noir);
-    }
-  }
-  // La queue, qui désigne l'endroit bloqué.
-  rect(6, 12, 3, 1, PALETTE.noir);
-  rect(6, 13, 2, 1, PALETTE.creme);
-  rect(6, 14, 2, 1, PALETTE.noir);
-  // Les trois points d'exclamation.
-  for (const x of [4, 7, 10]) {
-    rect(x, 3, 2, 4, PALETTE.rouge);
-    rect(x, 8, 2, 2, PALETTE.rouge);
-  }
-});
-
-export const ALERTE = bulleAlerte;
-
 export const INTERFACE = {
   bouton, boutonActif, bulleFond, bulleConvoyeur, bulleMine,
   outilConstruction, outilDestruction, outilRetour,
@@ -450,6 +423,7 @@ function sens(depuis, vers) {
 
 function tuile(ctx, sprite, cx, cy, quarts) {
   const c = centreCellule(cx, cy);
+  c.y += chutePose(cx, cy);
   if (quarts === 0) {
     ctx.drawImage(sprite, c.x - CELLULE / 2, c.y - CELLULE / 2, CELLULE, CELLULE);
     return;
@@ -528,28 +502,24 @@ function dessinerMachine(ctx, machine) {
 // ce qu'il alimente est lui-même bloqué ne dit rien, c'est l'autre qui parle.
 function dessinerAlertes(ctx, scene) {
   for (const machine of scene.machines) {
-    if (machine.bloqueeDepuis > ALERTE_DELAI) alerte(ctx, machine.cx, machine.cy);
+    if (machine.bloqueeDepuis > ALERTE_DELAI) {
+      alerte(ctx, machine.cx, machine.cy, machine.bloqueeDepuis - ALERTE_DELAI);
+    }
   }
   for (const convoyeur of scene.convoyeurs) {
     if (convoyeur.bloque <= ALERTE_DELAI) continue;
     if (convoyeur.cible && convoyeur.cible.bloqueeDepuis > ALERTE_DELAI) continue;
     if (convoyeur.sorties.some((suite) => suite.bloque > ALERTE_DELAI)) continue;
     const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
-    alerte(ctx, bout.cx, bout.cy);
+    alerte(ctx, bout.cx, bout.cy, convoyeur.bloque - ALERTE_DELAI);
   }
 }
 
-// La bulle sort de la case et palpite, pour attraper l'œil sans clignoter.
-function alerte(ctx, cx, cy) {
-  const coin = coinCellule(cx, cy);
-  const battement = 1 + 0.06 * Math.sin(performance.now() / 130);
-  const taille = Math.round(CELLULE * battement);
-  const x = Math.round(coin.x + (CELLULE - taille) / 2);
-  // La bulle sort vers le haut, sauf tout en haut de la grille où elle
-  // descend : elle ne doit jamais quitter le plateau.
-  const dessus = coin.y - CELLULE * 0.7;
-  const y = Math.round(dessus < GRILLE_Y ? coin.y + CELLULE * 0.55 : dessus);
-  ctx.drawImage(bulleAlerte, x, y, taille, taille);
+// La bulle jaillit de la case et se secoue. `age` compte depuis le moment où
+// le bouchon a été signalé, pas depuis le début du bouchon.
+function alerte(ctx, cx, cy, age) {
+  const c = centreCellule(cx, cy);
+  dessinerAlerte(ctx, c.x, c.y, age);
 }
 
 // Une mine montre ce qu'elle a extrait : on voit ce qu'il y a dedans.

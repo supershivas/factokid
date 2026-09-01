@@ -1,0 +1,64 @@
+// Les deux propositions retenues, telles qu'elles tournent dans le jeu :
+// ce fichier n'anime rien lui-même, il appelle le code de src/render/.
+
+import { PALETTE, TUILE_PX } from '../src/design.js';
+import { dessinerAlerte } from '../src/render/alerte.js';
+import { pose, majParticules, dessinerParticules } from '../src/render/particules.js';
+
+const CELLULE = 24;
+
+const tuileConvoyeur = (() => {
+  const c = document.createElement('canvas');
+  c.width = TUILE_PX;
+  c.height = TUILE_PX;
+  const g = c.getContext('2d');
+  const rect = (x, y, w, h, couleur) => { g.fillStyle = couleur; g.fillRect(x, y, w, h); };
+  rect(0, 3, 16, 1, PALETTE.noir);
+  rect(0, 4, 16, 8, PALETTE.ardoise);
+  rect(0, 12, 16, 1, PALETTE.noir);
+  for (let x = 1; x < 16; x += 4) { rect(x, 5, 2, 1, PALETTE.bleu); rect(x, 10, 2, 1, PALETTE.bleu); }
+  return c;
+})();
+
+function machine(ctx, taille) {
+  const c = taille / 2;
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(c - 15, taille - 26, 30, 22);
+  ctx.fillStyle = PALETTE.ardoise;
+  ctx.fillRect(c - 12, taille - 23, 24, 19);
+  ctx.fillStyle = PALETTE.bleu;
+  ctx.fillRect(c - 9, taille - 11, 18, 3);
+}
+
+export const RETENUS = [
+  {
+    titre: 'Bulle retenue',
+    note: 'jaillissement puis secousse, trois points de tailles et d’angles différents',
+    duree: 3,
+    dessiner(ctx, t, taille) {
+      machine(ctx, taille);
+      dessinerAlerte(ctx, taille / 2, taille - 15, t);
+    },
+  },
+  {
+    titre: 'Pose retenue',
+    note: 'la tuile tombe, la poussière monte, les rayons claquent',
+    duree: 1.8,
+    dessiner(ctx, t, taille) {
+      // Le décor : deux voisines déjà posées.
+      ctx.drawImage(tuileConvoyeur, 0, taille / 2 - CELLULE / 2, CELLULE, CELLULE);
+      ctx.drawImage(tuileConvoyeur, taille - CELLULE, taille / 2 - CELLULE / 2, CELLULE, CELLULE);
+
+      if (t < 0.02 && !this.lance) { this.lance = true; pose(taille / 2, taille / 2); }
+      if (t > 0.5) this.lance = false;
+
+      const chute = t < 0.22 ? -Math.round(16 * (1 - t / 0.22) ** 2) : 0;
+      ctx.drawImage(
+        tuileConvoyeur,
+        taille / 2 - CELLULE / 2, taille / 2 - CELLULE / 2 + chute, CELLULE, CELLULE,
+      );
+      majParticules(1 / 60);
+      dessinerParticules(ctx);
+    },
+  },
+];

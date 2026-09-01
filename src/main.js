@@ -4,7 +4,8 @@
 import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
 import { creerVue } from './render/canvas.js';
 import { dessinerScene, dessinerCarte, bordureGrille } from './render/sprites.js';
-import { majParticules, dessinerParticules, fumee, etoiles } from './render/particules.js';
+import { majParticules, dessinerParticules, fumee, pose } from './render/particules.js';
+import { marquerPose, majPoses } from './render/pose.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
@@ -25,7 +26,8 @@ globalThis.sonde = { monde, interface: interfaceJeu };
 // l'entrée, la récompense dans le rendu : main.js fait le lien.
 function effetsDeConstruction() {
   for (const c of interfaceJeu.effets) {
-    etoiles(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
+    marquerPose(c.cx, c.cy);
+    pose(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
   }
   interfaceJeu.effets.length = 0;
 }
@@ -49,6 +51,7 @@ demarrerBoucle(
     effetsDeConstruction();
     fumeeDesMines(dt);
     majParticules(dt);
+    majPoses(dt);
 
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
