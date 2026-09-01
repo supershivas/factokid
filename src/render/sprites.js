@@ -405,6 +405,19 @@ function memeEnsemble(a, b) {
 
 const BASE_T = [OUEST, EST, SUD];
 
+// Ne garde que les bords qui touchent vraiment la case : un voisin direct, une
+// fois chacun. Sans ce filtre, un vecteur en diagonale passait pour un bord et
+// faisait dessiner une croix aux bras dans le vide.
+function bordsCardinaux(liste) {
+  const gardes = [];
+  for (const v of liste) {
+    if (Math.abs(v.dx) + Math.abs(v.dy) !== 1) continue;
+    if (gardes.some((w) => memeSens(v, w))) continue;
+    gardes.push(v);
+  }
+  return gardes;
+}
+
 function orientationJonction(bords) {
   if (bords.length >= 4) return { sprite: convoyeurCroix, quarts: 0 };
   for (let q = 0; q < 4; q++) {
@@ -449,30 +462,40 @@ export function dessinerScene(ctx, scene, trace, solTuile = sol) {
 
 // Les convoyeurs d'une scène, puis ce qui roule dessus.
 export function dessinerConvoyeurs(ctx, scene) {
+  // Qui débouche sur quelle cellule : une fusion se voit du côté de la case
+  // où les tapis se rejoignent, pas du côté de celui qui repart.
+  const arrivees = new Map();
+  for (const convoyeur of scene.convoyeurs) {
+    const sortie = convoyeur.celluleSortie;
+    if (!sortie) continue;
+    const cle = sortie.cx + ',' + sortie.cy;
+    if (!arrivees.has(cle)) arrivees.set(cle, []);
+    arrivees.get(cle).push(convoyeur);
+  }
+
   for (const convoyeur of scene.convoyeurs) {
     const chemin = convoyeur.chemin;
     for (let i = 0; i < chemin.length; i++) {
       const avant = i === 0 ? convoyeur.celluleEntree : chemin[i - 1];
-      // Première cellule d'un tapis alimenté par plusieurs : c'est une fusion.
-      if (i === 0 && convoyeur.sources.length >= 2) {
-        const bords = convoyeur.sources
-          .map((amont) => celluleDe(amont))
-          .filter(Boolean)
-          .map((cellule) => sens(chemin[0], cellule));
-        bords.push(sens(chemin[0], chemin[1] || convoyeur.celluleSortie));
-        const j = orientationJonction(bords);
-        tuile(ctx, j.sprite, chemin[0].cx, chemin[0].cy, j.quarts);
-        continue;
-      }
-      // Dernière cellule d'un tapis qui se divise : c'est une jonction.
-      if (i === chemin.length - 1 && convoyeur.sorties.length >= 2) {
-        const bords = [sens(chemin[i], avant)];
-        for (const branche of convoyeur.sorties) bords.push(sens(chemin[i], branche.chemin[0]));
-        const j = orientationJonction(bords);
-        tuile(ctx, j.sprite, chemin[i].cx, chemin[i].cy, j.quarts);
-        continue;
-      }
       const apres = i === chemin.length - 1 ? convoyeur.celluleSortie : chemin[i + 1];
+
+      // Sur la dernière cellule, on compte tous les bords réellement occupés :
+      // d'où l'on vient, où l'on repart, et qui vient se déverser ici.
+      if (i === chemin.length - 1) {
+        const bords = [sens(chemin[i], avant), sens(chemin[i], apres)];
+        for (const branche of convoyeur.sorties) bords.push(sens(chemin[i], branche.chemin[0]));
+        for (const venant of arrivees.get(chemin[i].cx + ',' + chemin[i].cy) || []) {
+          if (venant === convoyeur) continue;
+          bords.push(sens(chemin[i], venant.chemin[venant.chemin.length - 1]));
+        }
+        const cardinaux = bordsCardinaux(bords);
+        if (cardinaux.length >= 3) {
+          const j = orientationJonction(cardinaux);
+          tuile(ctx, j.sprite, chemin[i].cx, chemin[i].cy, j.quarts);
+          continue;
+        }
+      }
+
       const o = orientation(sens(avant, chemin[i]), sens(chemin[i], apres));
       tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);
     }
