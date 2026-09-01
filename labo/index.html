@@ -42,6 +42,14 @@
   <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
   <div class="grille" id="bulles"></div>
 
+  <h2>Plus et croix — six styles et leur animation au clic</h2>
+  <p class="note">
+    Le plus s'enfonce d'abord, la croix ensuite ; la vignette rejoue la
+    séquence au clic. Au repos, l'icône est à l'échelle ×2 comme dans le jeu :
+    seule l'animation, le temps qu'elle dure, sort de la grille.
+  </p>
+  <div class="grille" id="boutons"></div>
+
   <h2>Icônes des outils — dix couples</h2>
   <p class="note">Construire à gauche, détruire à droite. Chaque couple doit se lire en niveaux de gris, sans un mot.</p>
   <div class="grille" id="icones"></div>
@@ -68,6 +76,10 @@
 
     const poses = document.getElementById('poses');
     for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+
+    const { BOUTONS } = await import('./boutons.js');
+    const boutons = document.getElementById('boutons');
+    for (const v of BOUTONS) poserVignette(boutons, v.titre, v.note, v.dessiner.bind(v), v.duree);
 
     const { DESTRUCTIONS } = await import('./destructions.js');
     const destructions = document.getElementById('destructions');

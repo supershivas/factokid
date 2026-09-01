@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Planche — plus et croix</title>
+<style>
+  html, body { margin: 0; background: #0e0f1a; color: #f4f4f4; }
+  body { font: 13px/1.4 ui-monospace, Menlo, monospace; padding: 20px; }
+  h1 { font-size: 16px; margin: 0 0 12px; }
+  .ligne { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ligne b { width: 250px; font-weight: 600; }
+  .ligne b span { display: block; color: #566c86; font-weight: 400; }
+  canvas { image-rendering: pixelated; border-radius: 4px; background: #1a1c2c; }
+</style>
+</head>
+<body>
+<h1>Plus et croix — six styles, six instants du clic sur le plus</h1>
+<div id="planche"></div>
+<script type="module">
+  import { BOUTONS } from './boutons.js';
+  const INSTANTS = [0.0, 0.17, 0.22, 0.30, 0.45, 0.9];
+  const planche = document.getElementById('planche');
+  for (const v of BOUTONS) {
+    const ligne = document.createElement('div');
+    ligne.className = 'ligne';
+    const t = document.createElement('b');
+    t.innerHTML = `${v.titre}<span>${v.note}</span>`;
+    ligne.append(t);
+    for (const instant of INSTANTS) {
+      const c = document.createElement('canvas');
+      c.width = 72 * 3; c.height = 72 * 3;
+      c.style.width = '108px'; c.style.height = '108px';
+      const g = c.getContext('2d');
+      g.setTransform(3, 0, 0, 3, 0, 0);
+      g.imageSmoothingEnabled = false;
+      g.fillStyle = '#1a1c2c'; g.fillRect(0, 0, 72, 72);
+      v.dessiner(g, instant, 72);
+      ligne.append(c);
+    }
+    planche.append(ligne);
+  }
+</script>
+</body>
+</html>
