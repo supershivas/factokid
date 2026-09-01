@@ -70,6 +70,13 @@ export function brancherPointeur(canvas, vue, monde) {
       icone: o.icone,
       actif: o.id === etat.outil,
       action: () => {
+        // Un second appui sur « construction » referme la liste : le bouton
+        // ouvre et ferme, le doigt n'a pas à chercher ailleurs.
+        if (o.id === 'construction' && etat.outil === 'construction' && etat.menuOuvert) {
+          fermerMenu();
+          majBoutons();
+          return;
+        }
         etat.outil = o.id;
         if (o.id === 'construction') {
           // Le convoyeur est ce qu'on pose le plus souvent : il est prêt.

@@ -304,15 +304,14 @@ for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(it
 
 // --- interface ------------------------------------------------------------
 
+// La touche est une plaque claire pleine, sans contour : c'est le signe qu'on
+// lit, pas son cadre. L'outil actif se distingue par sa pleine intensité,
+// l'autre s'efface (voir hud.js).
 const bouton = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
+  rect(0, 0, 16, 16, PALETTE.creme);
 });
 
-const boutonActif = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.creme);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-});
+const boutonActif = bouton;
 
 const bulleFond = toile(TUILE_PX, (rect, disque) => {
   disque(8, 8, 8, PALETTE.noir);
@@ -344,23 +343,19 @@ function traitCroix(rect, couleur, marge = 2, ecart = 0) {
   }
 }
 
-const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.creme));
+const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir));
 
 // Flèche de retour : on revient à l'usine.
 const outilRetour = toile(TUILE_PX, (rect) => {
-  rect(4, 7, 9, 3, PALETTE.creme);
-  for (let i = 0; i < 4; i++) rect(3 + i, 8 - i - 1, 2, 1, PALETTE.creme);
-  for (let i = 0; i < 4; i++) rect(3 + i, 9 + i, 2, 1, PALETTE.creme);
+  rect(4, 7, 9, 3, PALETTE.noir);
+  for (let i = 0; i < 4; i++) rect(3 + i, 8 - i - 1, 2, 1, PALETTE.noir);
+  for (let i = 0; i < 4; i++) rect(3 + i, 9 + i, 2, 1, PALETTE.noir);
 });
 
-// Le rouge sur l'ardoise du bouton ne se distingue que par la teinte : leurs
-// clartés sont les mêmes (rapport 1,05 : 1). La croix est donc tracée en crème
-// — qui, lui, tranche (4,9 : 1) — avec le rouge en cœur du trait. La forme et
-// la clarté portent l'information ; le rouge ne fait que confirmer.
-const outilDestruction = toile(TUILE_PX, (rect) => {
-  traitCroix(rect, PALETTE.creme, 2, 1);
-  traitCroix(rect, PALETTE.rouge, 2, 0);
-});
+// Sur la plaque claire, le rouge tranche largement (5,2 : 1) : la croix peut
+// donc être rouge pleine, sans trait de renfort. La forme la distingue déjà du
+// plus en niveaux de gris ; le rouge ne fait que confirmer.
+const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 2, 1));
 
 const bulleExtracteur = toile(TUILE_PX, (rect) => {
   rect(2, 11, 12, 3, PALETTE.ardoise);

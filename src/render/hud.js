@@ -172,8 +172,12 @@ function dessinerOutils(ctx, interfaceJeu) {
       ctx.scale(e.x, e.y);
       ctx.translate(-r.x - r.l / 2, -r.y - r.h / 2);
     }
-    ctx.drawImage(b.actif ? INTERFACE.boutonActif : INTERFACE.bouton, r.x, r.y, r.l, r.h);
+    // L'outil en cours est à pleine intensité, l'autre s'efface : la
+    // différence se voit sans cadre ni contour.
+    ctx.globalAlpha = b.actif ? 1 : 0.45;
+    ctx.drawImage(INTERFACE.bouton, r.x, r.y, r.l, r.h);
     ctx.drawImage(INTERFACE[b.icone], r.x, r.y, r.l, r.h);
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 

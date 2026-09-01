@@ -9,15 +9,21 @@ import { PALETTE } from '../src/design.js';
 export const VIGNETTE = 72;   // unités logiques
 export const ECHELLE = 3;     // pixels d'écran par unité logique
 
-export function poserVignette(parent, titre, note, dessiner, duree) {
+// « format » permet à une section de sortir du carré — les convoyeurs, par
+// exemple, se jugent en longueur. L'échelle reste entière dans tous les cas.
+export function poserVignette(parent, titre, note, dessiner, duree, format = {}) {
+  const largeur = format.largeur || VIGNETTE;
+  const hauteur = format.hauteur || VIGNETTE;
+  const echelle = format.echelle || ECHELLE;
+
   const carte = document.createElement('figure');
   carte.className = 'vignette';
 
   const canvas = document.createElement('canvas');
-  canvas.width = VIGNETTE * ECHELLE;
-  canvas.height = VIGNETTE * ECHELLE;
+  canvas.width = largeur * echelle;
+  canvas.height = hauteur * echelle;
   const ctx = canvas.getContext('2d');
-  ctx.setTransform(ECHELLE, 0, 0, ECHELLE, 0, 0);
+  ctx.setTransform(echelle, 0, 0, echelle, 0, 0);
   ctx.imageSmoothingEnabled = false;
 
   const legende = document.createElement('figcaption');
@@ -33,8 +39,8 @@ export function poserVignette(parent, titre, note, dessiner, duree) {
     let t = (maintenant - debut) / 1000;
     if (t > duree) { debut = maintenant; t = 0; }
     ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(0, 0, VIGNETTE, VIGNETTE);
-    dessiner(ctx, t, VIGNETTE);
+    ctx.fillRect(0, 0, largeur, hauteur);
+    dessiner(ctx, t, largeur, hauteur);
     requestAnimationFrame(image);
   }
   requestAnimationFrame(image);

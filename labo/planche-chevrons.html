@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Planche — chevrons</title>
+<style>
+  html, body { margin: 0; background: #0e0f1a; color: #f4f4f4; }
+  body { font: 13px/1.4 ui-monospace, Menlo, monospace; padding: 20px; }
+  h1 { font-size: 16px; margin: 0 0 12px; }
+  .ligne { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ligne b { width: 250px; font-weight: 600; }
+  .ligne b span { display: block; color: #566c86; font-weight: 400; }
+  canvas { image-rendering: pixelated; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>Chevrons — six animations, quatre instants</h1>
+<div id="planche"></div>
+<script type="module">
+  import { CHEVRONS } from './chevrons.js';
+  const INSTANTS = [0.0, 0.18, 0.36, 0.54];
+  const planche = document.getElementById('planche');
+  for (const v of CHEVRONS) {
+    const ligne = document.createElement('div');
+    ligne.className = 'ligne';
+    const t = document.createElement('b');
+    t.innerHTML = `${v.titre}<span>${v.note}</span>`;
+    ligne.append(t);
+    for (const instant of INSTANTS) {
+      const c = document.createElement('canvas');
+      c.width = v.format.largeur * 2; c.height = v.format.hauteur * 2;
+      const g = c.getContext('2d');
+      g.setTransform(2, 0, 0, 2, 0, 0);
+      g.imageSmoothingEnabled = false;
+      g.fillStyle = '#1a1c2c'; g.fillRect(0, 0, v.format.largeur, v.format.hauteur);
+      v.dessiner(g, instant, v.format.largeur);
+      ligne.append(c);
+    }
+    planche.append(ligne);
+  }
+</script>
+</body>
+</html>

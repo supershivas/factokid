@@ -42,6 +42,15 @@
   <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
   <div class="grille" id="bulles"></div>
 
+  <h2>Chevrons des convoyeurs — six animations</h2>
+  <p class="note">
+    Trois cases de tapis, sans pointillés : ce sont les chevrons qui disent le
+    mouvement. Chaque vignette avance, puis s'arrête à mi-boucle — un liseré
+    rouge marque ce moment : c'est le tapis bloqué, et le motif doit s'arrêter
+    avec lui.
+  </p>
+  <div class="grille" id="chevrons"></div>
+
   <h2>Plus et croix — six styles et leur animation au clic</h2>
   <p class="note">
     Le plus s'enfonce d'abord, la croix ensuite ; la vignette rejoue la
@@ -76,6 +85,10 @@
 
     const poses = document.getElementById('poses');
     for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+
+    const { CHEVRONS } = await import('./chevrons.js');
+    const chevrons = document.getElementById('chevrons');
+    for (const v of CHEVRONS) poserVignette(chevrons, v.titre, v.note, v.dessiner.bind(v), v.duree, v.format);
 
     const { BOUTONS } = await import('./boutons.js');
     const boutons = document.getElementById('boutons');
