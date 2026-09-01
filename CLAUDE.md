@@ -116,7 +116,11 @@ pouvoir sembler ignorée.
 
 ## 3. Stack
 
-- Vanilla JS, modules ES. Pas de framework, pas de bundler, pas de dépendance.
+- Vanilla JS, modules ES. Pas de framework, pas de bundler.
+- **Une seule dépendance : Motion** (le cœur de Framer Motion, sans React),
+  rangée dans `vendor/` et servie par le dépôt — aucun CDN au chargement. Elle
+  n'anime que l'interface. Aucune valeur animée par elle n'entre dans la
+  simulation, qui garde son pas fixe.
 - Rendu canvas 2D.
 - Déploiement GitHub Pages depuis `main`.
 - **Boucle de simulation à pas fixe, découplée du rendu.** Le débit ne doit pas
@@ -162,9 +166,11 @@ Elles sont publiées par `.github/workflows/pages.yml`.
 ```
 index.html          page mobile
 preview.html        aperçu desktop (même bundle, cadre différent)
+vendor/             Motion, rangé tel quel, jamais modifié
 src/
   main.js           point d'entrée, sélection du conteneur
   loop.js           boucle à pas fixe
+  anim.js           ressorts d'interface (Motion)
   sim/
     grid.js         grille, occupation des cellules
     belt.js         files compressées, déplacement des items

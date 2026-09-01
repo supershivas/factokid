@@ -152,8 +152,8 @@ function dessinerOutils(ctx, interfaceJeu) {
   ctx.fillRect(0, 0, LARGEUR_LOGIQUE, GRILLE_Y + LIGNES * CELLULE);
   ctx.globalAlpha = 1;
 
-  // Ease in : la bulle part lentement du bouton et finit vite à sa place.
-  const p = interfaceJeu.menu * interfaceJeu.menu;
+  // La progression vient d'un ressort : elle dépasse un peu, puis se pose.
+  const p = interfaceJeu.menu;
   for (let j = 0; j < interfaceJeu.bulles.length; j++) {
     const r = rectBulle(interfaceJeu.ancre, j, p);
     const taille = Math.round(BULLE * p);
@@ -168,6 +168,13 @@ function dessinerOutils(ctx, interfaceJeu) {
 function dessinerPanneau(ctx, interfaceJeu) {
   const p = interfaceJeu.panneau;
   if (!p) return;
+
+  // Le panneau surgit de son propre centre.
+  const echelle = interfaceJeu.panneauAnim;
+  ctx.save();
+  ctx.translate(PANNEAU.x + PANNEAU.l / 2, PANNEAU.y + PANNEAU.h / 2);
+  ctx.scale(echelle, echelle);
+  ctx.translate(-(PANNEAU.x + PANNEAU.l / 2), -(PANNEAU.y + PANNEAU.h / 2));
 
   ctx.fillStyle = PALETTE.noir;
   ctx.fillRect(PANNEAU.x, PANNEAU.y, PANNEAU.l, PANNEAU.h);
@@ -185,4 +192,5 @@ function dessinerPanneau(ctx, interfaceJeu) {
     const sprite = option.item ? spriteItem(option.item) : INTERFACE[option.icone];
     if (sprite) ctx.drawImage(sprite, r.x + 8, r.y + 8, OPTION - 16, OPTION - 16);
   }
+  ctx.restore();
 }

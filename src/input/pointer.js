@@ -5,10 +5,11 @@
 // éléments constructibles). Le rendu le lit, il ne le modifie jamais.
 
 import {
-  BULLE_ANIMATION, CELLULE, PANNEAU, rectBouton, rectBulle, rectOption, dansRect,
+  CELLULE, PANNEAU, rectBouton, rectBulle, rectOption, dansRect,
 } from '../design.js';
 import { ITEMS } from '../data/items.js';
 import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
+import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
@@ -17,12 +18,6 @@ import {
 import { aUneSortie, attendus } from '../sim/machine.js';
 import { coinCellule } from '../sim/grid.js';
 
-export function majInterface(etat, dt) {
-  const vise = etat.menuOuvert ? 1 : 0;
-  const pas = dt / BULLE_ANIMATION;
-  etat.menu = vise > etat.menu ? Math.min(1, etat.menu + pas) : Math.max(0, etat.menu - pas);
-}
-
 export function brancherPointeur(canvas, vue, monde) {
   const etat = {
     vue: -1,                     // -1 = l'usine, sinon l'index d'une carte
@@ -30,6 +25,7 @@ export function brancherPointeur(canvas, vue, monde) {
     constructible: CONSTRUCTIBLES[0].id,
     menuOuvert: false,
     menu: 0,
+    panneauAnim: 0,
     ancre: null,                 // d'où sortent les bulles
     panneau: null,               // élément construit ouvert : nom et options
     bulles: [],                  // ce que le rendu doit dessiner
@@ -41,6 +37,14 @@ export function brancherPointeur(canvas, vue, monde) {
   let actionsBulles = [];
   let actionsBoutons = [];
   let tapSur = null;             // machine touchée sans glissé
+  let animMenu = null;
+  let animPanneau = null;
+
+  // Les ressorts ne pilotent que la présentation : ils ne touchent pas au jeu.
+  function viser(cle, vers, courante) {
+    if (courante) courante.stop();
+    return ressort(etat[cle], vers, (v) => { etat[cle] = v; });
+  }
 
   // La barre d'outils dépend de l'écran : dans une carte, on ne construit pas,
   // on revient.
@@ -64,10 +68,18 @@ export function brancherPointeur(canvas, vue, monde) {
     etat.ancre = ancre;
     etat.bulles = contenu.map((c) => ({ icone: c.icone }));
     actionsBulles = contenu.map((c) => c.action);
+    animMenu = viser('menu', 1, animMenu);
   }
 
   function fermerMenu() {
+    if (!etat.menuOuvert) return;
     etat.menuOuvert = false;
+    animMenu = viser('menu', 0, animMenu);
+  }
+
+  function surgirPanneau() {
+    etat.panneauAnim = 0;
+    animPanneau = viser('panneauAnim', 1, animPanneau);
   }
 
   // Toucher un élément construit dit ce que c'est et ce qu'on peut y régler.
@@ -83,6 +95,7 @@ export function brancherPointeur(canvas, vue, monde) {
           }))
           : [],
       };
+      surgirPanneau();
       return;
     }
     // Un convoyeur sorti d'un trieur porte un filtre : la matière qu'il emmène.
@@ -101,6 +114,7 @@ export function brancherPointeur(canvas, vue, monde) {
         }]
         : [],
     };
+    surgirPanneau();
   }
 
   function panneauTouche(p) {

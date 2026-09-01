@@ -6,7 +6,7 @@ import { creerVue } from './render/canvas.js';
 import { dessinerScene, dessinerCarte, bordureGrille } from './render/sprites.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
-import { brancherPointeur, majInterface } from './input/pointer.js';
+import { brancherPointeur } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
 
 const canvas = document.getElementById('jeu');
@@ -20,7 +20,7 @@ const ctx = vue.ctx;
 globalThis.sonde = { monde, interface: interfaceJeu };
 
 demarrerBoucle(
-  (dt) => { majMonde(monde, dt); majInterface(interfaceJeu, dt); },
+  (dt) => majMonde(monde, dt),
   (fps) => {
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
