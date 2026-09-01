@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier d'animations</title>
+<style>
+  :root {
+    --noir: #1a1c2c; --ardoise: #566c86; --creme: #f4f4f4;
+    --rouge: #b13e53; --jaune: #ffcd75; --bleu: #41a6f6;
+  }
+  html, body { margin: 0; background: #0e0f1a; color: var(--creme); }
+  body { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 40px 0 4px; color: var(--jaune); }
+  p.note { color: var(--ardoise); margin: 0 0 20px; max-width: 62ch; }
+  .grille { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(216px, 1fr)); }
+  .vignette { margin: 0; background: var(--noir); border: 1px solid #2a2d44; border-radius: 8px;
+              padding: 10px; display: flex; flex-direction: column; align-items: center; }
+  .vignette canvas { image-rendering: pixelated; display: block; cursor: pointer; border-radius: 4px; }
+  figcaption { margin-top: 8px; text-align: center; }
+  figcaption b { display: block; font-weight: 600; }
+  figcaption span { display: block; color: var(--ardoise); font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>Atelier d'animations</h1>
+  <p class="note">
+    Chaque vignette tourne en boucle et se rejoue au clic. Même échelle et même
+    rendu que le jeu : ce qui est choisi ici se transporte tel quel.
+  </p>
+
+  <h2>Bulle d'alerte — dix apparitions</h2>
+  <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
+  <div class="grille" id="bulles"></div>
+
+  <h2>Pose d'un élément — dix effets</h2>
+  <p class="note">La même tuile de convoyeur posée entre deux voisines, à chaque fois.</p>
+  <div class="grille" id="poses"></div>
+
+  <script type="module">
+    import { poserVignette } from './atelier.js';
+    import { BULLES } from './bulles.js';
+    import { POSES } from './poses.js';
+
+    const bulles = document.getElementById('bulles');
+    for (const v of BULLES) poserVignette(bulles, v.titre, v.note, v.dessiner, v.duree);
+
+    const poses = document.getElementById('poses');
+    for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+  </script>
+</body>
+</html>

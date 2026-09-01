@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier — planches</title>
+<style>
+  :root { --noir: #1a1c2c; --ardoise: #566c86; --creme: #f4f4f4; --jaune: #ffcd75; }
+  html, body { margin: 0; background: #0e0f1a; color: var(--creme); }
+  body { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 24px 16px 64px; }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 32px 0 12px; color: var(--jaune); }
+  p.note { color: var(--ardoise); margin: 0 0 16px; max-width: 70ch; }
+  .ligne { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .ligne .nom { width: 190px; flex: none; }
+  .ligne .nom b { display: block; }
+  .ligne .nom span { color: var(--ardoise); font-size: 11px; }
+  .images { display: flex; gap: 4px; }
+  .images figure { margin: 0; }
+  .images canvas { image-rendering: pixelated; display: block; border-radius: 3px; }
+  .images figcaption { text-align: center; color: var(--ardoise); font-size: 10px; margin-top: 2px; }
+</style>
+</head>
+<body>
+  <h1>Planches de décomposition</h1>
+  <p class="note">
+    Chaque proposition décomposée en six instants, pour comparer les arrivées
+    d'un coup d'œil. Les animations vivantes sont sur l'atelier.
+  </p>
+  <h2>Bulle d'alerte</h2>
+  <div id="bulles"></div>
+  <h2>Pose d'un élément</h2>
+  <div id="poses"></div>
+
+  <script type="module">
+    import { BULLES } from './bulles.js';
+    import { POSES } from './poses.js';
+    import { VIGNETTE } from './atelier.js';
+
+    const INSTANTS = [0.04, 0.1, 0.18, 0.28, 0.45, 0.9];
+    const ECHELLE = 2;
+
+    function planche(parent, v) {
+      const ligne = document.createElement('div');
+      ligne.className = 'ligne';
+      ligne.innerHTML = `<div class="nom"><b>${v.titre}</b><span>${v.note}</span></div>`;
+      const images = document.createElement('div');
+      images.className = 'images';
+      for (const t of INSTANTS) {
+        const f = document.createElement('figure');
+        const c = document.createElement('canvas');
+        c.width = VIGNETTE * ECHELLE;
+        c.height = VIGNETTE * ECHELLE;
+        const ctx = c.getContext('2d');
+        ctx.setTransform(ECHELLE, 0, 0, ECHELLE, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.fillStyle = '#1a1c2c';
+        ctx.fillRect(0, 0, VIGNETTE, VIGNETTE);
+        v.dessiner(ctx, t, VIGNETTE);
+        f.append(c);
+        const cap = document.createElement('figcaption');
+        cap.textContent = t + ' s';
+        f.append(cap);
+        images.append(f);
+      }
+      ligne.append(images);
+      parent.append(ligne);
+    }
+
+    for (const v of BULLES) planche(document.getElementById('bulles'), v);
+    for (const v of POSES) planche(document.getElementById('poses'), v);
+  </script>
+</body>
+</html>
