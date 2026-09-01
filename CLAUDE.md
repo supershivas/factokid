@@ -24,9 +24,29 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   Pas de fusion, pas de séparation. À rouvrir seulement si le jeu le mérite.
 - **Prestige.** L'état de la partie en cours et l'état permanent sont deux
   structures distinctes, sauvegardées séparément, dès le premier commit.
+- **Les matières viennent des cartes, pas de nulle part.** Il n'y a plus de
+  machine qui produit à partir de rien : chaque matière brute a sa carte. Le
+  joueur touche un gisement, le héros le ramasse, la matière arrive au
+  téléporteur. Un gisement repousse après un délai.
+- **Un seul téléporteur, posé sur la grille de l'usine.** Il sort tout ce qui
+  a été ramassé, mélangé, sur un seul convoyeur. Le toucher fait sortir les
+  cartes en bulles ; en toucher une bascule l'écran sur cette carte.
+- **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur reçoit le
+  mélange et range : une sortie par matière, un convoyeur par sortie. La
+  matière d'un convoyeur sortant du trieur est déduite de ce qu'attend la
+  machine à l'arrivée — le joueur ne configure rien.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
+
+### Deux écrans, une seule grille
+
+L'usine et les cartes partagent la même grille logique, le même canvas et le
+même geste. Une carte n'est pas un niveau : c'est la même surface, remplie de
+gisements au lieu de machines. Changer d'écran ne change ni l'échelle, ni la
+mise en page, ni le code de rendu.
+
+La simulation de l'usine continue pendant qu'on est sur une carte.
 
 ### Règle de croissance
 
@@ -149,10 +169,12 @@ src/
     grid.js         grille, occupation des cellules
     belt.js         files compressées, déplacement des items
     machine.js      production, consommation, stocks
+    carte.js        gisements, ramassage, repousse
     world.js        état de la partie en cours
   data/
     items.js        table des items
     machines.js     table des machines
+    cartes.js       cartes et gisements
     depart.js       disposition de départ, chemin pré-tracé
     outils.js       outils et éléments constructibles
     recipes.js      table des recettes
@@ -207,7 +229,14 @@ Rien d'autre que ceci tant que ce n'est pas validé :
    sortir les éléments constructibles en bulles. Un convoyeur lâché en cours
    de tracé reste construit et ne débouche sur rien.
 
+Depuis, le lot a grossi sur décision : deuxième matière et première recette
+(a + b = c), cartes, téléporteur et trieur. Ces ajouts sont décrits en
+section 1.
+
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
+Mesuré à 208 items, 60 fps, image médiane 16,7 ms — avant que l'espacement ne
+passe à 27, qui plafonne désormais un long convoyeur à 121 items. Le chiffre
+de 200 est donc à revoir ou à atteindre autrement.
 
 Tant que ce chiffre n'est pas mesuré, aucune recette, aucun déblocage, aucune
 courbe, aucun prestige. Si le critère n'est pas tenu, on bascule sur un débit

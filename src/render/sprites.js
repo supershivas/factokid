@@ -128,6 +128,26 @@ function mine(item) {
   });
 }
 
+// Le téléporteur : un anneau ouvert d'où sort la matière ramassée.
+const teleporteur = toile(TUILE_PX, (rect, disque) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+  disque(8, 7, 5.5, PALETTE.bleu);
+  disque(8, 7, 4, PALETTE.noir);
+  disque(8, 7, 2, PALETTE.creme);
+  rect(3, 13, 10, 2, PALETTE.bleu);
+});
+
+// Le trieur : un flux qui entre, deux qui sortent.
+const trieur = toile(TUILE_PX, (rect) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+  rect(7, 2, 2, 4, PALETTE.creme);
+  rect(4, 6, 8, 2, PALETTE.creme);
+  rect(3, 8, 2, 5, PALETTE.creme);
+  rect(11, 8, 2, 5, PALETTE.creme);
+});
+
 // Un assembleur : deux blocs qui entrent en haut, un seul qui sort en bas.
 const assembleur = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
@@ -150,12 +170,56 @@ const consommateur = toile(TUILE_PX, (rect, disque) => {
   rect(2, 13, 12, 2, PALETTE.noir);
 });
 
-export const ICONES = {
-  mineBoulons: mine(ITEMS.boulon),
-  minePlaques: mine(ITEMS.plaque),
-  assembleur,
-  consommateur,
-};
+export const ICONES = { teleporteur, trieur, assembleur, consommateur };
+
+// --- cartes ---------------------------------------------------------------
+
+// Sol des cartes : plus organique que la grille de l'usine, pour qu'on sache
+// au premier coup d'œil qu'on n'est plus dans l'atelier.
+const solCarte = toile(TUILE_PX, (rect) => {
+  rect(0, 0, TUILE_PX, TUILE_PX, PALETTE.noir);
+  rect(3, 4, 2, 1, PALETTE.ardoise);
+  rect(10, 2, 1, 2, PALETTE.ardoise);
+  rect(6, 11, 3, 1, PALETTE.ardoise);
+  rect(12, 9, 1, 1, PALETTE.ardoise);
+});
+
+// Un gisement porte la forme de sa matière, posée sur un socle.
+function gisement(item) {
+  return toile(TUILE_PX, (rect) => {
+    rect(2, 11, 12, 3, PALETTE.ardoise);
+    rect(2, 14, 12, 1, PALETTE.noir);
+    rect(4, 8, 8, 3, PALETTE.ardoise);
+    formes[item.forme](decale(rect, 5, 2), PALETTE[item.couleur]);
+  });
+}
+
+// Gisement ramassé : le socle reste, la matière repousse.
+const gisementVide = toile(TUILE_PX, (rect) => {
+  rect(2, 11, 12, 3, PALETTE.ardoise);
+  rect(2, 14, 12, 1, PALETTE.noir);
+});
+
+const spritesGisements = {};
+for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(item);
+
+// Dessine une carte : même grille, même échelle, gisements au lieu de machines.
+export function dessinerCarte(ctx, carte) {
+  for (let cy = 0; cy < LIGNES; cy++) {
+    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solCarte, cx, cy, 0);
+  }
+  for (const g of carte.gisements) {
+    if (g.present) { tuile(ctx, spritesGisements[carte.item], g.cx, g.cy, 0); continue; }
+    tuile(ctx, gisementVide, g.cx, g.cy, 0);
+    // Attente de repousse : une barre qui se remplit sur le socle.
+    const part = Math.min(1, g.horloge / carte.repousse);
+    const coin = coinCellule(g.cx, g.cy);
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(coin.x + 6, coin.y + 24, 36, 6);
+    ctx.fillStyle = PALETTE.vert;
+    ctx.fillRect(coin.x + 6, coin.y + 24, Math.round(36 * part), 6);
+  }
+}
 
 // --- interface ------------------------------------------------------------
 
@@ -182,6 +246,13 @@ const outilConstruction = toile(TUILE_PX, (rect) => {
   rect(3, 6, 10, 4, PALETTE.creme);
 });
 
+// Flèche de retour : on revient à l'usine.
+const outilRetour = toile(TUILE_PX, (rect) => {
+  rect(4, 7, 9, 3, PALETTE.creme);
+  for (let i = 0; i < 4; i++) rect(3 + i, 8 - i - 1, 2, 1, PALETTE.creme);
+  for (let i = 0; i < 4; i++) rect(3 + i, 9 + i, 2, 1, PALETTE.creme);
+});
+
 const outilDestruction = toile(TUILE_PX, (rect) => {
   for (let i = 0; i < 10; i++) {
     rect(3 + i, 3 + i, 3, 2, PALETTE.rouge);
@@ -196,9 +267,21 @@ const bulleConvoyeur = toile(TUILE_PX, (rect) => {
   for (let x = 3; x < 14; x += 4) rect(x, 8, 2, 1, PALETTE.bleu);
 });
 
+// Une bulle de carte porte la forme de ce qu'on y ramasse : deux cartes ne se
+// distinguent jamais par la seule couleur.
+function bulleCarte(item) {
+  return toile(TUILE_PX, (rect) => {
+    rect(3, 3, 10, 10, PALETTE.vert);
+    rect(3, 3, 10, 1, PALETTE.creme);
+    formes[item.forme](decale(rect, 5, 5), PALETTE[item.couleur]);
+  });
+}
+
 export const INTERFACE = {
-  bouton, boutonActif, bulleFond, outilConstruction, outilDestruction, bulleConvoyeur,
+  bouton, boutonActif, bulleFond, bulleConvoyeur,
+  outilConstruction, outilDestruction, outilRetour,
 };
+for (const item of Object.values(ITEMS)) INTERFACE['bulleCarte_' + item.id] = bulleCarte(item);
 
 // --- items ----------------------------------------------------------------
 

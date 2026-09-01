@@ -4,13 +4,15 @@
 // Ce module tient aussi l'état de l'interface (outil courant, menu des
 // éléments constructibles). Le rendu le lit, il ne le modifie jamais.
 
-import { BULLE_ANIMATION, rectBouton, rectBulle, dansRect } from '../design.js';
+import { BULLE_ANIMATION, CELLULE, rectBouton, rectBulle, dansRect } from '../design.js';
 import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
 import { celluleDepuisPoint, adjacentes } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, retirerConvoyeur,
+  ramasserSurCarte,
 } from '../sim/world.js';
 import { aUneSortie, attendus } from '../sim/machine.js';
+import { coinCellule } from '../sim/grid.js';
 
 export function majInterface(etat, dt) {
   const vise = etat.menuOuvert ? 1 : 0;
@@ -20,14 +22,63 @@ export function majInterface(etat, dt) {
 
 export function brancherPointeur(canvas, vue, monde) {
   const etat = {
+    vue: -1,                     // -1 = l'usine, sinon l'index d'une carte
     outil: 'construction',
     constructible: CONSTRUCTIBLES[0].id,
     menuOuvert: false,
     menu: 0,
+    ancre: null,                 // d'où sortent les bulles
+    bulles: [],                  // ce que le rendu doit dessiner
+    boutons: [],
     trace: { actif: false, source: null, chemin: [] },
   };
   const trace = etat.trace;
   let pointeur = null;
+  let actionsBulles = [];
+  let actionsBoutons = [];
+  let tapSur = null;             // machine touchée sans glissé
+
+  // La barre d'outils dépend de l'écran : dans une carte, on ne construit pas,
+  // on revient.
+  function majBoutons() {
+    if (etat.vue < 0) {
+      etat.boutons = OUTILS.map((o) => ({ icone: o.icone, actif: o.id === etat.outil }));
+      actionsBoutons = OUTILS.map((o) => () => {
+        etat.outil = o.id;
+        if (o.id === 'construction') ouvrirMenu(bullesConstructibles(), rectBouton(0));
+        else fermerMenu();
+        majBoutons();
+      });
+      return;
+    }
+    etat.boutons = [{ icone: 'outilRetour', actif: false }];
+    actionsBoutons = [() => { etat.vue = -1; fermerMenu(); majBoutons(); }];
+  }
+
+  function ouvrirMenu(contenu, ancre) {
+    etat.menuOuvert = true;
+    etat.ancre = ancre;
+    etat.bulles = contenu.map((c) => ({ icone: c.icone }));
+    actionsBulles = contenu.map((c) => c.action);
+  }
+
+  function fermerMenu() {
+    etat.menuOuvert = false;
+  }
+
+  function bullesConstructibles() {
+    return CONSTRUCTIBLES.map((c) => ({
+      icone: c.icone,
+      action: () => { etat.constructible = c.id; etat.outil = 'construction'; fermerMenu(); majBoutons(); },
+    }));
+  }
+
+  function bullesCartes() {
+    return monde.cartes.map((carte, i) => ({
+      icone: 'bulleCarte_' + carte.item,
+      action: () => { etat.vue = i; fermerMenu(); majBoutons(); },
+    }));
+  }
 
   function point(e) { return vue.versLogique(e.clientX, e.clientY); }
 
@@ -66,27 +117,22 @@ export function brancherPointeur(canvas, vue, monde) {
 
   // Renvoie true si le point est tombé sur l'interface, qui a la priorité.
   function interfaceTouchee(p) {
-    if (etat.menu > 0) {
-      for (let j = 0; j < CONSTRUCTIBLES.length; j++) {
-        if (dansRect(rectBulle(j, etat.menu), p.x, p.y)) {
-          etat.constructible = CONSTRUCTIBLES[j].id;
-          etat.outil = 'construction';
-          etat.menuOuvert = false;
+    if (etat.menu > 0 && etat.ancre) {
+      for (let j = 0; j < etat.bulles.length; j++) {
+        if (dansRect(rectBulle(etat.ancre, j, etat.menu), p.x, p.y)) {
+          actionsBulles[j]();
           return true;
         }
       }
     }
-    for (let i = 0; i < OUTILS.length; i++) {
+    for (let i = 0; i < etat.boutons.length; i++) {
       if (!dansRect(rectBouton(i), p.x, p.y)) continue;
-      const outil = OUTILS[i].id;
-      // Toucher « construction » fait sortir les éléments constructibles, et
-      // ne fait que ça : pas de bascule, sinon un événement dupliqué par le
-      // navigateur referme le menu dans la foulée.
-      etat.menuOuvert = outil === 'construction';
-      etat.outil = outil;
+      // Un bouton ouvre, et ne fait que ça : pas de bascule, sinon un
+      // événement dupliqué par le navigateur referme le menu dans la foulée.
+      actionsBoutons[i]();
       return true;
     }
-    if (etat.menuOuvert) { etat.menuOuvert = false; return true; }
+    if (etat.menuOuvert) { fermerMenu(); return true; }
     return false;
   }
 
@@ -107,11 +153,18 @@ export function brancherPointeur(canvas, vue, monde) {
     if (!c) return;
     pointeur = e.pointerId;
     canvas.setPointerCapture(pointeur);
+    tapSur = null;
+
+    // Dans une carte, le seul geste est de ramasser.
+    if (etat.vue >= 0) { ramasserSurCarte(monde, etat.vue, c.cx, c.cy); return; }
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 
     const machine = machineEn(monde, c.cx, c.cy);
     if (!machine || !aUneSortie(machine)) return;
+    // Le téléporteur répond à deux gestes : un appui ouvre les cartes, un
+    // glissé trace un convoyeur. On tranche au relâchement.
+    if (machine.def.source) tapSur = machine;
     trace.actif = true;
     trace.source = machine;
     trace.chemin = [];
@@ -123,6 +176,7 @@ export function brancherPointeur(canvas, vue, monde) {
     const c = celluleDepuisPoint(p.x, p.y);
     e.preventDefault();
     if (!c) return;
+    if (etat.vue >= 0) return;
     if (etat.outil === 'destruction') { detruire(c); return; }
     if (trace.actif && !machineEn(monde, c.cx, c.cy)) relier(c);
   }
@@ -140,6 +194,14 @@ export function brancherPointeur(canvas, vue, monde) {
   function fin(e) {
     if (e.pointerId !== pointeur) return;
     e.preventDefault();
+    if (tapSur && trace.chemin.length === 0) {
+      const coin = coinCellule(tapSur.cx, tapSur.cy);
+      ouvrirMenu(bullesCartes(), { x: coin.x, y: coin.y, l: CELLULE, h: CELLULE });
+      tapSur = null;
+      relacher();
+      return;
+    }
+    tapSur = null;
     if (trace.actif && trace.chemin.length > 0) {
       const c = celluleDepuisPoint(point(e).x, point(e).y);
       const machine = c ? machineEn(monde, c.cx, c.cy) : null;
@@ -152,6 +214,7 @@ export function brancherPointeur(canvas, vue, monde) {
     relacher();
   }
 
+  majBoutons();
   canvas.addEventListener('pointerdown', debut);
   canvas.addEventListener('pointermove', deplacement);
   canvas.addEventListener('pointerup', fin);

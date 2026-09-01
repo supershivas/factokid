@@ -3,7 +3,7 @@
 
 import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
 import { creerVue } from './render/canvas.js';
-import { dessinerScene, bordureGrille } from './render/sprites.js';
+import { dessinerScene, dessinerCarte, bordureGrille } from './render/sprites.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { brancherPointeur, majInterface } from './input/pointer.js';
@@ -24,7 +24,8 @@ demarrerBoucle(
   (fps) => {
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
-    dessinerScene(ctx, monde, interfaceJeu.trace);
+    if (interfaceJeu.vue < 0) dessinerScene(ctx, monde, interfaceJeu.trace);
+    else dessinerCarte(ctx, monde.cartes[interfaceJeu.vue]);
     bordureGrille(ctx);
     dessinerHud(ctx, monde, fps, interfaceJeu);
   },

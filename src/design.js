@@ -53,12 +53,17 @@ export function rectBouton(i) {
   return { x: BOUTON_X + i * (BOUTON + BOUTON_ECART), y: BOUTON_Y, l: BOUTON, h: BOUTON };
 }
 
-export function rectBulle(j, progression) {
-  const base = rectBouton(0);
-  const distance = (j + 1) * (BULLE + BULLE_ECART) * progression;
+// Les bulles sortent de l'objet touché : le bouton construction, ou le
+// téléporteur posé sur la grille.
+export function rectBulle(ancre, j, progression) {
+  // Les bulles s'éloignent du bord le plus proche : vers le bas depuis un objet
+  // haut, vers le haut depuis la barre d'outils. Elles ne sortent jamais de
+  // l'écran.
+  const sens = ancre.y < HAUTEUR_LOGIQUE / 2 ? 1 : -1;
+  const distance = (j + 1) * (BULLE + BULLE_ECART) * progression * sens;
   return {
-    x: base.x + (BOUTON - BULLE) / 2,
-    y: base.y + (BOUTON - BULLE) / 2 - distance,
+    x: ancre.x + (ancre.l - BULLE) / 2,
+    y: ancre.y + (ancre.h - BULLE) / 2 + distance,
     l: BULLE,
     h: BULLE,
   };
