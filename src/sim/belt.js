@@ -23,6 +23,15 @@ function apres(chemin) {
   };
 }
 
+// La cellule qui précède le chemin, quand rien ne l'alimente encore.
+function avant(chemin) {
+  const suivante = chemin.length >= 2 ? chemin[1] : { cx: chemin[0].cx + 1, cy: chemin[0].cy };
+  return {
+    cx: chemin[0].cx - (suivante.cx - chemin[0].cx),
+    cy: chemin[0].cy - (suivante.cy - chemin[0].cy),
+  };
+}
+
 // La cellule d'où vient l'alimentation : celle de la machine, ou le bout du
 // convoyeur qui déverse ici.
 export function celluleDe(source) {
@@ -52,14 +61,17 @@ export function creerConvoyeur(chemin, source, cible) {
   // Sans machine à l'arrivée, la sortie vise la cellule suivante : le rendu et
   // la géométrie n'ont ainsi jamais à se demander si la cible existe.
   const celluleSortie = cible || apres(chemin);
+  const celluleEntree = celluleDe(source) || avant(chemin);
   return {
     chemin,
+    celluleEntree,
     celluleSortie,
-    points: polyligne(chemin, celluleDe(source), celluleSortie),
+    points: polyligne(chemin, celluleEntree, celluleSortie),
     longueur: chemin.length * CELLULE,
     items: [],
     queue: 0, // distance sortie -> dernier item (= somme des écarts)
     source,
+    sources: source ? [source] : [], // ce qui déverse ici : plusieurs, si fusion
     cible,
     sorties: [],  // convoyeurs alimentés par ce bout : un embranchement
     tour: 0,      // à qui le prochain item revient
@@ -111,7 +123,7 @@ export function reconstruire(convoyeur, chemin, cible, itemsImposes) {
 export function majSortie(convoyeur) {
   const branche = convoyeur.sorties[0] && convoyeur.sorties[0].chemin[0];
   convoyeur.celluleSortie = convoyeur.cible || branche || apres(convoyeur.chemin);
-  convoyeur.points = polyligne(convoyeur.chemin, celluleDe(convoyeur.source), convoyeur.celluleSortie);
+  convoyeur.points = polyligne(convoyeur.chemin, convoyeur.celluleEntree, convoyeur.celluleSortie);
 }
 
 export function peutAccepter(convoyeur) {

@@ -446,7 +446,18 @@ export function dessinerConvoyeurs(ctx, scene) {
   for (const convoyeur of scene.convoyeurs) {
     const chemin = convoyeur.chemin;
     for (let i = 0; i < chemin.length; i++) {
-      const avant = i === 0 ? celluleDe(convoyeur.source) : chemin[i - 1];
+      const avant = i === 0 ? convoyeur.celluleEntree : chemin[i - 1];
+      // Première cellule d'un tapis alimenté par plusieurs : c'est une fusion.
+      if (i === 0 && convoyeur.sources.length >= 2) {
+        const bords = convoyeur.sources
+          .map((amont) => celluleDe(amont))
+          .filter(Boolean)
+          .map((cellule) => sens(chemin[0], cellule));
+        bords.push(sens(chemin[0], chemin[1] || convoyeur.celluleSortie));
+        const j = orientationJonction(bords);
+        tuile(ctx, j.sprite, chemin[0].cx, chemin[0].cy, j.quarts);
+        continue;
+      }
       // Dernière cellule d'un tapis qui se divise : c'est une jonction.
       if (i === chemin.length - 1 && convoyeur.sorties.length >= 2) {
         const bords = [sens(chemin[i], avant)];

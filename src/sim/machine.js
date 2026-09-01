@@ -53,8 +53,10 @@ export function attendus(machine) {
 
 // Ce que la machine stocke, donc ce que le rendu doit montrer. Le téléporteur
 // stocke sans rien accepter d'un tapis : il est rempli par les cartes.
-// Combien de convoyeurs peuvent arriver sur cette machine.
+// Combien de convoyeurs peuvent arriver sur cette machine. Un téléporteur en
+// accepte un par côté : plusieurs mines peuvent l'alimenter.
 export function maxEntrees(machine) {
+  if (machine.def.accepteTout) return 4;
   return machine.def.tri ? 2 : attendus(machine).length;
 }
 

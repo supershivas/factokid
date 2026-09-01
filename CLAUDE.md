@@ -20,13 +20,15 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   ils défilent un par un et s'accumulent quand l'aval est saturé.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.
   Le joueur ne pose jamais une cellule à la fois.
-- **Séparation oui, fusion non.** Un convoyeur peut se diviser : on part d'une
-  de ses cellules pour en tracer une autre, et le bout distribue à tour de rôle
-  entre ses branches. Deux tapis ne se rejoignent jamais.
-  Un embranchement coupe le tapis au point de jonction : ce qui précède devient
-  un tapis qui distribue, ce qui suit un tapis alimenté par lui. Les files
-  compressées restent donc intactes de part et d'autre — il n'y a jamais
-  d'extraction en plein milieu d'une file.
+- **Séparation et fusion, jamais au milieu d'une file.** Un convoyeur peut se
+  diviser : on part d'une de ses cellules pour en tracer une autre, et le bout
+  distribue à tour de rôle entre ses branches. Il peut aussi se raccorder à
+  n'importe quel niveau d'un autre : venir buter dessus suffit.
+  Dans les deux cas, le tapis est **coupé au point de jonction** : ce qui
+  précède devient un tapis, ce qui suit un autre qu'il alimente. Les files
+  compressées restent donc intactes de part et d'autre — rien n'est jamais
+  inséré ni extrait en plein milieu d'une file. C'est ce qui permet ces deux
+  gestes sans renoncer à la contrainte de performance de la section 3.
 - **Prestige.** L'état de la partie en cours et l'état permanent sont deux
   structures distinctes, sauvegardées séparément, dès le premier commit.
 - **Les matières viennent des cartes, pas de nulle part.** Il n'y a plus de
@@ -34,7 +36,8 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   joueur touche un gisement, le héros le ramasse, la matière arrive au
   téléporteur. Un gisement repousse après un délai.
 - **Un téléporteur par carte**, posé sur la grille de l'usine, et le même en
-  bas de la carte. Une carte peut porter plusieurs matières : son téléporteur
+  bas de la carte. Il accepte un convoyeur par côté : plusieurs mines peuvent
+  l'alimenter. Une carte peut porter plusieurs matières : son téléporteur
   les sort mélangées sur un seul convoyeur. Le toucher côté usine ouvre son
   panneau et mène à sa carte ; le toucher côté carte ramène à l'usine.
 - **Le héros ramasse, la mine automatise.** On désigne des gisements, le héros

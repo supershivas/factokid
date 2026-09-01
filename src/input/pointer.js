@@ -14,7 +14,7 @@ import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes, coinCellule } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
-  prolongerConvoyeur, brancherConvoyeur,
+  prolongerConvoyeur, brancherConvoyeur, raccorderA,
 } from '../sim/scene.js';
 import { sceneDe, designerSurCarte, gisementSurCarte } from '../sim/world.js';
 import { poserMine, retirerMine } from '../sim/carte.js';
@@ -35,7 +35,10 @@ export function brancherPointeur(canvas, vue, monde) {
     boutons: [],
     panneau: null,
     panneauAnim: 0,
-    trace: { actif: false, source: null, chemin: [], reprise: null, branche: null, origine: null },
+    trace: {
+      actif: false, source: null, chemin: [], reprise: null, branche: null,
+      origine: null, contact: null,
+    },
     effets: [],                  // cellules qui viennent d'être construites
   };
   const trace = etat.trace;
@@ -216,7 +219,17 @@ export function brancherPointeur(canvas, vue, monde) {
     if (c.cx === avant.cx && c.cy === avant.cy) return;
     const avantAvant = trace.chemin.length >= 2 ? trace.chemin[trace.chemin.length - 2] : trace.source;
     if (c.cx === avantAvant.cx && c.cy === avantAvant.cy) { trace.chemin.pop(); return; }
-    if (!adjacentes(avant, c) || dejaTracee(c) || !celluleLibre(scene(), c.cx, c.cy)) return;
+    if (!adjacentes(avant, c) || dejaTracee(c)) return;
+    if (!celluleLibre(scene(), c.cx, c.cy)) {
+      // Buter sur un convoyeur, c'est vouloir s'y raccorder : on retient le
+      // point de contact, le doigt n'a pas besoin de viser plus juste.
+      const hote = convoyeurEn(scene(), c.cx, c.cy);
+      if (hote && hote !== trace.reprise && hote !== trace.source) {
+        trace.contact = { hote, cellule: c };
+      }
+      return;
+    }
+    trace.contact = null;
     trace.chemin.push(c);
   }
 
@@ -256,6 +269,7 @@ export function brancherPointeur(canvas, vue, monde) {
     trace.reprise = null;
     trace.branche = null;
     trace.origine = null;
+    trace.contact = null;
     departCellule = null;
     departPoint = null;
     clearTimeout(minuterie);
@@ -333,6 +347,7 @@ export function brancherPointeur(canvas, vue, monde) {
     trace.reprise = null;
     trace.branche = null;
     trace.origine = null;
+    trace.contact = null;
   }
 
   function deplacement(e) {
@@ -368,15 +383,26 @@ export function brancherPointeur(canvas, vue, monde) {
         && adjacentes(derniere(), machine)
         ? machine
         : null;
+      // Lâché sur un convoyeur, ou venu buter dessus : on s'y raccorde, à
+      // n'importe quel niveau.
+      const surPlace = !cible && c ? convoyeurEn(scene(), c.cx, c.cy) : null;
+      const raccord = surPlace && surPlace !== trace.reprise && surPlace !== trace.source
+        && adjacentes(derniere(), c)
+        ? { hote: surPlace, cellule: c }
+        : trace.contact;
       etat.panneau = null;
       marquerConstruit(trace.chemin);
+      let pose;
       if (trace.branche) {
-        brancherConvoyeur(scene(), trace.branche.tronc, trace.branche.cellule, trace.chemin, cible);
+        pose = brancherConvoyeur(scene(), trace.branche.tronc, trace.branche.cellule, trace.chemin, cible);
       } else if (trace.reprise) {
         prolongerConvoyeur(scene(), trace.reprise, trace.chemin, cible);
+        pose = trace.reprise;
       } else {
-        poserConvoyeur(scene(), trace.chemin, trace.source, cible);
+        pose = poserConvoyeur(scene(), trace.chemin, trace.source, cible);
       }
+      // Le tapis posé vient buter sur un autre : il s'y déverse.
+      if (raccord && !cible) raccorderA(scene(), pose, raccord.hote, raccord.cellule);
       relacher();
       return;
     }

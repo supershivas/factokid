@@ -74,13 +74,21 @@ export function retirerConvoyeur(scene, convoyeur) {
   const i = scene.convoyeurs.indexOf(convoyeur);
   if (i < 0) return;
   scene.convoyeurs.splice(i, 1);
-  // Ce que ce convoyeur alimentait n'a plus de source : on l'emporte avec lui.
-  for (const branche of [...convoyeur.sorties]) retirerConvoyeur(scene, branche);
+  // Ce qu'il alimentait perd une source, mais reste posé : détruire un morceau
+  // ne doit pas faire disparaître tout un réseau sous les doigts de l'enfant.
+  for (const branche of [...convoyeur.sorties]) {
+    const k = branche.sources.indexOf(convoyeur);
+    if (k >= 0) branche.sources.splice(k, 1);
+    if (branche.source === convoyeur) branche.source = branche.sources[0] || null;
+  }
+  convoyeur.sorties.length = 0;
   for (const c of convoyeur.chemin) poser(scene.grille, c.cx, c.cy, null);
-  const s = convoyeur.source.sorties.indexOf(convoyeur);
-  if (s >= 0) {
-    convoyeur.source.sorties.splice(s, 1);
-    if (!estMachine(convoyeur.source)) majSortie(convoyeur.source);
+  for (const amont of [...convoyeur.sources]) {
+    const s = amont.sorties.indexOf(convoyeur);
+    if (s >= 0) {
+      amont.sorties.splice(s, 1);
+      if (!estMachine(amont)) majSortie(amont);
+    }
   }
   if (convoyeur.cible) {
     const i = convoyeur.cible.entrees.indexOf(convoyeur);
@@ -120,19 +128,11 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   return convoyeur;
 }
 
-// Un embranchement : on part d'une cellule au milieu d'un convoyeur. Il est
-// coupé là, ce qui suivait devient un convoyeur alimenté par le premier, et la
-// nouvelle branche vient s'ajouter à côté. Le bout distribue à tour de rôle.
-export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
-  const i = tronc.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
-  if (i < 0) return null;
-  // Brancher sur le bout d'un tapis qui distribue déjà : rien à couper, une
-  // branche de plus suffit.
-  if (i === tronc.chemin.length - 1) {
-    const ajout = poserConvoyeur(scene, chemin, tronc, cible);
-    majSortie(tronc);
-    return ajout;
-  }
+// Coupe un convoyeur après la cellule d'indice i. Ce qui suit devient un
+// convoyeur à part entière, alimenté par le premier. Les items restent à leur
+// place : la file compressée est simplement séparée en deux.
+function couperEn(scene, tronc, i) {
+  if (i < 0 || i >= tronc.chemin.length - 1) return null;
 
   const coupe = (i + 1) * CELLULE;
   const liste = distances(tronc);
@@ -143,24 +143,74 @@ export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
 
   const suite = tronc.chemin.slice(i + 1);
   const cibleInitiale = tronc.cible;
+  const sortiesInitiales = [...tronc.sorties];
   if (tronc.cible) {
     const k = tronc.cible.entrees.indexOf(tronc);
     if (k >= 0) tronc.cible.entrees.splice(k, 1);
   }
+  tronc.sorties.length = 0;
   reconstruire(tronc, tronc.chemin.slice(0, i + 1), null, amont);
 
-  if (suite.length > 0) {
-    const prolongement = creerConvoyeur(suite, tronc, cibleInitiale);
-    scene.convoyeurs.push(prolongement);
-    for (const c of suite) poser(scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur: prolongement });
-    tronc.sorties.push(prolongement);
-    if (cibleInitiale) cibleInitiale.entrees.push(prolongement);
-    reconstruire(prolongement, suite, cibleInitiale, aval);
+  const prolongement = creerConvoyeur(suite, tronc, cibleInitiale);
+  scene.convoyeurs.push(prolongement);
+  for (const c of suite) {
+    poser(scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur: prolongement });
   }
+  tronc.sorties.push(prolongement);
+  if (cibleInitiale) cibleInitiale.entrees.push(prolongement);
+  // Ce que le tronc alimentait est désormais alimenté par le prolongement.
+  for (const branche of sortiesInitiales) {
+    prolongement.sorties.push(branche);
+    const k = branche.sources.indexOf(tronc);
+    if (k >= 0) branche.sources[k] = prolongement;
+    if (branche.source === tronc) branche.source = prolongement;
+  }
+  reconstruire(prolongement, suite, cibleInitiale, aval);
+  majSortie(tronc);
+  return prolongement;
+}
 
+// Un embranchement : on part d'une cellule au milieu d'un convoyeur. Il est
+// coupé là, et la nouvelle branche s'ajoute à côté de la suite. Le bout
+// distribue alors à tour de rôle entre ses branches.
+export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
+  const i = tronc.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
+  if (i < 0) return null;
+  couperEn(scene, tronc, i);
   const branche = poserConvoyeur(scene, chemin, tronc, cible);
   majSortie(tronc);
   return branche;
+}
+
+// Une fusion : un convoyeur vient se raccorder à n'importe quel niveau d'un
+// autre. L'hôte est coupé au point de raccord, et les deux amonts déversent
+// dans la suite — sans jamais mêler deux files compressées.
+export function raccorderConvoyeur(scene, chemin, source, hote, cellule) {
+  const nouveau = poserConvoyeur(scene, chemin, source, null);
+  raccorderA(scene, nouveau, hote, cellule);
+  return nouveau;
+}
+
+// Branche un convoyeur déjà posé sur n'importe quel niveau d'un autre.
+export function raccorderA(scene, nouveau, hote, cellule) {
+  if (!nouveau || nouveau === hote) return;
+  const i = hote.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
+  if (i < 0) return;
+  const suite = couperEn(scene, hote, i);
+  if (suite) {
+    nouveau.sorties.push(suite);
+    suite.sources.push(nouveau);
+  } else {
+    // Raccord sur le bout de l'hôte : le nouveau venu vise ce qu'il visait.
+    nouveau.cible = hote.cible;
+    if (hote.cible) hote.cible.entrees.push(nouveau);
+    for (const branche of hote.sorties) {
+      if (nouveau.sorties.includes(branche)) continue;
+      nouveau.sorties.push(branche);
+      branche.sources.push(nouveau);
+    }
+  }
+  majSortie(nouveau);
 }
 
 const BRANCHES_MAX = 3;
