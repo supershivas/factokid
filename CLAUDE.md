@@ -52,6 +52,12 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **Les mines se relient au téléporteur.** Une mine garde sa récolte dans son
   propre stock ; il faut tracer un convoyeur jusqu'au téléporteur de la carte.
   Même grille, même geste que dans l'usine.
+- **Les machines n'ont pas d'orientation.** Elles acceptent un convoyeur par
+  côté, quel qu'il soit. Un enfant relie sans avoir à penser au sens ; les
+  flèches d'entrée et de sortie suffisent à dire ce qui se passe. Pas de
+  rotation, donc.
+- **Le héros n'existe plus.** Sur une carte, on pose un extracteur sur un
+  gisement et on le relie au téléporteur : c'est tout ce qu'il y a à y faire.
 - **Appui court, appui long.** Un appui court fait la fonction principale de
   l'élément touché — un téléporteur mène à sa carte, un gisement se désigne.
   Un appui long ouvre ses informations et ses réglages.
