@@ -8,8 +8,8 @@ import { BULLE_ANIMATION, CELLULE, rectBouton, rectBulle, dansRect } from '../de
 import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
 import { celluleDepuisPoint, adjacentes } from '../sim/grid.js';
 import {
-  machineEn, convoyeurEn, celluleLibre, poserConvoyeur, retirerConvoyeur,
-  ramasserSurCarte,
+  machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
+  prolongerConvoyeur, ramasserSurCarte,
 } from '../sim/world.js';
 import { aUneSortie, attendus } from '../sim/machine.js';
 import { coinCellule } from '../sim/grid.js';
@@ -30,7 +30,7 @@ export function brancherPointeur(canvas, vue, monde) {
     ancre: null,                 // d'où sortent les bulles
     bulles: [],                  // ce que le rendu doit dessiner
     boutons: [],
-    trace: { actif: false, source: null, chemin: [] },
+    trace: { actif: false, source: null, chemin: [], reprise: null },
   };
   const trace = etat.trace;
   let pointeur = null;
@@ -82,12 +82,20 @@ export function brancherPointeur(canvas, vue, monde) {
 
   function point(e) { return vue.versLogique(e.clientX, e.clientY); }
 
+  // Les cellules déjà posées quand on reprend un tracé interrompu.
+  function base() {
+    return trace.reprise ? trace.reprise.chemin : [];
+  }
+
   function derniere() {
-    return trace.chemin.length > 0 ? trace.chemin[trace.chemin.length - 1] : trace.source;
+    if (trace.chemin.length > 0) return trace.chemin[trace.chemin.length - 1];
+    const posees = base();
+    return posees.length > 0 ? posees[posees.length - 1] : trace.source;
   }
 
   function dejaTracee(c) {
-    return trace.chemin.some((x) => x.cx === c.cx && x.cy === c.cy);
+    return trace.chemin.some((x) => x.cx === c.cx && x.cy === c.cy)
+      || base().some((x) => x.cx === c.cx && x.cy === c.cy);
   }
 
   function ajouter(c) {
@@ -138,7 +146,7 @@ export function brancherPointeur(canvas, vue, monde) {
 
   function detruire(c) {
     const convoyeur = convoyeurEn(monde, c.cx, c.cy);
-    if (convoyeur) retirerConvoyeur(monde, convoyeur);
+    if (convoyeur) couperConvoyeur(monde, convoyeur, c.cx, c.cy);
   }
 
   function debut(e) {
@@ -160,6 +168,19 @@ export function brancherPointeur(canvas, vue, monde) {
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 
+    // Reprendre un tracé arrêté en route : on repart de son bout mort.
+    const convoyeur = convoyeurEn(monde, c.cx, c.cy);
+    if (convoyeur && !convoyeur.cible) {
+      const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
+      if (bout.cx === c.cx && bout.cy === c.cy) {
+        trace.actif = true;
+        trace.source = convoyeur.source;
+        trace.chemin = [];
+        trace.reprise = convoyeur;
+        return;
+      }
+    }
+
     const machine = machineEn(monde, c.cx, c.cy);
     if (!machine || !aUneSortie(machine)) return;
     // Le téléporteur répond à deux gestes : un appui ouvre les cartes, un
@@ -168,6 +189,7 @@ export function brancherPointeur(canvas, vue, monde) {
     trace.actif = true;
     trace.source = machine;
     trace.chemin = [];
+    trace.reprise = null;
   }
 
   function deplacement(e) {
@@ -189,6 +211,7 @@ export function brancherPointeur(canvas, vue, monde) {
     pointeur = null;
     trace.actif = false;
     trace.chemin = [];
+    trace.reprise = null;
   }
 
   function fin(e) {
@@ -209,7 +232,8 @@ export function brancherPointeur(canvas, vue, monde) {
         && adjacentes(derniere(), machine)
         ? machine
         : null;
-      poserConvoyeur(monde, trace.chemin, trace.source, cible);
+      if (trace.reprise) prolongerConvoyeur(monde, trace.reprise, trace.chemin, cible);
+      else poserConvoyeur(monde, trace.chemin, trace.source, cible);
     }
     relacher();
   }

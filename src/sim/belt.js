@@ -56,6 +56,35 @@ export function creerConvoyeur(chemin, source, cible) {
   };
 }
 
+// Redonne au convoyeur un chemin différent — plus court quand on détruit une
+// tuile, plus long quand on reprend un tracé — en gardant les items qui y
+// tiennent encore. Leur distance depuis l'entrée ne change pas : c'est la
+// sortie qui bouge.
+export function reconstruire(convoyeur, chemin, cible) {
+  const distances = [];
+  let depuisSortie = 0;
+  for (const item of convoyeur.items) {
+    depuisSortie += item.ecart;
+    distances.push({ type: item.type, entree: convoyeur.longueur - depuisSortie });
+  }
+
+  convoyeur.chemin = chemin;
+  convoyeur.cible = cible;
+  convoyeur.celluleSortie = cible || apres(chemin);
+  convoyeur.points = polyligne(chemin, convoyeur.source, convoyeur.celluleSortie);
+  convoyeur.longueur = chemin.length * CELLULE;
+
+  convoyeur.items = [];
+  let precedente = 0;
+  for (const d of distances) {
+    if (d.entree > convoyeur.longueur) continue; // la tuile a disparu sous lui
+    const sortie = convoyeur.longueur - d.entree;
+    convoyeur.items.push({ type: d.type, ecart: sortie - precedente });
+    precedente = sortie;
+  }
+  convoyeur.queue = precedente;
+}
+
 export function peutAccepter(convoyeur) {
   if (convoyeur.items.length === 0) return true;
   return convoyeur.queue <= convoyeur.longueur - ESPACEMENT;

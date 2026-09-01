@@ -93,40 +93,27 @@ const convoyeurDroit = toile(TUILE_PX, (rect) => {
 });
 
 // Convoyeur en virage : entre par l'ouest, sort par le sud.
-// Les crans suivent le coude, comme sur la tuile droite : deux files de
-// pointillés qui longent chacun des deux bords du virage.
+// Les crans suivent exactement la même règle que sur la tuile droite : deux
+// files à un et six pixels du bord intérieur de la bande, un cran de deux tous
+// les quatre pixels. Les deux files se rejoignent dans l'angle.
 const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(0, 3, 13, 10, PALETTE.noir);
   rect(3, 3, 10, 13, PALETTE.noir);
   rect(0, 4, 12, 8, PALETTE.ardoise);
   rect(4, 4, 8, 12, PALETTE.ardoise);
-  // File intérieure : longe le bord court (nord puis ouest).
+
+  // File intérieure : le long du petit côté, y = 5 puis x = 5.
   rect(1, 5, 2, 1, PALETTE.bleu);
-  rect(5, 5, 1, 1, PALETTE.bleu);
-  rect(5, 7, 1, 2, PALETTE.bleu);
-  rect(5, 11, 1, 2, PALETTE.bleu);
-  // File extérieure : longe le bord long (sud puis est).
+  rect(5, 5, 1, 2, PALETTE.bleu);
+  rect(5, 9, 1, 2, PALETTE.bleu);
+  rect(5, 13, 1, 2, PALETTE.bleu);
+
+  // File extérieure : le long du grand côté, y = 10 puis x = 10.
   rect(1, 10, 2, 1, PALETTE.bleu);
   rect(5, 10, 2, 1, PALETTE.bleu);
-  rect(9, 10, 1, 1, PALETTE.bleu);
-  rect(10, 12, 1, 2, PALETTE.bleu);
+  rect(9, 10, 2, 1, PALETTE.bleu);
+  rect(10, 13, 1, 2, PALETTE.bleu);
 });
-
-// Une mine : entonnoir qui verse. La couleur du bandeau dit ce qu'elle sort,
-// la forme dit que c'est une source.
-// Une mine porte la forme de ce qu'elle sort : deux mines ne se distinguent
-// jamais par la seule couleur.
-function mine(item) {
-  return toile(TUILE_PX, (rect) => {
-    rect(0, 0, 16, 16, PALETTE.noir);
-    rect(1, 1, 14, 14, PALETTE.ardoise);
-    rect(2, 2, 12, 6, PALETTE.noir);
-    formes[item.forme](decale(rect, 5, 3), PALETTE[item.couleur]);
-    for (let i = 0; i < 4; i++) rect(4 + i, 9 + i, 8 - 2 * i, 1, PALETTE.creme);
-    rect(2, 14, 3, 2, PALETTE.noir);
-    rect(11, 14, 3, 2, PALETTE.noir);
-  });
-}
 
 // Le téléporteur : un anneau ouvert d'où sort la matière ramassée.
 const teleporteur = toile(TUILE_PX, (rect, disque) => {

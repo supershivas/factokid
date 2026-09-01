@@ -7,7 +7,7 @@ import {
   creerMachine, majMachine, deposer, deposerDepuisCarte, attendus, maxSorties,
 } from './machine.js';
 import { creerCartes, majCarte, ramasser } from './carte.js';
-import { creerConvoyeur, avancer } from './belt.js';
+import { creerConvoyeur, avancer, reconstruire } from './belt.js';
 
 export function creerMonde() {
   const monde = {
@@ -51,6 +51,39 @@ export function celluleLibre(monde, cx, cy) {
 export function convoyeurEn(monde, cx, cy) {
   const c = lire(monde.grille, cx, cy);
   return c && c.genre === 'convoyeur' ? c.convoyeur : null;
+}
+
+function detacherCible(convoyeur) {
+  if (!convoyeur.cible) return;
+  const i = convoyeur.cible.entrees.indexOf(convoyeur);
+  if (i >= 0) convoyeur.cible.entrees.splice(i, 1);
+  convoyeur.cible = null;
+}
+
+// Détruire une tuile ne détruit pas tout le convoyeur : il est coupé là. Ce
+// qui précède reste posé et ne débouche plus sur rien, ce qui suit disparaît.
+export function couperConvoyeur(monde, convoyeur, cx, cy) {
+  const i = convoyeur.chemin.findIndex((c) => c.cx === cx && c.cy === cy);
+  if (i < 0) return;
+  if (i === 0) { retirerConvoyeur(monde, convoyeur); return; }
+  for (let k = i; k < convoyeur.chemin.length; k++) {
+    poser(monde.grille, convoyeur.chemin[k].cx, convoyeur.chemin[k].cy, null);
+  }
+  detacherCible(convoyeur);
+  reconstruire(convoyeur, convoyeur.chemin.slice(0, i), null);
+}
+
+// Reprendre un tracé interrompu : on ajoute des cellules au bout, sans perdre
+// ce qui circule déjà dessus.
+export function prolongerConvoyeur(monde, convoyeur, cellules, cible) {
+  for (const c of cellules) poser(monde.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur });
+  if (cible) {
+    const dejaLa = cible.entrees.find((c) => c.source === convoyeur.source && c.matiere === convoyeur.matiere);
+    if (dejaLa && dejaLa !== convoyeur) retirerConvoyeur(monde, dejaLa);
+    while (cible.entrees.length >= attendus(cible).length) retirerConvoyeur(monde, cible.entrees[0]);
+    cible.entrees.push(convoyeur);
+  }
+  reconstruire(convoyeur, convoyeur.chemin.concat(cellules), cible);
 }
 
 export function retirerConvoyeur(monde, convoyeur) {
