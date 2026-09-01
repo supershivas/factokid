@@ -23,6 +23,14 @@ function apres(chemin) {
   };
 }
 
+// La cellule d'où vient l'alimentation : celle de la machine, ou le bout du
+// convoyeur qui déverse ici.
+export function celluleDe(source) {
+  if (!source) return null;
+  if (source.chemin) return source.chemin[source.chemin.length - 1];
+  return { cx: source.cx, cy: source.cy };
+}
+
 // Polyligne parcourue par les items : demi-cellule d'entrée, centres, demi-cellule
 // de sortie. Longueur totale = nombre de cellules × CELLULE.
 function polyligne(chemin, celluleEntree, celluleSortie) {
@@ -47,42 +55,63 @@ export function creerConvoyeur(chemin, source, cible) {
   return {
     chemin,
     celluleSortie,
-    points: polyligne(chemin, source, celluleSortie),
+    points: polyligne(chemin, celluleDe(source), celluleSortie),
     longueur: chemin.length * CELLULE,
     items: [],
     queue: 0, // distance sortie -> dernier item (= somme des écarts)
     source,
     cible,
+    sorties: [],  // convoyeurs alimentés par ce bout : un embranchement
+    tour: 0,      // à qui le prochain item revient
   };
+}
+
+// Où en est chaque item, mesuré depuis l'entrée. La tête d'abord.
+export function distances(convoyeur) {
+  const liste = [];
+  let depuisSortie = 0;
+  for (const item of convoyeur.items) {
+    depuisSortie += item.ecart;
+    liste.push({ type: item.type, entree: convoyeur.longueur - depuisSortie });
+  }
+  return liste;
+}
+
+// Repose une liste d'items à des distances données depuis l'entrée. Ceux qui
+// ne tiennent plus sur le convoyeur sont écartés.
+export function reposerItems(convoyeur, liste) {
+  convoyeur.items = [];
+  let precedente = 0;
+  for (const d of liste) {
+    if (d.entree > convoyeur.longueur) continue;
+    const sortie = convoyeur.longueur - d.entree;
+    convoyeur.items.push({ type: d.type, ecart: sortie - precedente });
+    precedente = sortie;
+  }
+  convoyeur.queue = precedente;
 }
 
 // Redonne au convoyeur un chemin différent — plus court quand on détruit une
 // tuile, plus long quand on reprend un tracé — en gardant les items qui y
 // tiennent encore. Leur distance depuis l'entrée ne change pas : c'est la
 // sortie qui bouge.
-export function reconstruire(convoyeur, chemin, cible) {
-  const distances = [];
-  let depuisSortie = 0;
-  for (const item of convoyeur.items) {
-    depuisSortie += item.ecart;
-    distances.push({ type: item.type, entree: convoyeur.longueur - depuisSortie });
-  }
+export function reconstruire(convoyeur, chemin, cible, itemsImposes) {
+  const liste = itemsImposes || distances(convoyeur);
 
   convoyeur.chemin = chemin;
   convoyeur.cible = cible;
-  convoyeur.celluleSortie = cible || apres(chemin);
-  convoyeur.points = polyligne(chemin, convoyeur.source, convoyeur.celluleSortie);
   convoyeur.longueur = chemin.length * CELLULE;
+  majSortie(convoyeur);
 
-  convoyeur.items = [];
-  let precedente = 0;
-  for (const d of distances) {
-    if (d.entree > convoyeur.longueur) continue; // la tuile a disparu sous lui
-    const sortie = convoyeur.longueur - d.entree;
-    convoyeur.items.push({ type: d.type, ecart: sortie - precedente });
-    precedente = sortie;
-  }
-  convoyeur.queue = precedente;
+  reposerItems(convoyeur, liste);
+}
+
+// Recalcule la géométrie : la sortie vise la cible, sinon la première branche
+// alimentée, sinon la cellule d'après.
+export function majSortie(convoyeur) {
+  const branche = convoyeur.sorties[0] && convoyeur.sorties[0].chemin[0];
+  convoyeur.celluleSortie = convoyeur.cible || branche || apres(convoyeur.chemin);
+  convoyeur.points = polyligne(convoyeur.chemin, celluleDe(convoyeur.source), convoyeur.celluleSortie);
 }
 
 export function peutAccepter(convoyeur) {

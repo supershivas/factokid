@@ -20,8 +20,13 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   ils défilent un par un et s'accumulent quand l'aval est saturé.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.
   Le joueur ne pose jamais une cellule à la fois.
-- **Pas de jonctions pour l'instant.** Une sortie, un convoyeur, une entrée.
-  Pas de fusion, pas de séparation. À rouvrir seulement si le jeu le mérite.
+- **Séparation oui, fusion non.** Un convoyeur peut se diviser : on part d'une
+  de ses cellules pour en tracer une autre, et le bout distribue à tour de rôle
+  entre ses branches. Deux tapis ne se rejoignent jamais.
+  Un embranchement coupe le tapis au point de jonction : ce qui précède devient
+  un tapis qui distribue, ce qui suit un tapis alimenté par lui. Les files
+  compressées restent donc intactes de part et d'autre — il n'y a jamais
+  d'extraction en plein milieu d'une file.
 - **Prestige.** L'état de la partie en cours et l'état permanent sont deux
   structures distinctes, sauvegardées séparément, dès le premier commit.
 - **Les matières viennent des cartes, pas de nulle part.** Il n'y a plus de

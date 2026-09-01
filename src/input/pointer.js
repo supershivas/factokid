@@ -14,7 +14,7 @@ import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes, coinCellule } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
-  prolongerConvoyeur, retirerConvoyeur,
+  prolongerConvoyeur, brancherConvoyeur,
 } from '../sim/scene.js';
 import { sceneDe, designerSurCarte, gisementSurCarte } from '../sim/world.js';
 import { poserMine, retirerMine } from '../sim/carte.js';
@@ -35,7 +35,7 @@ export function brancherPointeur(canvas, vue, monde) {
     boutons: [],
     panneau: null,
     panneauAnim: 0,
-    trace: { actif: false, source: null, chemin: [], reprise: null },
+    trace: { actif: false, source: null, chemin: [], reprise: null, branche: null, origine: null },
     effets: [],                  // cellules qui viennent d'être construites
   };
   const trace = etat.trace;
@@ -200,7 +200,10 @@ export function brancherPointeur(canvas, vue, monde) {
   function derniere() {
     if (trace.chemin.length > 0) return trace.chemin[trace.chemin.length - 1];
     const posees = base();
-    return posees.length > 0 ? posees[posees.length - 1] : trace.source;
+    if (posees.length > 0) return posees[posees.length - 1];
+    // Une branche part d'une cellule de convoyeur, qui n'est pas une machine :
+    // c'est elle l'origine du chemin.
+    return trace.origine || trace.source;
   }
 
   function dejaTracee(c) {
@@ -251,6 +254,8 @@ export function brancherPointeur(canvas, vue, monde) {
     trace.actif = false;
     trace.chemin = [];
     trace.reprise = null;
+    trace.branche = null;
+    trace.origine = null;
     departCellule = null;
     departPoint = null;
     clearTimeout(minuterie);
@@ -292,17 +297,31 @@ export function brancherPointeur(canvas, vue, monde) {
       }
     }
 
-    // Reprendre un tracé arrêté en route : on repart de son bout mort.
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
-    if (convoyeur && !convoyeur.cible) {
+    if (convoyeur) {
       const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
-      if (bout.cx === c.cx && bout.cy === c.cy) {
+      const auBout = bout.cx === c.cx && bout.cy === c.cy;
+      // Au bout d'un tapis inachevé : on reprend le tracé là où il s'est
+      // arrêté. Ailleurs sur un tapis : on en fait partir une branche.
+      if (auBout && !convoyeur.cible) {
         trace.actif = true;
         trace.source = convoyeur.source;
         trace.chemin = [];
         trace.reprise = convoyeur;
+        trace.branche = null;
+        trace.origine = null;
         return;
       }
+      if (!auBout) {
+        trace.actif = true;
+        trace.source = convoyeur;
+        trace.chemin = [];
+        trace.reprise = null;
+        trace.branche = { tronc: convoyeur, cellule: c };
+        trace.origine = c;
+        return;
+      }
+      return;
     }
 
     const machine = machineEn(scene(), c.cx, c.cy);
@@ -311,6 +330,8 @@ export function brancherPointeur(canvas, vue, monde) {
     trace.source = machine;
     trace.chemin = [];
     trace.reprise = null;
+    trace.branche = null;
+    trace.origine = null;
   }
 
   function deplacement(e) {
@@ -348,8 +369,13 @@ export function brancherPointeur(canvas, vue, monde) {
         : null;
       etat.panneau = null;
       marquerConstruit(trace.chemin);
-      if (trace.reprise) prolongerConvoyeur(scene(), trace.reprise, trace.chemin, cible);
-      else poserConvoyeur(scene(), trace.chemin, trace.source, cible);
+      if (trace.branche) {
+        brancherConvoyeur(scene(), trace.branche.tronc, trace.branche.cellule, trace.chemin, cible);
+      } else if (trace.reprise) {
+        prolongerConvoyeur(scene(), trace.reprise, trace.chemin, cible);
+      } else {
+        poserConvoyeur(scene(), trace.chemin, trace.source, cible);
+      }
       relacher();
       return;
     }

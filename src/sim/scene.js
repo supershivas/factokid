@@ -3,8 +3,12 @@
 // carte n'est pas un niveau, c'est la même surface remplie autrement.
 
 import { creerGrille, poser, lire, libre } from './grid.js';
-import { creerMachine, majMachine, deposer, attendus, maxSorties, maxEntrees } from './machine.js';
-import { creerConvoyeur, avancer, reconstruire } from './belt.js';
+import { creerMachine, majMachine, deposer, maxSorties, maxEntrees } from './machine.js';
+import {
+  creerConvoyeur, avancer, reconstruire, majSortie, distances, peutAccepter,
+  pousser
+} from './belt.js';
+import { CELLULE } from '../design.js';
 
 export function creerScene() {
   return { grille: creerGrille(), machines: [], convoyeurs: [] };
@@ -64,13 +68,20 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
   reconstruire(convoyeur, convoyeur.chemin.concat(cellules), cible);
 }
 
+function estMachine(x) { return Boolean(x && x.def); }
+
 export function retirerConvoyeur(scene, convoyeur) {
   const i = scene.convoyeurs.indexOf(convoyeur);
   if (i < 0) return;
   scene.convoyeurs.splice(i, 1);
+  // Ce que ce convoyeur alimentait n'a plus de source : on l'emporte avec lui.
+  for (const branche of [...convoyeur.sorties]) retirerConvoyeur(scene, branche);
   for (const c of convoyeur.chemin) poser(scene.grille, c.cx, c.cy, null);
   const s = convoyeur.source.sorties.indexOf(convoyeur);
-  if (s >= 0) convoyeur.source.sorties.splice(s, 1);
+  if (s >= 0) {
+    convoyeur.source.sorties.splice(s, 1);
+    if (!estMachine(convoyeur.source)) majSortie(convoyeur.source);
+  }
   if (convoyeur.cible) {
     const i = convoyeur.cible.entrees.indexOf(convoyeur);
     if (i >= 0) convoyeur.cible.entrees.splice(i, 1);
@@ -81,19 +92,19 @@ export function retirerConvoyeur(scene, convoyeur) {
 // autant d'entrées que sa recette a d'ingrédients. Poser un convoyeur remplace
 // ce qui occupait la place, il n'y a jamais de jonction sur un convoyeur.
 export function poserConvoyeur(scene, chemin, source, cible) {
-  // La place occupée n'est pas « cette machine », c'est « cette matière depuis
-  // cette machine » : un trieur envoie légitimement deux tapis au même
-  // assembleur, un pour chaque ingrédient.
   // Un trieur a deux branches : la matière choisie, et le reste. Le rôle du
   // tapis dépend de la place encore libre, pas d'un réglage.
-  const role = source.def.tri
+  const role = estMachine(source) && source.def.tri
     ? (source.sorties.some((c) => c.role === 'triee') ? 'reste' : 'triee')
     : null;
-  const memePlace = source.sorties.find(
-    (c) => (role ? c.role === role : c.cible === cible),
-  );
-  if (memePlace) retirerConvoyeur(scene, memePlace);
-  while (source.sorties.length >= maxSorties(source)) retirerConvoyeur(scene, source.sorties[0]);
+  // Repartir d'une machine vers la même place remplace le tapis qui l'occupait.
+  // Repartir d'un convoyeur ajoute une branche : c'est le but.
+  if (estMachine(source)) {
+    const memePlace = source.sorties.find((c) => (role ? c.role === role : c.cible === cible));
+    if (memePlace) retirerConvoyeur(scene, memePlace);
+  }
+  const limite = estMachine(source) ? maxSorties(source) : BRANCHES_MAX;
+  while (source.sorties.length >= limite) retirerConvoyeur(scene, source.sorties[0]);
   if (cible) {
     const dejaLa = cible.entrees.find((c) => c.source === source && c.role === role);
     if (dejaLa) retirerConvoyeur(scene, dejaLa);
@@ -104,13 +115,67 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   for (const c of chemin) poser(scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur });
   convoyeur.role = role;
   source.sorties.push(convoyeur);
+  if (!estMachine(source)) majSortie(source);
   if (cible) cible.entrees.push(convoyeur);
   return convoyeur;
 }
 
+// Un embranchement : on part d'une cellule au milieu d'un convoyeur. Il est
+// coupé là, ce qui suivait devient un convoyeur alimenté par le premier, et la
+// nouvelle branche vient s'ajouter à côté. Le bout distribue à tour de rôle.
+export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
+  const i = tronc.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
+  if (i < 0 || i === tronc.chemin.length - 1) return null;
+
+  const coupe = (i + 1) * CELLULE;
+  const liste = distances(tronc);
+  const amont = liste.filter((d) => d.entree <= coupe);
+  const aval = liste
+    .filter((d) => d.entree > coupe)
+    .map((d) => ({ type: d.type, entree: d.entree - coupe }));
+
+  const suite = tronc.chemin.slice(i + 1);
+  const cibleInitiale = tronc.cible;
+  if (tronc.cible) {
+    const k = tronc.cible.entrees.indexOf(tronc);
+    if (k >= 0) tronc.cible.entrees.splice(k, 1);
+  }
+  reconstruire(tronc, tronc.chemin.slice(0, i + 1), null, amont);
+
+  if (suite.length > 0) {
+    const prolongement = creerConvoyeur(suite, tronc, cibleInitiale);
+    scene.convoyeurs.push(prolongement);
+    for (const c of suite) poser(scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur: prolongement });
+    tronc.sorties.push(prolongement);
+    if (cibleInitiale) cibleInitiale.entrees.push(prolongement);
+    reconstruire(prolongement, suite, cibleInitiale, aval);
+  }
+
+  const branche = poserConvoyeur(scene, chemin, tronc, cible);
+  majSortie(tronc);
+  return branche;
+}
+
+const BRANCHES_MAX = 3;
+
+// Ce que le bout d'un convoyeur fait de l'item qui arrive : le remettre à sa
+// machine, ou le répartir à tour de rôle entre ses branches.
+function livrerDepuis(convoyeur, type) {
+  if (convoyeur.cible) return deposer(convoyeur.cible, type);
+  const n = convoyeur.sorties.length;
+  for (let k = 0; k < n; k++) {
+    const suivant = convoyeur.sorties[(convoyeur.tour + k) % n];
+    if (!peutAccepter(suivant)) continue;
+    pousser(suivant, type);
+    convoyeur.tour = (convoyeur.tour + k + 1) % n;
+    return true;
+  }
+  return false;
+}
+
 export function majScene(scene, dt) {
   for (const convoyeur of scene.convoyeurs) {
-    avancer(convoyeur, dt, (type) => (convoyeur.cible ? deposer(convoyeur.cible, type) : false));
+    avancer(convoyeur, dt, (type) => livrerDepuis(convoyeur, type));
   }
   for (const machine of scene.machines) majMachine(machine, dt);
 }
