@@ -7,11 +7,14 @@
 import { CARTES, HEROS, MINE } from '../data/cartes.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { centreCellule } from './grid.js';
+import { creerScene, ajouterMachine, machineEn, retirerConvoyeur } from './scene.js';
+import { deposerDepuisCarte } from './machine.js';
 
 export function creerCartes() {
   return CARTES.map((def) => {
     const depart = centreCellule(def.teleporteur.cx, def.teleporteur.cy);
-    return {
+    const carte = {
+      scene: creerScene(),
       def,
       items: def.items,
       teleporteur: def.teleporteur,
@@ -29,6 +32,12 @@ export function creerCartes() {
         horloge: 0,
       },
     };
+    // Le téléporteur de la carte, posé en bas : le héros y dépose, les
+    // convoyeurs des mines y arrivent, et le toucher ramène à l'usine.
+    carte.sortie = ajouterMachine(
+      carte.scene, 'sortieCarte', def.teleporteur.cx, def.teleporteur.cy, { carte },
+    );
+    return carte;
   });
 }
 
@@ -51,12 +60,13 @@ export function estDesigne(carte, gisement) {
   return carte.heros.file.some((f) => f.cx === gisement.cx && f.cy === gisement.cy);
 }
 
-// Une mine se pose sur un gisement, et prend sa récolte en charge.
+// Une mine se pose sur un gisement : elle devient une machine de la scène de
+// la carte, avec son propre stock. Il faut ensuite la relier au téléporteur.
 export function poserMine(carte, cx, cy) {
   const g = gisementEn(carte, cx, cy);
   if (!g || g.mine) return false;
-  g.mine = true;
-  g.horlogeMine = 0;
+  g.mine = ajouterMachine(carte.scene, 'mine', cx, cy, { carte, item: g.item });
+  g.mine.horlogeMine = 0;
   const i = carte.heros.file.findIndex((f) => f.cx === cx && f.cy === cy);
   if (i >= 0) carte.heros.file.splice(i, 1);
   return true;
@@ -65,7 +75,11 @@ export function poserMine(carte, cx, cy) {
 export function retirerMine(carte, cx, cy) {
   const g = gisementEn(carte, cx, cy);
   if (!g || !g.mine) return false;
-  g.mine = false;
+  for (const c of [...g.mine.sorties]) retirerConvoyeur(carte.scene, c);
+  const i = carte.scene.machines.indexOf(g.mine);
+  if (i >= 0) carte.scene.machines.splice(i, 1);
+  carte.scene.grille.cellules[cy * 7 + cx] = null;
+  g.mine = null;
   return true;
 }
 
@@ -84,8 +98,10 @@ function avancerVers(heros, point, dt) {
   return false;
 }
 
-// `livrer(item)` verse au téléporteur et renvoie false s'il est plein.
-export function majCarte(carte, dt, livrer) {
+// Les mines creusent leur gisement ; le héros ramasse ce qu'on lui a montré.
+// Les deux versent dans le téléporteur de la carte, qui n'est qu'une machine
+// de plus sur sa scène.
+export function majCarte(carte, dt) {
   const periodeMine = MINE.ticksParItem / TICKS_PAR_SECONDE;
   for (const g of carte.gisements) {
     if (!g.present) {
@@ -94,14 +110,15 @@ export function majCarte(carte, dt, livrer) {
       continue;
     }
     if (!g.mine) continue;
-    g.horlogeMine += dt;
-    if (g.horlogeMine < periodeMine) continue;
-    if (!livrer(g.item)) { g.horlogeMine = periodeMine; continue; }
-    g.horlogeMine = 0;
+    g.mine.horlogeMine += dt;
+    g.mine.creuse = g.mine.stocks[g.item] < g.mine.def.capacite;
+    if (g.mine.horlogeMine < periodeMine) continue;
+    if (!deposerDepuisCarte(g.mine, g.item)) { g.mine.horlogeMine = periodeMine; continue; }
+    g.mine.horlogeMine = 0;
     g.present = false;
     g.horloge = 0;
   }
-  majHeros(carte, dt, livrer);
+  majHeros(carte, dt, (item) => deposerDepuisCarte(carte.sortie, item));
 }
 
 function majHeros(carte, dt, livrer) {

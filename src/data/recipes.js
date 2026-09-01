@@ -3,9 +3,15 @@
 // Une nouvelle fabrication est une entrée de plus, jamais du code en plus.
 
 export const RECETTES = {
+  caramel: {
+    id: 'caramel',
+    entrees: { sucre: 1 },
+    sortie: 'caramel',
+    ticksParItem: 45,
+  },
   bonbon: {
     id: 'bonbon',
-    entrees: { sucre: 1, fraise: 1, menthe: 1 },
+    entrees: { caramel: 1, fraise: 1, menthe: 1 },
     sortie: 'bonbon',
     ticksParItem: 60,
   },

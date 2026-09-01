@@ -37,10 +37,16 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   gisement le récolte seule, plus lentement qu'un joueur attentif.
 - **L'usine fabrique des bonbons.** Sucre, fraise et menthe entrent, un bonbon
   sort.
-- **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur reçoit le
-  mélange et range : une sortie par matière, un convoyeur par sortie. La
-  matière d'un convoyeur sortant du trieur est déduite de ce qu'attend la
-  machine à l'arrivée — le joueur ne configure rien.
+- **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur a deux
+  branches : la matière que le joueur a choisie, et tout le reste. Le premier
+  convoyeur tracé prend la matière choisie, le second ramasse le reste. La
+  matière se change à tout moment depuis le panneau du trieur.
+- **Les mines se relient au téléporteur.** Une mine garde sa récolte dans son
+  propre stock ; il faut tracer un convoyeur jusqu'au téléporteur de la carte.
+  Même grille, même geste que dans l'usine.
+- **Appui court, appui long.** Un appui court fait la fonction principale de
+  l'élément touché — un téléporteur mène à sa carte, un gisement se désigne.
+  Un appui long ouvre ses informations et ses réglages.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
@@ -179,6 +185,7 @@ src/
   anim.js           ressorts d'interface (Motion)
   sim/
     grid.js         grille, occupation des cellules
+    scene.js        une grille, ses machines, ses convoyeurs
     belt.js         files compressées, déplacement des items
     machine.js      production, consommation, stocks
     carte.js        gisements, ramassage, repousse
@@ -193,6 +200,7 @@ src/
     progression.js  paliers de déblocage, courbe
   render/
     canvas.js       mise à l'échelle, culling
+    particules.js   fumée et étoiles
     sprites.js      atlas, dessin des tuiles
     hud.js          compteurs, boutons
   input/

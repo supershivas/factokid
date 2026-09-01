@@ -39,7 +39,7 @@ export function demarrerBoucle(maj, rendu) {
       compteurFps = 0;
     }
 
-    rendu(fps);
+    rendu(fps, ecoule);
     if (!document.hidden) requestAnimationFrame(image);
   }
 

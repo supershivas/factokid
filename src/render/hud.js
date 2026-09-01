@@ -104,8 +104,8 @@ export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const confiserie = monde.machines.find((m) => m.recette);
-  const livraison = monde.machines.find((m) => m.def.entree);
+  const confiserie = monde.usine.machines.find((m) => m.recette);
+  const livraison = monde.usine.machines.find((m) => m.def.entree);
 
   // Bandeau haut : items en circulation, et fréquence d'images.
   ctx.drawImage(spriteItem('bonbon'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
@@ -159,8 +159,10 @@ function dessinerOutils(ctx, interfaceJeu) {
     const taille = Math.round(BULLE * p);
     const dx = Math.round(r.x + (BULLE - taille) / 2);
     const dy = Math.round(r.y + (BULLE - taille) / 2);
+    ctx.globalAlpha = interfaceJeu.bulles[j].grise ? 0.35 : 1;
     ctx.drawImage(INTERFACE.bulleFond, dx, dy, taille, taille);
     ctx.drawImage(INTERFACE[interfaceJeu.bulles[j].icone], dx, dy, taille, taille);
+    ctx.globalAlpha = 1;
   }
 }
 

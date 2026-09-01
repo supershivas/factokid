@@ -58,6 +58,14 @@ const formes = {
     rect(0, 4, 1, 1, n); rect(1, 4, 4, 1, couleur); rect(5, 4, 1, 1, n);
     rect(0, 5, 6, 1, n);
   },
+  // Le caramel : une barre plate, silhouette qu'aucune autre matière n'a.
+  barre: (rect, couleur) => {
+    const n = PALETTE.noir;
+    rect(0, 1, 6, 1, n);
+    rect(0, 2, 6, 2, couleur);
+    rect(1, 2, 1, 1, PALETTE.creme);
+    rect(0, 4, 6, 1, n);
+  },
   bonbon: (rect, couleur) => {
     const n = PALETTE.noir;
     rect(2, 0, 2, 1, n);
@@ -155,6 +163,17 @@ const confiserie = toile(TUILE_PX, (rect) => {
   formes.bonbon(decale(rect, 5, 10), PALETTE.orange);
 });
 
+// La chaufferie : une cuve sur un feu, où le sucre fond en caramel.
+const chaufferie = toile(TUILE_PX, (rect) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+  rect(3, 3, 10, 6, PALETTE.noir);
+  rect(4, 5, 8, 3, PALETTE.jaune);
+  rect(4, 4, 8, 1, PALETTE.creme);
+  for (let i = 0; i < 3; i++) rect(4 + i * 3, 11, 2, 3, PALETTE.orange);
+  rect(3, 14, 10, 1, PALETTE.rouge);
+});
+
 // La livraison : un bocal ouvert où tombent les bonbons.
 const livraison = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
@@ -164,8 +183,6 @@ const livraison = toile(TUILE_PX, (rect) => {
   rect(5, 5, 6, 7, PALETTE.vert);
   rect(5, 5, 6, 2, PALETTE.noir);
 });
-
-export const ICONES = { teleporteur, trieur, confiserie, livraison };
 
 // --- cartes ---------------------------------------------------------------
 
@@ -217,61 +234,12 @@ const mine = toile(TUILE_PX, (rect) => {
   rect(3, 3, 3, 2, PALETTE.jaune);
 });
 
+export const ICONES = {
+  teleporteur, trieur, confiserie, livraison, chaufferie, mine, sortieCarte: teleporteur,
+};
+
 const spritesGisements = {};
 for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(item);
-
-// Dessine une carte : même grille, même échelle, gisements au lieu de machines.
-export function dessinerCarte(ctx, carte) {
-  for (let cy = 0; cy < LIGNES; cy++) {
-    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solCarte, cx, cy, 0);
-  }
-
-  // Le téléporteur : là où le héros dépose, et par où l'on repart.
-  tuile(ctx, ICONES.teleporteur, carte.teleporteur.cx, carte.teleporteur.cy, 0);
-
-  for (const g of carte.gisements) {
-    const coin = coinCellule(g.cx, g.cy);
-    if (g.present && g.mine) {
-      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
-      tuile(ctx, mine, g.cx, g.cy, 0);
-      continue;
-    }
-    if (g.mine) { tuile(ctx, mine, g.cx, g.cy, 0); continue; }
-    if (g.present) {
-      // Désigné : un cadre clair dit que le héros viendra le chercher.
-      if (estDesigne(carte, g)) {
-        ctx.strokeStyle = PALETTE.creme;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(coin.x + 4.5, coin.y + 4.5, CELLULE - 9, CELLULE - 9);
-      }
-      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
-      continue;
-    }
-    tuile(ctx, gisementVide, g.cx, g.cy, 0);
-    // Attente de repousse : une barre qui se remplit sur le socle.
-    const part = Math.min(1, g.horloge / carte.repousse);
-    ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(coin.x + 6, coin.y + 24, 36, 6);
-    ctx.fillStyle = PALETTE.vert;
-    ctx.fillRect(coin.x + 6, coin.y + 24, Math.round(36 * part), 6);
-  }
-
-  dessinerHeros(ctx, carte);
-}
-
-function dessinerHeros(ctx, carte) {
-  const h = carte.heros;
-  const x = Math.round(h.x - CELLULE / 2);
-  const y = Math.round(h.y - CELLULE / 2);
-  ctx.drawImage(heros, x, y, CELLULE, CELLULE);
-  // Ce qu'il porte, au-dessus de sa tête.
-  for (let i = 0; i < h.sac.length; i++) {
-    ctx.drawImage(
-      spritesItems[h.sac[i]],
-      x + 6 + i * (TAILLE_ITEM - 6), y - 6, TAILLE_ITEM, TAILLE_ITEM,
-    );
-  }
-}
 
 // --- interface ------------------------------------------------------------
 
@@ -412,12 +380,20 @@ function tuile(ctx, sprite, cx, cy, quarts) {
   ctx.restore();
 }
 
-export function dessinerScene(ctx, monde, trace) {
+// Dessine une scène : ses convoyeurs, ce qui circule dessus, ses machines.
+// L'usine et les cartes passent par ici, seul le sol change.
+export function dessinerScene(ctx, scene, trace, solTuile = sol) {
   for (let cy = 0; cy < LIGNES; cy++) {
-    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, sol, cx, cy, 0);
+    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solTuile, cx, cy, 0);
   }
+  dessinerConvoyeurs(ctx, scene);
+  for (const machine of scene.machines) dessinerMachine(ctx, machine);
+  if (trace && trace.actif) dessinerTrace(ctx, trace);
+}
 
-  for (const convoyeur of monde.convoyeurs) {
+// Les convoyeurs d'une scène, puis ce qui roule dessus.
+export function dessinerConvoyeurs(ctx, scene) {
+  for (const convoyeur of scene.convoyeurs) {
     const chemin = convoyeur.chemin;
     for (let i = 0; i < chemin.length; i++) {
       const avant = i === 0 ? convoyeur.source : chemin[i - 1];
@@ -426,8 +402,7 @@ export function dessinerScene(ctx, monde, trace) {
       tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);
     }
   }
-
-  for (const convoyeur of monde.convoyeurs) {
+  for (const convoyeur of scene.convoyeurs) {
     parcourirItems(convoyeur, (item, p) => {
       ctx.drawImage(
         spritesItems[item.type],
@@ -436,18 +411,119 @@ export function dessinerScene(ctx, monde, trace) {
       );
     });
   }
+}
 
-  for (const machine of monde.machines) {
-    tuile(ctx, ICONES[machine.type], machine.cx, machine.cy, 0);
-    const coin = coinCellule(machine.cx, machine.cy);
-    dessinerStock(ctx, machine, coin);
-    if (machine.bloquee) {
-      ctx.fillStyle = PALETTE.rouge;
-      ctx.fillRect(coin.x + CELLULE - 12, coin.y + 3, 9, 9);
-    }
+function dessinerMachine(ctx, machine) {
+  tuile(ctx, ICONES[machine.type], machine.cx, machine.cy, 0);
+  const coin = coinCellule(machine.cx, machine.cy);
+  contenuMine(ctx, machine, coin);
+  dessinerStock(ctx, machine, coin);
+  fileTrieur(ctx, machine, coin);
+  dessinerFleches(ctx, machine);
+  if (machine.bloquee) {
+    ctx.fillStyle = PALETTE.rouge;
+    ctx.fillRect(coin.x + CELLULE - 12, coin.y + 3, 9, 9);
+  }
+}
+
+// Une mine montre ce qu'elle a extrait : on voit ce qu'il y a dedans.
+function contenuMine(ctx, machine, coin) {
+  if (!machine.def.mine) return;
+  const n = machine.stocks[machine.item] || 0;
+  if (n === 0) return;
+  ctx.drawImage(spritesItems[machine.item], coin.x + 15, coin.y + 24, TAILLE_ITEM, TAILLE_ITEM);
+}
+
+// La file d'un trieur, telle quelle : on voit le mélange qui attend.
+function fileTrieur(ctx, machine, coin) {
+  if (!machine.def.tri) return;
+  const n = machine.def.capacite;
+  for (let i = 0; i < n; i++) {
+    const x = coin.x + 4 + (i % 3) * 14;
+    const y = coin.y + CELLULE - 15 + Math.floor(i / 3) * 7;
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(x - 1, y - 1, 14, 7);
+    ctx.fillStyle = i < machine.file.length ? PALETTE[ITEMS[machine.file[i]].couleur] : PALETTE.ardoise;
+    ctx.fillRect(x, y, 12, 5);
+  }
+}
+
+// Flèches d'entrée et de sortie : par où ça rentre, par où ça sort.
+const FLECHE = 12;
+
+function fleche(ctx, machine, direction, versLInterieur, couleur) {
+  const coin = coinCellule(machine.cx, machine.cy);
+  const cx = coin.x + CELLULE / 2;
+  const cy = coin.y + CELLULE / 2;
+  const bord = CELLULE / 2 - 3;
+  // Pointe posée sur le bord concerné, base à l'intérieur.
+  const sensPointe = versLInterieur ? -1 : 1;
+  const px = cx + direction.dx * bord * (versLInterieur ? 1 : 1);
+  const py = cy + direction.dy * bord;
+  ctx.fillStyle = couleur;
+  ctx.beginPath();
+  const ux = direction.dx * sensPointe;
+  const uy = direction.dy * sensPointe;
+  ctx.moveTo(px + ux * (FLECHE / 2), py + uy * (FLECHE / 2));
+  ctx.lineTo(px - ux * (FLECHE / 2) + uy * (FLECHE / 2), py - uy * (FLECHE / 2) + ux * (FLECHE / 2));
+  ctx.lineTo(px - ux * (FLECHE / 2) - uy * (FLECHE / 2), py - uy * (FLECHE / 2) - ux * (FLECHE / 2));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function dessinerFleches(ctx, machine) {
+  for (const convoyeur of machine.entrees) {
+    const derniere = convoyeur.chemin[convoyeur.chemin.length - 1];
+    fleche(ctx, machine, sens(derniere, machine), true, PALETTE.bleu);
+  }
+  for (const convoyeur of machine.sorties) {
+    fleche(ctx, machine, sens(machine, convoyeur.chemin[0]), false, PALETTE.creme);
+  }
+}
+
+// Dessine une carte : même grille, même échelle, gisements et mines.
+export function dessinerCarte(ctx, carte, trace) {
+  for (let cy = 0; cy < LIGNES; cy++) {
+    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solCarte, cx, cy, 0);
   }
 
+  for (const g of carte.gisements) {
+    const coin = coinCellule(g.cx, g.cy);
+    if (g.present) {
+      if (estDesigne(carte, g)) {
+        ctx.strokeStyle = PALETTE.creme;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(coin.x + 4.5, coin.y + 4.5, CELLULE - 9, CELLULE - 9);
+      }
+      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
+      continue;
+    }
+    tuile(ctx, gisementVide, g.cx, g.cy, 0);
+    const part = Math.min(1, g.horloge / carte.repousse);
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(coin.x + 6, coin.y + 24, 36, 6);
+    ctx.fillStyle = PALETTE.vert;
+    ctx.fillRect(coin.x + 6, coin.y + 24, Math.round(36 * part), 6);
+  }
+
+  dessinerConvoyeurs(ctx, carte.scene);
+  for (const machine of carte.scene.machines) dessinerMachine(ctx, machine);
+  dessinerHeros(ctx, carte);
   if (trace && trace.actif) dessinerTrace(ctx, trace);
+}
+
+function dessinerHeros(ctx, carte) {
+  const h = carte.heros;
+  const x = Math.round(h.x - CELLULE / 2);
+  const y = Math.round(h.y - CELLULE / 2);
+  ctx.drawImage(heros, x, y, CELLULE, CELLULE);
+  // Ce qu'il porte, au-dessus de sa tête.
+  for (let i = 0; i < h.sac.length; i++) {
+    ctx.drawImage(
+      spritesItems[h.sac[i]],
+      x + 6 + i * (TAILLE_ITEM - 6), y - 6, TAILLE_ITEM, TAILLE_ITEM,
+    );
+  }
 }
 
 // Jauge de stock : une rangée de pastilles par ingrédient attendu, à la

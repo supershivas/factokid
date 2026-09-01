@@ -12,8 +12,10 @@ export const MACHINES = {
   trieur: {
     id: 'trieur',
     nom: 'trieur',
-    tri: ['sucre', 'fraise', 'menthe'], // une sortie par matière rangée
-    capacite: 4,
+    tri: true,          // deux sorties : la matière choisie, et tout le reste
+    triables: ['sucre', 'caramel', 'fraise', 'menthe'],
+    triDefaut: 'fraise',
+    capacite: 6,        // file d'attente mélangée
     ticksParItem: 15,
   },
   confiserie: {
@@ -28,6 +30,25 @@ export const MACHINES = {
     entree: 'bonbon',
     ticksParItem: 60,
     capacite: 4,
+  },
+  chaufferie: {
+    id: 'chaufferie',
+    nom: 'chaufferie',
+    recette: 'caramel',   // le sucre y fond
+    capacite: 4,
+  },
+  mine: {
+    id: 'mine',
+    nom: 'mine',
+    mine: true,           // se remplit du gisement qu'elle occupe
+    capacite: 4,
+    ticksParItem: 20,     // cadence à laquelle elle verse sur le tapis
+  },
+  sortieCarte: {
+    id: 'sortieCarte',
+    nom: 'téléporteur',
+    accepteTout: true,    // tout ce qu'on lui apporte part vers l'usine
+    capacite: 8,
   },
   convoyeur: {
     id: 'convoyeur',
