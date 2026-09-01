@@ -3,7 +3,9 @@
 // carte n'est pas un niveau, c'est la même surface remplie autrement.
 
 import { creerGrille, poser, lire, libre } from './grid.js';
-import { creerMachine, majMachine, deposer, maxSorties, maxEntrees } from './machine.js';
+import {
+  creerMachine, majMachine, deposer, maxSorties, maxEntrees, aUneSortie,
+} from './machine.js';
 import {
   creerConvoyeur, avancer, reconstruire, majSortie, distances, peutAccepter,
   pousser
@@ -171,7 +173,29 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   source.sorties.push(convoyeur);
   if (!estMachine(source)) majSortie(source);
   if (cible) cible.entrees.push(convoyeur);
+  // Un tapis qui passe devant un extracteur au repos le prend au passage : la
+  // règle vaut dans les deux sens, qu'on pose la machine ou le tapis en dernier.
+  raccorderMinesAutour(scene, [...chemin]);
   return convoyeur;
+}
+
+// Les extracteurs que ce chemin longe et qui ne débouchent sur rien.
+function raccorderMinesAutour(scene, chemin) {
+  const vues = new Set();
+  for (const c of chemin) {
+    const autour = [
+      { cx: c.cx, cy: c.cy - 1 }, { cx: c.cx + 1, cy: c.cy },
+      { cx: c.cx, cy: c.cy + 1 }, { cx: c.cx - 1, cy: c.cy },
+    ];
+    for (const v of autour) {
+      const machine = machineEn(scene, v.cx, v.cy);
+      if (!machine || !machine.def.mine || machine.sorties.length > 0) continue;
+      const cle = v.cx + ',' + v.cy;
+      if (vues.has(cle)) continue;
+      vues.add(cle);
+      raccorderAuVoisinage(scene, machine);
+    }
+  }
 }
 
 // Coupe un convoyeur après la cellule d'indice i. Ce qui suit devient un
@@ -259,6 +283,37 @@ export function raccorderA(scene, nouveau, hote, cellule) {
     }
   }
   majSortie(nouveau);
+}
+
+// Une machine posée devant un tapis s'y raccorde toute seule. Le tapis est
+// coupé juste avant la cellule voisine : ce qui suit devient un tapis à part,
+// que l'amont et la machine alimentent tous les deux. Rien n'est inséré au
+// milieu d'une file — la coupure sépare, elle n'insère pas.
+//
+// Poser un extracteur sur un gisement que le tapis longe déjà suffit donc à le
+// mettre au travail : un enfant n'a pas à deviner qu'il faut retracer par
+// dessus.
+export function raccorderAuVoisinage(scene, machine) {
+  if (!aUneSortie(machine) || machine.sorties.length >= maxSorties(machine)) return null;
+  const voisines = [
+    { cx: machine.cx, cy: machine.cy - 1 }, { cx: machine.cx + 1, cy: machine.cy },
+    { cx: machine.cx, cy: machine.cy + 1 }, { cx: machine.cx - 1, cy: machine.cy },
+  ];
+  for (const c of voisines) {
+    const hote = convoyeurEn(scene, c.cx, c.cy);
+    if (!hote) continue;
+    const i = hote.chemin.findIndex((x) => x.cx === c.cx && x.cy === c.cy);
+    if (i < 0) continue;
+    // La machine déverse à la cellule qu'elle touche : le tapis est donc coupé
+    // juste avant elle, et c'est la suite qu'elle alimente.
+    const suite = i === 0 ? hote : couperEn(scene, hote, i - 1);
+    if (!suite || suite.sources.includes(machine)) continue;
+    machine.sorties.push(suite);
+    suite.sources.push(machine);
+    if (!suite.source) suite.source = machine;
+    return suite;
+  }
+  return null;
 }
 
 const BRANCHES_MAX = 3;

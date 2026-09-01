@@ -62,6 +62,10 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   côté, quel qu'il soit. Un enfant relie sans avoir à penser au sens ; les
   flèches d'entrée et de sortie suffisent à dire ce qui se passe. Pas de
   rotation, donc.
+- **Un extracteur posé devant un tapis s'y raccorde tout seul**, et un tapis
+  tracé devant un extracteur au repos le prend au passage. Le tapis est coupé
+  juste avant la cellule voisine : la machine déverse dans la suite, à côté de
+  ce qui l'alimentait déjà. Rien n'est inséré au milieu d'une file.
 - **Le héros n'existe plus.** Sur une carte, on pose un extracteur sur un
   gisement et on le relie au téléporteur : c'est tout ce qu'il y a à y faire.
 - **Appui court, appui long.** Un appui court fait la fonction principale de

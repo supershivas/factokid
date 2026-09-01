@@ -6,9 +6,10 @@
 
 import { CARTES, EXTRACTEUR } from '../data/cartes.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
-import { creerScene, ajouterMachine, retirerConvoyeur } from './scene.js';
+import {
+  creerScene, ajouterMachine, retirerMachine, raccorderAuVoisinage,
+} from './scene.js';
 import { deposerDepuisCarte } from './machine.js';
-import { COLONNES } from '../design.js';
 
 export function creerCartes() {
   return CARTES.map((def) => {
@@ -42,16 +43,18 @@ export function poserExtracteur(carte, cx, cy) {
   if (!g || g.extracteur) return false;
   g.extracteur = ajouterMachine(carte.scene, 'extracteur', cx, cy, { carte, item: g.item });
   g.extracteur.horlogeMine = 0;
+  // S'il y a déjà un tapis devant lui, il s'y raccorde sans qu'on le demande.
+  raccorderAuVoisinage(carte.scene, g.extracteur);
   return true;
 }
 
 export function retirerExtracteur(carte, cx, cy) {
   const g = gisementEn(carte, cx, cy);
   if (!g || !g.extracteur) return false;
-  for (const c of [...g.extracteur.sorties]) retirerConvoyeur(carte.scene, c);
-  const i = carte.scene.machines.indexOf(g.extracteur);
-  if (i >= 0) carte.scene.machines.splice(i, 1);
-  carte.scene.grille.cellules[cy * COLONNES + cx] = null;
+  // Le tapis qu'il alimentait n'est pas détruit avec lui : depuis qu'un
+  // extracteur peut se raccorder à un tapis déjà posé, ce tapis peut avoir
+  // d'autres sources. Ce qui ne serait plus alimenté par personne, lui, part.
+  retirerMachine(carte.scene, g.extracteur);
   g.extracteur = null;
   return true;
 }
