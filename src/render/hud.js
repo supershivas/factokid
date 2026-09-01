@@ -182,10 +182,12 @@ function dessinerOutils(ctx, interfaceJeu) {
     const taille = Math.round(BULLE * p);
     const dx = Math.round(r.x + (BULLE - taille) / 2);
     const dy = Math.round(r.y + (BULLE - taille) / 2);
-    ctx.globalAlpha = interfaceJeu.bulles[j].grise ? 0.35 : 1;
+    const bulle = interfaceJeu.bulles[j];
+    ctx.globalAlpha = bulle.grise ? 0.35 : 1;
     ctx.drawImage(INTERFACE.bulleFond, dx, dy, taille, taille);
-    ctx.drawImage(INTERFACE[interfaceJeu.bulles[j].icone], dx, dy, taille, taille);
+    ctx.drawImage(INTERFACE[bulle.icone], dx, dy, taille, taille);
     ctx.globalAlpha = 1;
+    if (bulle.choisie) encadrer(ctx, dx, dy, taille);
   }
 }
 
@@ -224,7 +226,18 @@ function dessinerPanneau(ctx, interfaceJeu) {
     ctx.drawImage(INTERFACE.bouton, r.x, r.y, r.l, r.h);
     const option = p.options[j];
     const sprite = option.item ? spriteItem(option.item) : INTERFACE[option.icone];
+    // Ce qui est choisi est entouré ; le reste est simplement en retrait.
+    ctx.globalAlpha = option.choisie === false ? 0.45 : 1;
     if (sprite) ctx.drawImage(sprite, r.x + 8, r.y + 8, OPTION - 16, OPTION - 16);
+    ctx.globalAlpha = 1;
+    if (option.choisie) encadrer(ctx, r.x, r.y, r.l);
   }
   ctx.restore();
+}
+
+// Le cadre qui dit « c'est celui-ci ».
+function encadrer(ctx, x, y, taille) {
+  ctx.strokeStyle = PALETTE.creme;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, taille - 2, taille - 2);
 }

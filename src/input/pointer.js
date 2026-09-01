@@ -17,8 +17,8 @@ import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
   prolongerConvoyeur, brancherConvoyeur, raccorderA,
 } from '../sim/scene.js';
-import { sceneDe, designerSurCarte, gisementSurCarte } from '../sim/world.js';
-import { poserMine, retirerMine } from '../sim/carte.js';
+import { sceneDe, gisementSurCarte } from '../sim/world.js';
+import { poserExtracteur, retirerExtracteur } from '../sim/carte.js';
 import { aUneSortie, attendus, maxEntrees } from '../sim/machine.js';
 
 const APPUI_LONG = 0.42 * 1000; // millisecondes
@@ -70,6 +70,8 @@ export function brancherPointeur(canvas, vue, monde) {
       action: () => {
         etat.outil = o.id;
         if (o.id === 'construction') {
+          // Le convoyeur est ce qu'on pose le plus souvent : il est prêt.
+          etat.constructible = 'convoyeur';
           ouvrirMenu(bullesConstructibles(), rectBouton(etat.vue < 0 ? 0 : 1));
         } else fermerMenu();
         majBoutons();
@@ -89,7 +91,7 @@ export function brancherPointeur(canvas, vue, monde) {
   function ouvrirMenu(contenu, ancre) {
     etat.menuOuvert = true;
     etat.ancre = ancre;
-    etat.bulles = contenu.map((c) => ({ icone: c.icone, grise: c.grise }));
+    etat.bulles = contenu.map((c) => ({ icone: c.icone, grise: c.grise, choisie: c.choisie }));
     actionsBulles = contenu.map((c) => c.action);
     animMenu = viser('menu', 1, animMenu);
   }
@@ -108,6 +110,7 @@ export function brancherPointeur(canvas, vue, monde) {
     return CONSTRUCTIBLES.map((c) => ({
       icone: c.icone,
       grise: c.ou !== 'partout' && c.ou !== ici,
+      choisie: c.id === etat.constructible,
       action: () => {
         if (c.ou !== 'partout' && c.ou !== ici) return;
         etat.constructible = c.id;
@@ -148,6 +151,17 @@ export function brancherPointeur(canvas, vue, monde) {
     surgirPanneau();
   }
 
+  // Toucher un gisement propose d'y bâtir : c'est la seule chose à y faire.
+  function proposerExtracteur(c, g) {
+    etat.panneau = {
+      nom: ITEMS[g.item].nom,
+      description: 'pose un extracteur pour le récolter',
+      icone: 'bulleExtracteur',
+      options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }],
+    };
+    surgirPanneau();
+  }
+
   function optionsMachine(machine) {
     // Un téléporteur mène à sa carte.
     if (machine.carte && machine.def.source) {
@@ -160,6 +174,7 @@ export function brancherPointeur(canvas, vue, monde) {
     if (machine.def.tri) {
       return machine.def.triables.map((item) => ({
         item,
+        choisie: item === machine.matiereTriee,
         action: () => { machine.matiereTriee = item; ouvrirPanneau(machine, null); },
       }));
     }
@@ -263,11 +278,22 @@ export function brancherPointeur(canvas, vue, monde) {
     for (const c of cellules) etat.effets.push({ cx: c.cx, cy: c.cy });
   }
 
+  // Pose un extracteur sur le gisement, et rend la main au convoyeur : on ne
+  // reste jamais coincé dans un mode.
+  function batirExtracteur(c) {
+    const g = gisementSurCarte(monde, etat.vue, c.cx, c.cy);
+    if (!g || g.extracteur || !poserExtracteur(carte(), c.cx, c.cy)) return false;
+    marquerConstruit([c]);
+    etat.constructible = 'convoyeur';
+    etat.panneau = null;
+    return true;
+  }
+
   function detruire(c) {
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
     if (convoyeur) { couperConvoyeur(scene(), convoyeur, c.cx, c.cy); return; }
     const g = carte() && gisementSurCarte(monde, etat.vue, c.cx, c.cy);
-    if (g && g.mine) retirerMine(carte(), c.cx, c.cy);
+    if (g && g.extracteur) retirerExtracteur(carte(), c.cx, c.cy);
   }
 
   // --- gestes -------------------------------------------------------------
@@ -312,14 +338,9 @@ export function brancherPointeur(canvas, vue, monde) {
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 
-    // Poser une mine, sur une carte, sur un gisement.
-    if (etat.vue >= 0 && etat.outil === 'construction' && etat.constructible === 'mine') {
-      const g = gisementSurCarte(monde, etat.vue, c.cx, c.cy);
-      if (g && !g.mine && poserMine(carte(), c.cx, c.cy)) {
-        marquerConstruit([c]);
-        etat.constructible = 'convoyeur';
-        return;
-      }
+    // Poser un extracteur, sur une carte, sur un gisement.
+    if (etat.vue >= 0 && etat.outil === 'construction' && etat.constructible === 'extracteur') {
+      if (batirExtracteur(c)) return;
     }
 
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
@@ -431,7 +452,7 @@ export function brancherPointeur(canvas, vue, monde) {
         return;
       }
       const g = gisementSurCarte(monde, etat.vue, c.cx, c.cy);
-      if (g && !g.mine) { designerSurCarte(monde, etat.vue, c.cx, c.cy); return; }
+      if (g && !g.extracteur) { proposerExtracteur(c, g); return; }
       return;
     }
     const machine = machineEn(monde.usine, c.cx, c.cy);

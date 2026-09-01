@@ -5,7 +5,7 @@
 
 import { DEPART } from '../data/depart.js';
 import { creerScene, ajouterMachine, poserConvoyeur, majScene, itemsDeScene } from './scene.js';
-import { creerCartes, majCarte, designer, gisementEn } from './carte.js';
+import { creerCartes, majCarte, gisementEn } from './carte.js';
 import { deposerDepuisCarte } from './machine.js';
 
 export function creerMonde() {
@@ -30,11 +30,6 @@ export function creerMonde() {
 // La scène affichée : -1 pour l'usine, sinon l'index d'une carte.
 export function sceneDe(monde, vue) {
   return vue < 0 ? monde.usine : monde.cartes[vue].scene;
-}
-
-export function designerSurCarte(monde, indexCarte, cx, cy) {
-  const carte = monde.cartes[indexCarte];
-  return carte ? designer(carte, cx, cy) : false;
 }
 
 export function gisementSurCarte(monde, indexCarte, cx, cy) {

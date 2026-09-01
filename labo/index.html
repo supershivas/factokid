@@ -42,6 +42,14 @@
   <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
   <div class="grille" id="bulles"></div>
 
+  <h2>Icônes des outils — dix couples</h2>
+  <p class="note">Construire à gauche, détruire à droite. Chaque couple doit se lire en niveaux de gris, sans un mot.</p>
+  <div class="grille" id="icones"></div>
+
+  <h2>Destruction d'un élément — dix effets</h2>
+  <p class="note">La même tuile retirée entre deux voisines, à chaque fois.</p>
+  <div class="grille" id="destructions"></div>
+
   <h2>Pose d'un élément — dix effets</h2>
   <p class="note">La même tuile de convoyeur posée entre deux voisines, à chaque fois.</p>
   <div class="grille" id="poses"></div>
@@ -60,6 +68,34 @@
 
     const poses = document.getElementById('poses');
     for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+
+    const { DESTRUCTIONS } = await import('./destructions.js');
+    const destructions = document.getElementById('destructions');
+    for (const v of DESTRUCTIONS) poserVignette(destructions, v.titre, v.note, v.dessiner, v.duree);
+
+    // Les icônes ne s'animent pas : on les pose côte à côte, en grand.
+    const { ICONES_OUTILS } = await import('./icones.js');
+    const icones = document.getElementById('icones');
+    for (const couple of ICONES_OUTILS) {
+      const carte = document.createElement('figure');
+      carte.className = 'vignette';
+      const paire = document.createElement('div');
+      paire.style.cssText = 'display:flex;gap:10px';
+      for (const [sprite, fond] of [[couple.construire, '#243047'], [couple.detruire, '#3a2230']]) {
+        const c = document.createElement('canvas');
+        c.width = 16 * 6; c.height = 16 * 6;
+        const g = c.getContext('2d');
+        g.imageSmoothingEnabled = false;
+        g.fillStyle = fond; g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(sprite, 0, 0, c.width, c.height);
+        c.style.cssText = 'image-rendering:pixelated;border-radius:4px';
+        paire.append(c);
+      }
+      const legende = document.createElement('figcaption');
+      legende.innerHTML = `<b>${couple.titre}</b><span>${couple.note}</span>`;
+      carte.append(paire, legende);
+      icones.append(carte);
+    }
   </script>
 </body>
 </html>

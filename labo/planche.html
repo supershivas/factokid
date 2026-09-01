@@ -31,6 +31,8 @@
   <div id="bulles"></div>
   <h2>Pose d'un élément</h2>
   <div id="poses"></div>
+  <h2>Destruction d'un élément</h2>
+  <div id="destructions"></div>
 
   <script type="module">
     import { BULLES } from './bulles.js';
@@ -69,6 +71,8 @@
 
     for (const v of BULLES) planche(document.getElementById('bulles'), v);
     for (const v of POSES) planche(document.getElementById('poses'), v);
+    const { DESTRUCTIONS } = await import('./destructions.js');
+    for (const v of DESTRUCTIONS) planche(document.getElementById('destructions'), v);
   </script>
 </body>
 </html>

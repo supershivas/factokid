@@ -9,7 +9,6 @@ import { ITEMS } from '../data/items.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
 import { dessinerAlerte } from './alerte.js';
-import { estDesigne } from '../sim/carte.js';
 import { chutePose } from './pose.js';
 import { parcourirItems, celluleDe } from '../sim/belt.js';
 
@@ -136,6 +135,17 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(5, 13, 1, 2, PALETTE.bleu);
 });
 
+// Le chevron qui dit le sens de circulation. Il se pose par-dessus la tuile,
+// tourné vers la sortie de la case : un enfant doit voir où ça va sans
+// attendre qu'un item passe.
+const chevron = toile(TUILE_PX, (rect) => {
+  for (let i = 0; i < 3; i++) {
+    rect(6 + i, 5 + i, 1, 1, PALETTE.creme);
+    rect(6 + i, 10 - i, 1, 1, PALETTE.creme);
+  }
+  rect(9, 8, 1, 1, PALETTE.creme);
+});
+
 // Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les
 // quatre rotations couvrent les quatre jonctions à trois branches.
 const convoyeurT = toile(TUILE_PX, (rect) => {
@@ -247,20 +257,8 @@ const gisementVide = toile(TUILE_PX, (rect) => {
   rect(2, 14, 12, 1, PALETTE.noir);
 });
 
-// Le héros : de dos, il tient un panier. Assez petit pour ne jamais cacher un
-// gisement, assez contrasté pour qu'on le suive des yeux.
-const heros = toile(TUILE_PX, (rect) => {
-  rect(5, 2, 6, 4, PALETTE.noir);
-  rect(6, 3, 4, 2, PALETTE.creme);
-  rect(5, 6, 6, 6, PALETTE.bleu);
-  rect(4, 7, 1, 4, PALETTE.creme);
-  rect(11, 7, 1, 4, PALETTE.creme);
-  rect(5, 12, 2, 3, PALETTE.noir);
-  rect(9, 12, 2, 3, PALETTE.noir);
-});
-
-// Une mine : un chevalet posé sur le gisement, qui le récolte tout seul.
-const mine = toile(TUILE_PX, (rect) => {
+// Un extracteur : un chevalet posé sur le gisement, qui le récolte tout seul.
+const extracteur = toile(TUILE_PX, (rect) => {
   rect(2, 12, 12, 3, PALETTE.ardoise);
   rect(2, 15, 12, 1, PALETTE.noir);
   rect(7, 3, 2, 9, PALETTE.creme);
@@ -270,7 +268,8 @@ const mine = toile(TUILE_PX, (rect) => {
 });
 
 export const ICONES = {
-  teleporteur, trieur, confiserie, livraison, chaufferie, mine, sortieCarte: teleporteur,
+  teleporteur, trieur, confiserie, livraison, chaufferie, extracteur,
+  sortieCarte: teleporteur,
 };
 
 const spritesGisements = {};
@@ -315,7 +314,7 @@ const outilDestruction = toile(TUILE_PX, (rect) => {
   }
 });
 
-const bulleMine = toile(TUILE_PX, (rect) => {
+const bulleExtracteur = toile(TUILE_PX, (rect) => {
   rect(2, 11, 12, 3, PALETTE.ardoise);
   rect(7, 3, 2, 8, PALETTE.creme);
   rect(4, 6, 8, 1, PALETTE.jaune);
@@ -340,7 +339,7 @@ function bulleCarte(item) {
 }
 
 export const INTERFACE = {
-  bouton, boutonActif, bulleFond, bulleConvoyeur, bulleMine,
+  bouton, boutonActif, bulleFond, bulleConvoyeur, bulleExtracteur,
   outilConstruction, outilDestruction, outilRetour,
 };
 for (const item of Object.values(ITEMS)) INTERFACE['bulleCarte_' + item.id] = bulleCarte(item);
@@ -498,6 +497,7 @@ export function dessinerConvoyeurs(ctx, scene) {
 
       const o = orientation(sens(avant, chemin[i]), sens(chemin[i], apres));
       tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);
+      dessinerChevron(ctx, chemin[i], sens(chemin[i], apres));
     }
   }
   for (const convoyeur of scene.convoyeurs) {
@@ -508,6 +508,17 @@ export function dessinerConvoyeurs(ctx, scene) {
         TAILLE_ITEM, TAILLE_ITEM,
       );
     });
+  }
+}
+
+// Un chevron par case, tourné vers la sortie.
+function dessinerChevron(ctx, cellule, vers) {
+  for (let q = 0; q < 4; q++) {
+    if (!memeSens(tourner(EST, q), vers)) continue;
+    ctx.globalAlpha = 0.6;
+    tuile(ctx, chevron, cellule.cx, cellule.cy, q);
+    ctx.globalAlpha = 1;
+    return;
   }
 }
 
@@ -609,11 +620,6 @@ export function dessinerCarte(ctx, carte, trace) {
   for (const g of carte.gisements) {
     const coin = coinCellule(g.cx, g.cy);
     if (g.present) {
-      if (estDesigne(carte, g)) {
-        ctx.strokeStyle = PALETTE.creme;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(coin.x + 4.5, coin.y + 4.5, CELLULE - 9, CELLULE - 9);
-      }
       tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
       continue;
     }
@@ -628,23 +634,9 @@ export function dessinerCarte(ctx, carte, trace) {
   dessinerConvoyeurs(ctx, carte.scene);
   for (const machine of carte.scene.machines) dessinerMachine(ctx, machine);
   dessinerAlertes(ctx, carte.scene);
-  dessinerHeros(ctx, carte);
   if (trace && trace.actif) dessinerTrace(ctx, trace);
 }
 
-function dessinerHeros(ctx, carte) {
-  const h = carte.heros;
-  const x = Math.round(h.x - CELLULE / 2);
-  const y = Math.round(h.y - CELLULE / 2);
-  ctx.drawImage(heros, x, y, CELLULE, CELLULE);
-  // Ce qu'il porte, au-dessus de sa tête.
-  for (let i = 0; i < h.sac.length; i++) {
-    ctx.drawImage(
-      spritesItems[h.sac[i]],
-      x + 6 + i * (TAILLE_ITEM - 6), y - 6, TAILLE_ITEM, TAILLE_ITEM,
-    );
-  }
-}
 
 // Jauge de stock : une rangée de pastilles par ingrédient attendu, à la
 // couleur de l'item. Le bouchon se voit sur la machine, pas seulement sur le

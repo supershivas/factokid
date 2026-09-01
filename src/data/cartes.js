@@ -2,18 +2,9 @@
 // Une carte porte une ou plusieurs matières brutes, et son propre téléporteur.
 // Ajouter une matière au jeu, c'est ajouter une entrée ici.
 
-// Le héros : il va chercher ce qu'on lui désigne et le rapporte au
-// téléporteur. Il ne se dirige pas, on lui montre.
-export const HEROS = {
-  vitesse: 150,       // unités logiques par seconde
-  capacite: 4,        // ce qu'il porte avant de devoir rentrer
-  ticksRamassage: 18, // le temps de se baisser
-};
-
-// Une mine posée sur un gisement le récolte toute seule.
-export const MINE = {
-  nom: 'mine',
-  ticksParItem: 150,  // 2,5 s : bien plus lent qu'un héros attentif
+// Un extracteur posé sur un gisement le récolte tout seul.
+export const EXTRACTEUR = {
+  ticksParItem: 150, // 2,5 s par matière
 };
 
 export const CARTES = [

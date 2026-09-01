@@ -10,5 +10,5 @@ export const OUTILS = [
 // `ou` dit où l'élément se pose : « partout », « usine » ou « carte ».
 export const CONSTRUCTIBLES = [
   { id: 'convoyeur', icone: 'bulleConvoyeur', ou: 'partout' },
-  { id: 'mine', icone: 'bulleMine', ou: 'carte' },
+  { id: 'extracteur', icone: 'bulleExtracteur', ou: 'carte' },
 ];

@@ -42,11 +42,11 @@ export const MACHINES = {
     recette: 'caramel',   // le sucre y fond
     capacite: 4,
   },
-  mine: {
-    id: 'mine',
+  extracteur: {
+    id: 'extracteur',
     description: 'récolte son gisement toute seule',
-    nom: 'mine',
-    mine: true,           // se remplit du gisement qu'elle occupe
+    nom: 'extracteur',
+    mine: true,           // se remplit du gisement qu'il occupe
     capacite: 4,
     ticksParItem: 20,     // cadence à laquelle elle verse sur le tapis
   },

@@ -70,6 +70,29 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
 
 function estMachine(x) { return Boolean(x && x.def); }
 
+// Un convoyeur que plus rien n'alimente ne peut plus rien recevoir : il reste
+// à l'écran sans jamais servir. On l'enlève, et de proche en proche.
+function alimente(convoyeur) {
+  return estMachine(convoyeur.source) || convoyeur.sources.length > 0;
+}
+
+let nettoyageEnCours = false;
+
+function nettoyerOrphelins(scene) {
+  if (nettoyageEnCours) return;
+  nettoyageEnCours = true;
+  let encore = true;
+  while (encore) {
+    encore = false;
+    for (const c of [...scene.convoyeurs]) {
+      if (alimente(c)) continue;
+      retirerConvoyeur(scene, c);
+      encore = true;
+    }
+  }
+  nettoyageEnCours = false;
+}
+
 export function retirerConvoyeur(scene, convoyeur) {
   const i = scene.convoyeurs.indexOf(convoyeur);
   if (i < 0) return;
@@ -94,6 +117,7 @@ export function retirerConvoyeur(scene, convoyeur) {
     const i = convoyeur.cible.entrees.indexOf(convoyeur);
     if (i >= 0) convoyeur.cible.entrees.splice(i, 1);
   }
+  nettoyerOrphelins(scene);
 }
 
 // Une sortie, un convoyeur, une entrée : chaque machine n'a qu'une sortie, et
