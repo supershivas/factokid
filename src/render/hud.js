@@ -43,11 +43,11 @@ export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const producteur = monde.machines.find((m) => m.type === 'producteur');
-  const consommateur = monde.machines.find((m) => m.type === 'consommateur');
+  const assembleur = monde.machines.find((m) => m.recette);
+  const consommateur = monde.machines.find((m) => m.def.entree);
 
   // Bandeau haut : items en circulation, et fréquence d'images.
-  ctx.drawImage(spriteItem('boulon'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
+  ctx.drawImage(spriteItem('moteur'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
   dessinerNombre(ctx, nombreItems(monde), 12 + TAILLE_ITEM + 9, 21, TEXTE_GRAND, PALETTE.creme);
 
   const largeurFps = largeurNombre(fps, TEXTE_PETIT);
@@ -57,8 +57,8 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
 
   // Bandeau bas : la barre d'outils à gauche, les compteurs à droite.
   const basY = GRILLE_Y + LIGNES * CELLULE + 24;
-  ctx.drawImage(ICONES.producteur, 140, basY - 8, 32, 32);
-  dessinerNombre(ctx, producteur.produits, 180, basY, TEXTE_PETIT, PALETTE.jaune);
+  ctx.drawImage(ICONES.assembleur, 140, basY - 8, 32, 32);
+  dessinerNombre(ctx, assembleur.produits, 180, basY, TEXTE_PETIT, PALETTE.jaune);
 
   const largeurC = largeurNombre(consommateur.consommes, TEXTE_PETIT);
   ctx.drawImage(ICONES.consommateur, LARGEUR_LOGIQUE - 44, basY - 8, 32, 32);

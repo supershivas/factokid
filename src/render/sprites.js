@@ -7,6 +7,7 @@ import {
 } from '../design.js';
 import { ITEMS } from '../data/items.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
+import { attendus } from '../sim/machine.js';
 import { parcourirItems } from '../sim/belt.js';
 
 const TAILLE_ITEM_PX = 6;
@@ -30,6 +31,43 @@ function toile(taille, peindre) {
   peindre(rect, disque, g);
   return c;
 }
+
+// --- formes des items -----------------------------------------------------
+// Définies avant les tuiles : les machines s'en servent pour porter la forme
+// de ce qu'elles produisent.
+
+// Décale un peintre de rectangles : sert à poser une forme d'item ailleurs
+// que dans son propre coin, par exemple sur la façade d'une mine.
+function decale(rect, ox, oy) {
+  return (x, y, w, h, couleur) => rect(x + ox, y + oy, w, h, couleur);
+}
+
+const formes = {
+  carre: (rect, couleur) => {
+    rect(0, 0, 6, 6, PALETTE.noir);
+    rect(1, 1, 4, 4, couleur);
+    rect(1, 1, 1, 1, PALETTE.creme);
+  },
+  triangle: (rect, couleur) => {
+    const n = PALETTE.noir;
+    rect(2, 0, 2, 1, n);
+    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
+    rect(1, 2, 1, 1, n); rect(2, 2, 2, 1, couleur); rect(4, 2, 1, 1, n);
+    rect(0, 3, 1, 1, n); rect(1, 3, 4, 1, couleur); rect(5, 3, 1, 1, n);
+    rect(0, 4, 1, 1, n); rect(1, 4, 4, 1, couleur); rect(5, 4, 1, 1, n);
+    rect(0, 5, 6, 1, n);
+  },
+  rond: (rect, couleur) => {
+    const n = PALETTE.noir;
+    rect(2, 0, 2, 1, n);
+    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
+    rect(0, 2, 1, 2, n); rect(1, 2, 4, 2, couleur); rect(5, 2, 1, 2, n);
+    rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
+    rect(2, 5, 2, 1, n);
+    rect(2, 1, 1, 1, PALETTE.creme);
+  },
+};
+
 
 // --- tuiles ---------------------------------------------------------------
 
@@ -74,13 +112,32 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(10, 12, 1, 2, PALETTE.bleu);
 });
 
-const producteur = toile(TUILE_PX, (rect) => {
+// Une mine : entonnoir qui verse. La couleur du bandeau dit ce qu'elle sort,
+// la forme dit que c'est une source.
+// Une mine porte la forme de ce qu'elle sort : deux mines ne se distinguent
+// jamais par la seule couleur.
+function mine(item) {
+  return toile(TUILE_PX, (rect) => {
+    rect(0, 0, 16, 16, PALETTE.noir);
+    rect(1, 1, 14, 14, PALETTE.ardoise);
+    rect(2, 2, 12, 6, PALETTE.noir);
+    formes[item.forme](decale(rect, 5, 3), PALETTE[item.couleur]);
+    for (let i = 0; i < 4; i++) rect(4 + i, 9 + i, 8 - 2 * i, 1, PALETTE.creme);
+    rect(2, 14, 3, 2, PALETTE.noir);
+    rect(11, 14, 3, 2, PALETTE.noir);
+  });
+}
+
+// Un assembleur : deux blocs qui entrent en haut, un seul qui sort en bas.
+const assembleur = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
   rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(2, 2, 12, 4, PALETTE.jaune);
-  for (let i = 0; i < 5; i++) rect(4 + i, 8 + i, 8 - 2 * i, 1, PALETTE.creme);
-  rect(2, 14, 3, 2, PALETTE.noir);
-  rect(11, 14, 3, 2, PALETTE.noir);
+  rect(3, 2, 3, 3, PALETTE.creme);
+  rect(10, 2, 3, 3, PALETTE.creme);
+  rect(5, 5, 2, 2, PALETTE.creme);
+  rect(9, 5, 2, 2, PALETTE.creme);
+  rect(6, 7, 4, 2, PALETTE.creme);
+  rect(4, 9, 8, 3, PALETTE.jaune);
 });
 
 const consommateur = toile(TUILE_PX, (rect, disque) => {
@@ -93,7 +150,12 @@ const consommateur = toile(TUILE_PX, (rect, disque) => {
   rect(2, 13, 12, 2, PALETTE.noir);
 });
 
-export const ICONES = { producteur, consommateur };
+export const ICONES = {
+  mineBoulons: mine(ITEMS.boulon),
+  minePlaques: mine(ITEMS.plaque),
+  assembleur,
+  consommateur,
+};
 
 // --- interface ------------------------------------------------------------
 
@@ -140,26 +202,10 @@ export const INTERFACE = {
 
 // --- items ----------------------------------------------------------------
 
-const formes = {
-  carre: (rect, _d, couleur) => {
-    rect(0, 0, 6, 6, PALETTE.noir);
-    rect(1, 1, 4, 4, couleur);
-    rect(1, 1, 1, 1, PALETTE.creme);
-  },
-  losange: (rect, _d, couleur) => {
-    const n = PALETTE.noir;
-    rect(2, 0, 2, 1, n);
-    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
-    rect(0, 2, 1, 2, n); rect(1, 2, 4, 2, couleur); rect(5, 2, 1, 2, n);
-    rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
-    rect(2, 5, 2, 1, n);
-  },
-};
-
 const spritesItems = {};
 for (const item of Object.values(ITEMS)) {
-  spritesItems[item.id] = toile(TAILLE_ITEM_PX, (rect, disque) => {
-    formes[item.forme](rect, disque, PALETTE[item.couleur]);
+  spritesItems[item.id] = toile(TAILLE_ITEM_PX, (rect) => {
+    formes[item.forme](rect, PALETTE[item.couleur]);
   });
 }
 export function spriteItem(id) { return spritesItems[id]; }
@@ -252,7 +298,7 @@ export function dessinerScene(ctx, monde, trace) {
   for (const machine of monde.machines) {
     tuile(ctx, ICONES[machine.type], machine.cx, machine.cy, 0);
     const coin = coinCellule(machine.cx, machine.cy);
-    if (machine.def.capacite) dessinerStock(ctx, machine, coin);
+    dessinerStock(ctx, machine, coin);
     if (machine.bloquee) {
       ctx.fillStyle = PALETTE.rouge;
       ctx.fillRect(coin.x + CELLULE - 12, coin.y + 3, 9, 9);
@@ -262,19 +308,27 @@ export function dessinerScene(ctx, monde, trace) {
   if (trace && trace.actif) dessinerTrace(ctx, trace);
 }
 
-// Jauge de stock : une pastille par place du tampon, verte quand elle est prise.
-// Le bouchon se voit sur la machine, pas seulement sur le convoyeur.
+// Jauge de stock : une rangée de pastilles par ingrédient attendu, à la
+// couleur de l'item. Le bouchon se voit sur la machine, pas seulement sur le
+// convoyeur.
 const PASTILLE = 6;
-const PAS_PASTILLE = 9;
+const PAS_PASTILLE = 10;
 
 function dessinerStock(ctx, machine, coin) {
-  const total = machine.def.capacite;
-  const largeur = total * PASTILLE + (total - 1) * (PAS_PASTILLE - PASTILLE);
-  const x = coin.x + Math.round((CELLULE - largeur) / 2);
-  const y = coin.y + 39;
-  for (let i = 0; i < total; i++) {
-    ctx.fillStyle = i < machine.stock ? PALETTE.vert : PALETTE.noir;
-    ctx.fillRect(x + i * PAS_PASTILLE, y, PASTILLE, PASTILLE);
+  const rangees = attendus(machine);
+  for (let r = 0; r < rangees.length; r++) {
+    const { item, capacite } = rangees[r];
+    const largeur = capacite * PASTILLE + (capacite - 1) * (PAS_PASTILLE - PASTILLE);
+    const x = coin.x + Math.round((CELLULE - largeur) / 2);
+    const y = coin.y + CELLULE - 9 - r * (PASTILLE + 3);
+    // Fond sombre derrière la rangée : les places vides doivent se voir autant
+    // que les pleines, sinon on ne lit pas combien il en reste.
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(x - 2, y - 2, largeur + 4, PASTILLE + 4);
+    for (let i = 0; i < capacite; i++) {
+      ctx.fillStyle = i < machine.stocks[item] ? PALETTE[ITEMS[item].couleur] : PALETTE.ardoise;
+      ctx.fillRect(x + i * PAS_PASTILLE, y, PASTILLE, PASTILLE);
+    }
   }
 }
 

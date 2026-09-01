@@ -2,16 +2,26 @@
 // Toute constante de gameplay vit dans ce dossier.
 
 export const MACHINES = {
-  producteur: {
-    id: 'producteur',
+  mineBoulons: {
+    id: 'mineBoulons',
     ticksParItem: 30,   // un item toutes les 30 ticks (0,5 s à 60 Hz)
                         // reste sous le débit du convoyeur (3,55 items/s)
     sortie: 'boulon',
   },
+  minePlaques: {
+    id: 'minePlaques',
+    ticksParItem: 30,
+    sortie: 'plaque',
+  },
+  assembleur: {
+    id: 'assembleur',
+    recette: 'moteur',  // a + b = c
+    capacite: 4,        // par ingrédient
+  },
   consommateur: {
     id: 'consommateur',
-    ticksParItem: 60,   // moitié du producteur : le convoyeur sature
-    entree: 'boulon',
+    entree: 'moteur',
+    ticksParItem: 60,
     capacite: 4,
   },
   convoyeur: {

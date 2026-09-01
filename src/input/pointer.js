@@ -10,6 +10,7 @@ import { celluleDepuisPoint, adjacentes } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, retirerConvoyeur,
 } from '../sim/world.js';
+import { aUneSortie, attendus } from '../sim/machine.js';
 
 export function majInterface(etat, dt) {
   const vise = etat.menuOuvert ? 1 : 0;
@@ -78,8 +79,10 @@ export function brancherPointeur(canvas, vue, monde) {
     for (let i = 0; i < OUTILS.length; i++) {
       if (!dansRect(rectBouton(i), p.x, p.y)) continue;
       const outil = OUTILS[i].id;
-      // Toucher « construction » fait sortir les éléments constructibles.
-      etat.menuOuvert = outil === 'construction' && !(etat.outil === outil && etat.menuOuvert);
+      // Toucher « construction » fait sortir les éléments constructibles, et
+      // ne fait que ça : pas de bascule, sinon un événement dupliqué par le
+      // navigateur referme le menu dans la foulée.
+      etat.menuOuvert = outil === 'construction';
       etat.outil = outil;
       return true;
     }
@@ -93,10 +96,12 @@ export function brancherPointeur(canvas, vue, monde) {
   }
 
   function debut(e) {
-    if (pointeur !== null) return;
     const p = point(e);
     e.preventDefault();
-    if (interfaceTouchee(p)) return;
+    // L'interface est testée avant tout : un pointeur resté coincé (pointerup
+    // perdu, ce qui arrive sur mobile) ne doit pas condamner la barre d'outils.
+    if (interfaceTouchee(p)) { relacher(); return; }
+    if (pointeur !== null) return;
 
     const c = celluleDepuisPoint(p.x, p.y);
     if (!c) return;
@@ -106,7 +111,7 @@ export function brancherPointeur(canvas, vue, monde) {
     if (etat.outil === 'destruction') { detruire(c); return; }
 
     const machine = machineEn(monde, c.cx, c.cy);
-    if (!machine || machine.type !== 'producteur') return;
+    if (!machine || !aUneSortie(machine)) return;
     trace.actif = true;
     trace.source = machine;
     trace.chemin = [];
@@ -125,27 +130,33 @@ export function brancherPointeur(canvas, vue, monde) {
   // Un convoyeur lâché en cours de route reste construit : on ne recommence
   // jamais du début. Sans machine à l'arrivée, il ne débouche sur rien et les
   // items s'y accumulent.
+  function relacher() {
+    if (pointeur !== null && canvas.hasPointerCapture(pointeur)) canvas.releasePointerCapture(pointeur);
+    pointeur = null;
+    trace.actif = false;
+    trace.chemin = [];
+  }
+
   function fin(e) {
     if (e.pointerId !== pointeur) return;
     e.preventDefault();
     if (trace.actif && trace.chemin.length > 0) {
       const c = celluleDepuisPoint(point(e).x, point(e).y);
       const machine = c ? machineEn(monde, c.cx, c.cy) : null;
-      const cible = machine && machine.type === 'consommateur' && adjacentes(derniere(), machine)
+      const cible = machine && machine !== trace.source && attendus(machine).length > 0
+        && adjacentes(derniere(), machine)
         ? machine
         : null;
       poserConvoyeur(monde, trace.chemin, trace.source, cible);
     }
-    trace.actif = false;
-    trace.chemin = [];
-    if (canvas.hasPointerCapture(pointeur)) canvas.releasePointerCapture(pointeur);
-    pointeur = null;
+    relacher();
   }
 
   canvas.addEventListener('pointerdown', debut);
   canvas.addEventListener('pointermove', deplacement);
   canvas.addEventListener('pointerup', fin);
   canvas.addEventListener('pointercancel', fin);
+  canvas.addEventListener('lostpointercapture', relacher);
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   return etat;

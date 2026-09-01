@@ -14,7 +14,10 @@
            display: flex; align-items: center; justify-content: center;
            background: var(--noir); border: 6px solid var(--ardoise);
            border-radius: 18px; box-shadow: 0 12px 40px #0008; }
-  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  /* touch-action n'est pas héritée : sans ça le navigateur peut réclamer
+     le geste pour lui (zoom, panoramique) et annuler nos événements. */
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block;
+           touch-action: none; }
 </style>
 </head>
 <body>

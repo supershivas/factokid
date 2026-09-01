@@ -11,7 +11,10 @@
          touch-action: none; -webkit-user-select: none; user-select: none;
          -webkit-tap-highlight-color: transparent; }
   #scene { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
+  /* touch-action n'est pas héritée : sans ça le navigateur peut réclamer
+     le geste pour lui (zoom, panoramique) et annuler nos événements. */
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block;
+           touch-action: none; }
 </style>
 </head>
 <body>
