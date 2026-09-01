@@ -4,12 +4,15 @@
 // Ce module tient aussi l'état de l'interface (outil courant, menu des
 // éléments constructibles). Le rendu le lit, il ne le modifie jamais.
 
-import { BULLE_ANIMATION, CELLULE, rectBouton, rectBulle, dansRect } from '../design.js';
+import {
+  BULLE_ANIMATION, CELLULE, PANNEAU, rectBouton, rectBulle, rectOption, dansRect,
+} from '../design.js';
+import { ITEMS } from '../data/items.js';
 import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
 import { celluleDepuisPoint, adjacentes } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
-  prolongerConvoyeur, ramasserSurCarte,
+  prolongerConvoyeur, designerSurCarte,
 } from '../sim/world.js';
 import { aUneSortie, attendus } from '../sim/machine.js';
 import { coinCellule } from '../sim/grid.js';
@@ -28,6 +31,7 @@ export function brancherPointeur(canvas, vue, monde) {
     menuOuvert: false,
     menu: 0,
     ancre: null,                 // d'où sortent les bulles
+    panneau: null,               // élément construit ouvert : nom et options
     bulles: [],                  // ce que le rendu doit dessiner
     boutons: [],
     trace: { actif: false, source: null, chemin: [], reprise: null },
@@ -66,17 +70,53 @@ export function brancherPointeur(canvas, vue, monde) {
     etat.menuOuvert = false;
   }
 
+  // Toucher un élément construit dit ce que c'est et ce qu'on peut y régler.
+  function ouvrirPanneau(machine, convoyeur) {
+    if (machine) {
+      etat.panneau = {
+        nom: machine.def.nom,
+        icone: machine.type,
+        options: machine.def.source
+          ? monde.cartes.map((carte, i) => ({
+            icone: 'bulleCarte_' + carte.item,
+            action: () => { etat.vue = i; etat.panneau = null; majBoutons(); },
+          }))
+          : [],
+      };
+      return;
+    }
+    // Un convoyeur sorti d'un trieur porte un filtre : la matière qu'il emmène.
+    const tri = convoyeur.source.def.tri;
+    etat.panneau = {
+      nom: convoyeur.matiere ? ITEMS[convoyeur.matiere].nom : 'convoyeur',
+      icone: 'bulleConvoyeur',
+      options: tri && convoyeur.matiere
+        ? [{
+          item: convoyeur.matiere,
+          action: () => {
+            const i = tri.indexOf(convoyeur.matiere);
+            convoyeur.matiere = tri[(i + 1) % tri.length];
+            ouvrirPanneau(null, convoyeur);
+          },
+        }]
+        : [],
+    };
+  }
+
+  function panneauTouche(p) {
+    if (!etat.panneau) return false;
+    for (let j = 0; j < etat.panneau.options.length; j++) {
+      if (dansRect(rectOption(j), p.x, p.y)) { etat.panneau.options[j].action(); return true; }
+    }
+    if (dansRect(PANNEAU, p.x, p.y)) return true;
+    etat.panneau = null;
+    return false;
+  }
+
   function bullesConstructibles() {
     return CONSTRUCTIBLES.map((c) => ({
       icone: c.icone,
       action: () => { etat.constructible = c.id; etat.outil = 'construction'; fermerMenu(); majBoutons(); },
-    }));
-  }
-
-  function bullesCartes() {
-    return monde.cartes.map((carte, i) => ({
-      icone: 'bulleCarte_' + carte.item,
-      action: () => { etat.vue = i; fermerMenu(); majBoutons(); },
     }));
   }
 
@@ -154,6 +194,7 @@ export function brancherPointeur(canvas, vue, monde) {
     e.preventDefault();
     // L'interface est testée avant tout : un pointeur resté coincé (pointerup
     // perdu, ce qui arrive sur mobile) ne doit pas condamner la barre d'outils.
+    if (panneauTouche(p)) { relacher(); return; }
     if (interfaceTouchee(p)) { relacher(); return; }
     if (pointeur !== null) return;
 
@@ -164,12 +205,13 @@ export function brancherPointeur(canvas, vue, monde) {
     tapSur = null;
 
     // Dans une carte, le seul geste est de ramasser.
-    if (etat.vue >= 0) { ramasserSurCarte(monde, etat.vue, c.cx, c.cy); return; }
+    if (etat.vue >= 0) { designerSurCarte(monde, etat.vue, c.cx, c.cy); return; }
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 
     // Reprendre un tracé arrêté en route : on repart de son bout mort.
     const convoyeur = convoyeurEn(monde, c.cx, c.cy);
+    if (convoyeur) tapSur = { convoyeur };
     if (convoyeur && !convoyeur.cible) {
       const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
       if (bout.cx === c.cx && bout.cy === c.cy) {
@@ -182,10 +224,10 @@ export function brancherPointeur(canvas, vue, monde) {
     }
 
     const machine = machineEn(monde, c.cx, c.cy);
+    if (machine) tapSur = { machine };
+    // Une machine répond à deux gestes : un appui ouvre son panneau, un glissé
+    // trace un convoyeur. On tranche au relâchement.
     if (!machine || !aUneSortie(machine)) return;
-    // Le téléporteur répond à deux gestes : un appui ouvre les cartes, un
-    // glissé trace un convoyeur. On tranche au relâchement.
-    if (machine.def.source) tapSur = machine;
     trace.actif = true;
     trace.source = machine;
     trace.chemin = [];
@@ -218,8 +260,7 @@ export function brancherPointeur(canvas, vue, monde) {
     if (e.pointerId !== pointeur) return;
     e.preventDefault();
     if (tapSur && trace.chemin.length === 0) {
-      const coin = coinCellule(tapSur.cx, tapSur.cy);
-      ouvrirMenu(bullesCartes(), { x: coin.x, y: coin.y, l: CELLULE, h: CELLULE });
+      ouvrirPanneau(tapSur.machine || null, tapSur.convoyeur || null);
       tapSur = null;
       relacher();
       return;
@@ -232,6 +273,7 @@ export function brancherPointeur(canvas, vue, monde) {
         && adjacentes(derniere(), machine)
         ? machine
         : null;
+      etat.panneau = null;
       if (trace.reprise) prolongerConvoyeur(monde, trace.reprise, trace.chemin, cible);
       else poserConvoyeur(monde, trace.chemin, trace.source, cible);
     }

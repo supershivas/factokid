@@ -8,6 +8,7 @@ import {
 import { ITEMS } from '../data/items.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
+import { estDesigne } from '../sim/carte.js';
 import { parcourirItems } from '../sim/belt.js';
 
 const TAILLE_ITEM_PX = 6;
@@ -187,6 +188,18 @@ const gisementVide = toile(TUILE_PX, (rect) => {
   rect(2, 14, 12, 1, PALETTE.noir);
 });
 
+// Le héros : de dos, il tient un panier. Assez petit pour ne jamais cacher un
+// gisement, assez contrasté pour qu'on le suive des yeux.
+const heros = toile(TUILE_PX, (rect) => {
+  rect(5, 2, 6, 4, PALETTE.noir);
+  rect(6, 3, 4, 2, PALETTE.creme);
+  rect(5, 6, 6, 6, PALETTE.bleu);
+  rect(4, 7, 1, 4, PALETTE.creme);
+  rect(11, 7, 1, 4, PALETTE.creme);
+  rect(5, 12, 2, 3, PALETTE.noir);
+  rect(9, 12, 2, 3, PALETTE.noir);
+});
+
 const spritesGisements = {};
 for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(item);
 
@@ -195,16 +208,45 @@ export function dessinerCarte(ctx, carte) {
   for (let cy = 0; cy < LIGNES; cy++) {
     for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solCarte, cx, cy, 0);
   }
+
+  // Le téléporteur : là où le héros dépose, et par où l'on repart.
+  tuile(ctx, ICONES.teleporteur, carte.teleporteur.cx, carte.teleporteur.cy, 0);
+
   for (const g of carte.gisements) {
-    if (g.present) { tuile(ctx, spritesGisements[carte.item], g.cx, g.cy, 0); continue; }
+    const coin = coinCellule(g.cx, g.cy);
+    if (g.present) {
+      // Désigné : un cadre clair dit que le héros viendra le chercher.
+      if (estDesigne(carte, g)) {
+        ctx.strokeStyle = PALETTE.creme;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(coin.x + 4.5, coin.y + 4.5, CELLULE - 9, CELLULE - 9);
+      }
+      tuile(ctx, spritesGisements[carte.item], g.cx, g.cy, 0);
+      continue;
+    }
     tuile(ctx, gisementVide, g.cx, g.cy, 0);
     // Attente de repousse : une barre qui se remplit sur le socle.
     const part = Math.min(1, g.horloge / carte.repousse);
-    const coin = coinCellule(g.cx, g.cy);
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(coin.x + 6, coin.y + 24, 36, 6);
     ctx.fillStyle = PALETTE.vert;
     ctx.fillRect(coin.x + 6, coin.y + 24, Math.round(36 * part), 6);
+  }
+
+  dessinerHeros(ctx, carte);
+}
+
+function dessinerHeros(ctx, carte) {
+  const h = carte.heros;
+  const x = Math.round(h.x - CELLULE / 2);
+  const y = Math.round(h.y - CELLULE / 2);
+  ctx.drawImage(heros, x, y, CELLULE, CELLULE);
+  // Ce qu'il porte, au-dessus de sa tête.
+  for (let i = 0; i < h.sac; i++) {
+    ctx.drawImage(
+      spritesItems[carte.item],
+      x + 6 + i * (TAILLE_ITEM - 6), y - 6, TAILLE_ITEM, TAILLE_ITEM,
+    );
   }
 }
 

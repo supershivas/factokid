@@ -47,6 +47,20 @@ export const BULLE = CIBLE_TACTILE; // jamais en dessous de la cible tactile
 export const BULLE_ECART = 8;
 export const BULLE_ANIMATION = 0.18; // secondes
 
+// Panneau d'information d'un élément construit : son nom et ses options.
+export const PANNEAU = { x: 12, y: 452, l: 336, h: 104 };
+export const OPTION = CIBLE_TACTILE;
+export const OPTION_ECART = 8;
+
+export function rectOption(j) {
+  return {
+    x: PANNEAU.x + 12 + j * (OPTION + OPTION_ECART),
+    y: PANNEAU.y + PANNEAU.h - OPTION - 12,
+    l: OPTION,
+    h: OPTION,
+  };
+}
+
 // Géométrie partagée par le rendu et l'entrée : une seule source de vérité,
 // sinon le bouton dessiné et le bouton touché finissent par diverger.
 export function rectBouton(i) {

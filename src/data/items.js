@@ -3,7 +3,7 @@
 // la couleur ne fait que confirmer ce que la forme dit déjà.
 
 export const ITEMS = {
-  boulon: { id: 'boulon', forme: 'carre', couleur: 'rouge' },
-  plaque: { id: 'plaque', forme: 'triangle', couleur: 'orange' },
-  moteur: { id: 'moteur', forme: 'rond', couleur: 'jaune' },
+  boulon: { id: 'boulon', nom: 'boulon', forme: 'carre', couleur: 'rouge' },
+  plaque: { id: 'plaque', nom: 'plaque', forme: 'triangle', couleur: 'orange' },
+  moteur: { id: 'moteur', nom: 'moteur', forme: 'rond', couleur: 'jaune' },
 };

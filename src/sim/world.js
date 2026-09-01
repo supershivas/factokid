@@ -6,7 +6,7 @@ import { DEPART } from '../data/depart.js';
 import {
   creerMachine, majMachine, deposer, deposerDepuisCarte, attendus, maxSorties,
 } from './machine.js';
-import { creerCartes, majCarte, ramasser } from './carte.js';
+import { creerCartes, majCarte, designer } from './carte.js';
 import { creerConvoyeur, avancer, reconstruire } from './belt.js';
 
 export function creerMonde() {
@@ -135,21 +135,18 @@ function matiereSortante(source, cible) {
   return attendu.find((i) => !dejaServies.includes(i)) || attendu[0] || null;
 }
 
-// Le héros ramasse : la matière part directement au téléporteur.
-export function ramasserSurCarte(monde, indexCarte, cx, cy) {
+// On désigne un gisement : le héros ira le chercher. Le joueur ne déplace
+// jamais le héros lui-même, il lui montre quoi rapporter.
+export function designerSurCarte(monde, indexCarte, cx, cy) {
   const carte = monde.cartes[indexCarte];
-  if (!carte || !monde.teleporteur) return false;
-  const item = ramasser(carte, cx, cy);
-  if (!item) return false;
-  if (deposerDepuisCarte(monde.teleporteur, item)) return true;
-  // Téléporteur plein : le gisement n'est pas gaspillé.
-  const g = carte.gisements.find((x) => x.cx === cx && x.cy === cy);
-  g.present = true;
-  return false;
+  if (!carte) return false;
+  return designer(carte, cx, cy);
 }
 
 export function majMonde(monde, dt) {
-  for (const carte of monde.cartes) majCarte(carte, dt);
+  for (const carte of monde.cartes) {
+    majCarte(carte, dt, (item) => deposerDepuisCarte(monde.teleporteur, item));
+  }
   for (const convoyeur of monde.convoyeurs) {
     avancer(convoyeur, dt, (type) => (convoyeur.cible ? deposer(convoyeur.cible, type) : false));
   }
