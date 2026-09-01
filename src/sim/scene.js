@@ -125,7 +125,14 @@ export function poserConvoyeur(scene, chemin, source, cible) {
 // nouvelle branche vient s'ajouter à côté. Le bout distribue à tour de rôle.
 export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
   const i = tronc.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
-  if (i < 0 || i === tronc.chemin.length - 1) return null;
+  if (i < 0) return null;
+  // Brancher sur le bout d'un tapis qui distribue déjà : rien à couper, une
+  // branche de plus suffit.
+  if (i === tronc.chemin.length - 1) {
+    const ajout = poserConvoyeur(scene, chemin, tronc, cible);
+    majSortie(tronc);
+    return ajout;
+  }
 
   const coupe = (i + 1) * CELLULE;
   const liste = distances(tronc);

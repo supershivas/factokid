@@ -9,7 +9,7 @@ import { ITEMS } from '../data/items.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
 import { estDesigne } from '../sim/carte.js';
-import { parcourirItems } from '../sim/belt.js';
+import { parcourirItems, celluleDe } from '../sim/belt.js';
 
 const TAILLE_ITEM_PX = 6;
 const TAILLE_ITEM = TAILLE_ITEM_PX * (CELLULE / TUILE_PX); // 18 unités logiques
@@ -129,6 +129,37 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(1, 10, 2, 1, PALETTE.bleu);
   rect(5, 10, 2, 1, PALETTE.bleu);
   rect(9, 10, 2, 1, PALETTE.bleu);
+  rect(10, 13, 1, 2, PALETTE.bleu);
+});
+
+// Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les
+// quatre rotations couvrent les quatre jonctions à trois branches.
+const convoyeurT = toile(TUILE_PX, (rect) => {
+  rect(0, 3, 16, 10, PALETTE.noir);
+  rect(3, 3, 10, 13, PALETTE.noir);
+  rect(0, 4, 16, 8, PALETTE.ardoise);
+  rect(4, 4, 8, 12, PALETTE.ardoise);
+  for (let x = 1; x < 16; x += 4) {
+    rect(x, 5, 2, 1, PALETTE.bleu);
+    rect(x, 10, 2, 1, PALETTE.bleu);
+  }
+  rect(5, 13, 1, 2, PALETTE.bleu);
+  rect(10, 13, 1, 2, PALETTE.bleu);
+});
+
+// Convoyeur en croix : les quatre bords sont reliés.
+const convoyeurCroix = toile(TUILE_PX, (rect) => {
+  rect(0, 3, 16, 10, PALETTE.noir);
+  rect(3, 0, 10, 16, PALETTE.noir);
+  rect(0, 4, 16, 8, PALETTE.ardoise);
+  rect(4, 0, 8, 16, PALETTE.ardoise);
+  rect(1, 5, 2, 1, PALETTE.bleu);
+  rect(13, 5, 2, 1, PALETTE.bleu);
+  rect(1, 10, 2, 1, PALETTE.bleu);
+  rect(13, 10, 2, 1, PALETTE.bleu);
+  rect(5, 1, 1, 2, PALETTE.bleu);
+  rect(10, 1, 1, 2, PALETTE.bleu);
+  rect(5, 13, 1, 2, PALETTE.bleu);
   rect(10, 13, 1, 2, PALETTE.bleu);
 });
 
@@ -361,6 +392,25 @@ function orientation(entree, sortie) {
   return { sprite: convoyeurDroit, quarts: 0 };
 }
 
+// Une jonction relie trois bords, parfois quatre : la tuile se choisit sur
+// l'ensemble des bords occupés, pas sur un sens de circulation.
+function memeEnsemble(a, b) {
+  if (a.length !== b.length) return false;
+  return a.every((v) => b.some((w) => memeSens(v, w)));
+}
+
+const BASE_T = [OUEST, EST, SUD];
+
+function orientationJonction(bords) {
+  if (bords.length >= 4) return { sprite: convoyeurCroix, quarts: 0 };
+  for (let q = 0; q < 4; q++) {
+    if (memeEnsemble(BASE_T.map((v) => tourner(v, q)), bords)) {
+      return { sprite: convoyeurT, quarts: q };
+    }
+  }
+  return { sprite: convoyeurCroix, quarts: 0 };
+}
+
 function sens(depuis, vers) {
   return { dx: Math.sign(vers.cx - depuis.cx), dy: Math.sign(vers.cy - depuis.cy) };
 }
@@ -396,7 +446,15 @@ export function dessinerConvoyeurs(ctx, scene) {
   for (const convoyeur of scene.convoyeurs) {
     const chemin = convoyeur.chemin;
     for (let i = 0; i < chemin.length; i++) {
-      const avant = i === 0 ? convoyeur.source : chemin[i - 1];
+      const avant = i === 0 ? celluleDe(convoyeur.source) : chemin[i - 1];
+      // Dernière cellule d'un tapis qui se divise : c'est une jonction.
+      if (i === chemin.length - 1 && convoyeur.sorties.length >= 2) {
+        const bords = [sens(chemin[i], avant)];
+        for (const branche of convoyeur.sorties) bords.push(sens(chemin[i], branche.chemin[0]));
+        const j = orientationJonction(bords);
+        tuile(ctx, j.sprite, chemin[i].cx, chemin[i].cy, j.quarts);
+        continue;
+      }
       const apres = i === chemin.length - 1 ? convoyeur.celluleSortie : chemin[i + 1];
       const o = orientation(sens(avant, chemin[i]), sens(chemin[i], apres));
       tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);

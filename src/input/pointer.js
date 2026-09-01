@@ -302,8 +302,9 @@ export function brancherPointeur(canvas, vue, monde) {
       const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
       const auBout = bout.cx === c.cx && bout.cy === c.cy;
       // Au bout d'un tapis inachevé : on reprend le tracé là où il s'est
-      // arrêté. Ailleurs sur un tapis : on en fait partir une branche.
-      if (auBout && !convoyeur.cible) {
+      // arrêté. Sur un tapis qui distribue déjà, ou en plein milieu : on en
+      // fait partir une branche de plus.
+      if (auBout && !convoyeur.cible && convoyeur.sorties.length === 0) {
         trace.actif = true;
         trace.source = convoyeur.source;
         trace.chemin = [];
@@ -312,7 +313,7 @@ export function brancherPointeur(canvas, vue, monde) {
         trace.origine = null;
         return;
       }
-      if (!auBout) {
+      if (!auBout || convoyeur.sorties.length > 0) {
         trace.actif = true;
         trace.source = convoyeur;
         trace.chemin = [];
