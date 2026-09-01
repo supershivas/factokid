@@ -3,7 +3,9 @@
 
 import { PALETTE, TUILE_PX } from '../src/design.js';
 import { dessinerAlerte } from '../src/render/alerte.js';
-import { pose, majParticules, dessinerParticules } from '../src/render/particules.js';
+import {
+  pose, destruction, majParticules, dessinerParticules,
+} from '../src/render/particules.js';
 
 const CELLULE = 24;
 
@@ -57,6 +59,28 @@ export const RETENUS = [
         tuileConvoyeur,
         taille / 2 - CELLULE / 2, taille / 2 - CELLULE / 2 + chute, CELLULE, CELLULE,
       );
+      majParticules(1 / 60);
+      dessinerParticules(ctx);
+    },
+  },
+  {
+    titre: 'Destruction retenue',
+    note: 'éclats, poussière et rouille mêlés : le morceau part, la poussière reste',
+    duree: 1.8,
+    dessiner(ctx, t, taille) {
+      ctx.drawImage(tuileConvoyeur, 0, taille / 2 - CELLULE / 2, CELLULE, CELLULE);
+      ctx.drawImage(tuileConvoyeur, taille - CELLULE, taille / 2 - CELLULE / 2, CELLULE, CELLULE);
+
+      if (t < 0.02 && !this.lance) { this.lance = true; destruction(taille / 2, taille / 2); }
+      if (t > 0.5) this.lance = false;
+
+      // La tuile disparaît à l'instant de l'éclat : c'est elle qui part en morceaux.
+      if (t < 0.02) {
+        ctx.drawImage(
+          tuileConvoyeur,
+          taille / 2 - CELLULE / 2, taille / 2 - CELLULE / 2, CELLULE, CELLULE,
+        );
+      }
       majParticules(1 / 60);
       dessinerParticules(ctx);
     },

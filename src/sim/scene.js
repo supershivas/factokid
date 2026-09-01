@@ -120,6 +120,28 @@ export function retirerConvoyeur(scene, convoyeur) {
   nettoyerOrphelins(scene);
 }
 
+// Retirer une machine construite : ses tapis restent posés, ils perdent
+// seulement ce qu'ils reliaient. Détruire un élément ne doit jamais faire
+// disparaître tout un réseau sous les doigts de l'enfant.
+export function retirerMachine(scene, machine) {
+  const i = scene.machines.indexOf(machine);
+  if (i < 0) return;
+  scene.machines.splice(i, 1);
+  poser(scene.grille, machine.cx, machine.cy, null);
+  for (const amont of [...machine.entrees]) {
+    amont.cible = null;
+    majSortie(amont);
+  }
+  machine.entrees.length = 0;
+  for (const aval of [...machine.sorties]) {
+    const k = aval.sources.indexOf(machine);
+    if (k >= 0) aval.sources.splice(k, 1);
+    if (aval.source === machine) aval.source = aval.sources[0] || null;
+  }
+  machine.sorties.length = 0;
+  nettoyerOrphelins(scene);
+}
+
 // Une sortie, un convoyeur, une entrée : chaque machine n'a qu'une sortie, et
 // autant d'entrées que sa recette a d'ingrédients. Poser un convoyeur remplace
 // ce qui occupait la place, il n'y a jamais de jonction sur un convoyeur.

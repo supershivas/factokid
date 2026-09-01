@@ -15,15 +15,22 @@ export const MACHINES = {
     description: "range une matière, le reste à part",
     nom: 'trieur',
     tri: true,          // deux sorties : la matière choisie, et tout le reste
-    triables: ['sucre', 'caramel', 'fraise', 'menthe'],
-    triDefaut: 'fraise',
+    triables: ['sucre', 'papier', 'fraise', 'menthe'],
+    triDefaut: 'sucre',
     capacite: 6,        // file d'attente mélangée
     ticksParItem: 15,
   },
   confiserie: {
     id: 'confiserie',
-    description: 'assemble le bonbon',
+    description: 'assemble la pastille',
     nom: 'confiserie',
+    recette: 'pastille',
+    capacite: 4,
+  },
+  plieuse: {
+    id: 'plieuse',
+    description: 'plie le papier autour de la pastille',
+    nom: 'plieuse',
     recette: 'bonbon',
     capacite: 4,
   },

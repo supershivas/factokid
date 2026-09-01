@@ -75,6 +75,22 @@ const formes = {
     rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
     rect(2, 5, 2, 1, n);
   },
+  // Le papier : une feuille dont tout le coin est corné. Le pli traverse la
+  // silhouette en biais : même en gris, on ne la confond pas avec le sucre.
+  feuille: (rect, couleur) => {
+    const n = PALETTE.noir;
+    rect(0, 0, 3, 1, n);
+    rect(3, 1, 1, 1, n);
+    rect(4, 2, 1, 1, n);
+    rect(0, 1, 1, 4, n);
+    rect(5, 3, 1, 2, n);
+    rect(0, 5, 6, 1, n);
+    rect(1, 1, 2, 1, couleur);
+    rect(1, 2, 3, 1, couleur);
+    rect(1, 3, 4, 1, couleur);
+    rect(1, 4, 4, 1, couleur);
+    rect(1, 1, 1, 1, PALETTE.creme);
+  },
   rond: (rect, couleur) => {
     const n = PALETTE.noir;
     rect(2, 0, 2, 1, n);
@@ -219,6 +235,17 @@ const chaufferie = toile(TUILE_PX, (rect) => {
   rect(3, 14, 10, 1, PALETTE.rouge);
 });
 
+// La plieuse : deux volets qui se referment sur une feuille de papier.
+const plieuse = toile(TUILE_PX, (rect) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+  rect(2, 3, 4, 10, PALETTE.noir);
+  rect(10, 3, 4, 10, PALETTE.noir);
+  rect(3, 4, 2, 8, PALETTE.creme);
+  rect(11, 4, 2, 8, PALETTE.creme);
+  formes.feuille(decale(rect, 5, 5), PALETTE.bleu);
+});
+
 // La livraison : un bocal ouvert où tombent les bonbons.
 const livraison = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
@@ -268,7 +295,7 @@ const extracteur = toile(TUILE_PX, (rect) => {
 });
 
 export const ICONES = {
-  teleporteur, trieur, confiserie, livraison, chaufferie, extracteur,
+  teleporteur, trieur, confiserie, plieuse, livraison, chaufferie, extracteur,
   sortieCarte: teleporteur,
 };
 
@@ -328,6 +355,38 @@ const bulleConvoyeur = toile(TUILE_PX, (rect) => {
   for (let x = 3; x < 14; x += 4) rect(x, 8, 2, 1, PALETTE.bleu);
 });
 
+// Bulles des machines constructibles : le même motif que la machine posée,
+// sans son cadre, pour qu'il tienne dans le rond de la bulle.
+const bulleTrieur = toile(TUILE_PX, (rect) => {
+  rect(7, 3, 2, 4, PALETTE.creme);
+  rect(4, 7, 8, 2, PALETTE.creme);
+  rect(3, 9, 2, 4, PALETTE.creme);
+  rect(11, 9, 2, 4, PALETTE.creme);
+});
+
+const bulleChaufferie = toile(TUILE_PX, (rect) => {
+  rect(3, 3, 10, 6, PALETTE.noir);
+  rect(4, 4, 8, 1, PALETTE.creme);
+  rect(4, 5, 8, 3, PALETTE.jaune);
+  for (let i = 0; i < 3; i++) rect(4 + i * 3, 11, 2, 3, PALETTE.orange);
+});
+
+const bulleConfiserie = toile(TUILE_PX, (rect) => {
+  rect(3, 2, 3, 2, PALETTE.creme);
+  rect(10, 2, 3, 2, PALETTE.creme);
+  rect(5, 4, 2, 2, PALETTE.creme);
+  rect(9, 4, 2, 2, PALETTE.creme);
+  formes.bonbon(decale(rect, 5, 7), PALETTE.orange);
+});
+
+const bulliePlieuse = toile(TUILE_PX, (rect) => {
+  rect(2, 3, 3, 10, PALETTE.noir);
+  rect(11, 3, 3, 10, PALETTE.noir);
+  rect(3, 4, 2, 8, PALETTE.creme);
+  rect(11, 4, 2, 8, PALETTE.creme);
+  formes.feuille(decale(rect, 5, 5), PALETTE.bleu);
+});
+
 // Une bulle de carte porte la forme de ce qu'on y ramasse : deux cartes ne se
 // distinguent jamais par la seule couleur.
 function bulleCarte(item) {
@@ -340,6 +399,7 @@ function bulleCarte(item) {
 
 export const INTERFACE = {
   bouton, boutonActif, bulleFond, bulleConvoyeur, bulleExtracteur,
+  bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
   outilConstruction, outilDestruction, outilRetour,
 };
 for (const item of Object.values(ITEMS)) INTERFACE['bulleCarte_' + item.id] = bulleCarte(item);

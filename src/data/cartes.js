@@ -11,15 +11,15 @@ export const CARTES = [
   {
     id: 'sucrerie',
     nom: 'sucrerie',
-    items: ['sucre'],
+    items: ['sucre', 'papier'],
     repousseTicks: 180,             // 3 s à 60 Hz
     teleporteur: { cx: 3, cy: 9 },  // en bas : on le touche pour rentrer
     gisements: [
-      { cx: 1, cy: 1, item: 'sucre' }, { cx: 4, cy: 0, item: 'sucre' },
-      { cx: 2, cy: 3, item: 'sucre' }, { cx: 5, cy: 2, item: 'sucre' },
-      { cx: 0, cy: 5, item: 'sucre' }, { cx: 3, cy: 6, item: 'sucre' },
+      { cx: 1, cy: 1, item: 'sucre' }, { cx: 4, cy: 0, item: 'papier' },
+      { cx: 2, cy: 3, item: 'sucre' }, { cx: 5, cy: 2, item: 'papier' },
+      { cx: 0, cy: 5, item: 'sucre' }, { cx: 3, cy: 6, item: 'papier' },
       { cx: 6, cy: 5, item: 'sucre' }, { cx: 1, cy: 7, item: 'sucre' },
-      { cx: 5, cy: 7, item: 'sucre' },
+      { cx: 5, cy: 7, item: 'papier' },
     ],
   },
   {

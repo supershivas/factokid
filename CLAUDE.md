@@ -43,8 +43,14 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **Le héros ramasse, la mine automatise.** On désigne des gisements, le héros
   les fait dans l'ordre et rapporte au téléporteur. Une mine posée sur un
   gisement le récolte seule, plus lentement qu'un joueur attentif.
-- **L'usine fabrique des bonbons.** Sucre, fraise et menthe entrent, un bonbon
-  sort.
+- **L'usine fabrique des bonbons.** La chaîne tient en trois recettes : le
+  sucre fond en caramel ; caramel, fraise et menthe font la pastille ; la
+  pastille et le papier font le bonbon. Deux cartes fournissent les quatre
+  matières brutes, mélangées deux par deux.
+- **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
+  confiserie et plieuse sont des éléments constructibles comme le convoyeur :
+  on les pose sur une cellule libre de l'usine, et l'outil destruction les
+  retire. Le téléporteur et la livraison, eux, restent en place.
 - **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur a deux
   branches : la matière que le joueur a choisie, et tout le reste. Le premier
   convoyeur tracé prend la matière choisie, le second ramasse le reste. La
@@ -268,8 +274,9 @@ Rien d'autre que ceci tant que ce n'est pas validé :
    de tracé reste construit et ne débouche sur rien.
 
 Depuis, le lot a grossi sur décision : deuxième matière et première recette
-(a + b = c), cartes, téléporteur et trieur. Ces ajouts sont décrits en
-section 1.
+(a + b = c), cartes, téléporteur et trieur, puis la chaîne complète du bonbon
+et la construction des trieurs et des transformateurs. Ces ajouts sont décrits
+en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
 Mesuré à 208 items, 60 fps, image médiane 16,7 ms — avant que l'espacement ne

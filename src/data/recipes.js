@@ -9,10 +9,16 @@ export const RECETTES = {
     sortie: 'caramel',
     ticksParItem: 45,
   },
+  pastille: {
+    id: 'pastille',
+    entrees: { caramel: 1, fraise: 1, menthe: 1 },
+    sortie: 'pastille',
+    ticksParItem: 60,
+  },
   bonbon: {
     id: 'bonbon',
-    entrees: { caramel: 1, fraise: 1, menthe: 1 },
+    entrees: { pastille: 1, papier: 1 },
     sortie: 'bonbon',
-    ticksParItem: 60,
+    ticksParItem: 45,
   },
 };

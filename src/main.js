@@ -4,7 +4,9 @@
 import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
 import { creerVue } from './render/canvas.js';
 import { dessinerScene, dessinerCarte, bordureGrille } from './render/sprites.js';
-import { majParticules, dessinerParticules, fumee, pose } from './render/particules.js';
+import {
+  majParticules, dessinerParticules, fumee, pose, destruction,
+} from './render/particules.js';
 import { marquerPose, majPoses } from './render/pose.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
@@ -22,7 +24,8 @@ const ctx = vue.ctx;
 // Rien dans le jeu ne la lit.
 globalThis.sonde = { monde, interface: interfaceJeu };
 
-// Ce qui vient d'être construit lance sa gerbe d'étoiles. Le geste est dans
+// Ce qui vient d'être construit lance sa gerbe d'étoiles, ce qui vient d'être
+// détruit part en éclats. Le geste est dans
 // l'entrée, la récompense dans le rendu : main.js fait le lien.
 function effetsDeConstruction() {
   for (const c of interfaceJeu.effets) {
@@ -30,6 +33,10 @@ function effetsDeConstruction() {
     pose(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
   }
   interfaceJeu.effets.length = 0;
+  for (const c of interfaceJeu.debris) {
+    destruction(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
+  }
+  interfaceJeu.debris.length = 0;
 }
 
 // Une mine qui creuse fume.

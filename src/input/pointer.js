@@ -8,14 +8,14 @@
 import {
   CELLULE, PANNEAU, rectBouton, rectBulle, rectOption, dansRect,
 } from '../design.js';
-import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
+import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
 import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes, coinCellule } from '../sim/grid.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
-  prolongerConvoyeur, brancherConvoyeur, raccorderA,
+  prolongerConvoyeur, brancherConvoyeur, raccorderA, ajouterMachine, retirerMachine,
 } from '../sim/scene.js';
 import { sceneDe, gisementSurCarte } from '../sim/world.js';
 import { poserExtracteur, retirerExtracteur } from '../sim/carte.js';
@@ -41,6 +41,7 @@ export function brancherPointeur(canvas, vue, monde) {
       origine: null, contact: null,
     },
     effets: [],                  // cellules qui viennent d'être construites
+    debris: [],                  // cellules qui viennent d'être détruites
   };
   const trace = etat.trace;
   let pointeur = null;
@@ -278,6 +279,10 @@ export function brancherPointeur(canvas, vue, monde) {
     for (const c of cellules) etat.effets.push({ cx: c.cx, cy: c.cy });
   }
 
+  function marquerDetruit(cellules) {
+    for (const c of cellules) etat.debris.push({ cx: c.cx, cy: c.cy });
+  }
+
   // Pose un extracteur sur le gisement, et rend la main au convoyeur : on ne
   // reste jamais coincé dans un mode.
   function batirExtracteur(c) {
@@ -289,11 +294,34 @@ export function brancherPointeur(canvas, vue, monde) {
     return true;
   }
 
+  // Pose une machine sur une cellule libre de l'usine, puis rend la main au
+  // convoyeur : on ne reste jamais coincé dans un mode.
+  function batirMachine(c, type) {
+    if (etat.vue >= 0 || !celluleLibre(scene(), c.cx, c.cy)) return false;
+    ajouterMachine(scene(), type, c.cx, c.cy, {});
+    marquerConstruit([c]);
+    etat.constructible = 'convoyeur';
+    etat.panneau = null;
+    return true;
+  }
+
   function detruire(c) {
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
-    if (convoyeur) { couperConvoyeur(scene(), convoyeur, c.cx, c.cy); return; }
+    if (convoyeur) {
+      couperConvoyeur(scene(), convoyeur, c.cx, c.cy);
+      marquerDetruit([c]);
+      return;
+    }
+    const machine = machineEn(scene(), c.cx, c.cy);
+    // Seules les machines qu'on peut poser peuvent être retirées : le
+    // téléporteur et la livraison restent en place quoi qu'il arrive.
+    if (machine && MACHINES_CONSTRUCTIBLES.includes(machine.def.id)) {
+      retirerMachine(scene(), machine);
+      marquerDetruit([c]);
+      return;
+    }
     const g = carte() && gisementSurCarte(monde, etat.vue, c.cx, c.cy);
-    if (g && g.extracteur) retirerExtracteur(carte(), c.cx, c.cy);
+    if (g && g.extracteur) { retirerExtracteur(carte(), c.cx, c.cy); marquerDetruit([c]); }
   }
 
   // --- gestes -------------------------------------------------------------
@@ -341,6 +369,12 @@ export function brancherPointeur(canvas, vue, monde) {
     // Poser un extracteur, sur une carte, sur un gisement.
     if (etat.vue >= 0 && etat.outil === 'construction' && etat.constructible === 'extracteur') {
       if (batirExtracteur(c)) return;
+    }
+
+    // Poser une machine, dans l'usine, sur une cellule libre.
+    if (etat.outil === 'construction') {
+      const choisi = CONSTRUCTIBLES.find((x) => x.id === etat.constructible);
+      if (choisi && choisi.machine && batirMachine(c, choisi.machine)) return;
     }
 
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);

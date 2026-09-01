@@ -1,10 +1,15 @@
-// Particules : fumée et étoiles. Pure présentation, alimentée par le rendu.
-// Rien ici n'entre dans la simulation.
+// Particules : fumée, étoiles, éclats et rouille. Pure présentation, alimentée
+// par le rendu. Rien ici n'entre dans la simulation.
 
 import { PALETTE, PIXEL } from '../design.js';
 
 const MAX = 240;
 const particules = [];
+
+function ajouter(p) {
+  if (particules.length >= MAX) particules.shift();
+  particules.push(p);
+}
 
 function emettre(x, y, genre, couleur) {
   if (particules.length >= MAX) particules.shift();
@@ -57,6 +62,51 @@ export function pose(x, y) {
   rayons(x, y);
 }
 
+// La destruction : trois matières mêlées. L'éclat part vite et retombe, la
+// poussière reste au sol et s'étale, la rouille tombe en écailles qui tournent.
+// Aucune des trois ne suffit seule : l'éclat sans poussière est sec, la
+// poussière sans éclat est molle.
+export function destruction(x, y) {
+  for (let i = 0; i < 10; i++) {
+    const angle = (Math.PI * 2 * i) / 10 + (Math.random() - 0.5) * 0.5;
+    const vitesse = 80 + Math.random() * 70;
+    ajouter({
+      x, y,
+      vx: Math.cos(angle) * vitesse,
+      vy: Math.sin(angle) * vitesse - 40,
+      vie: 0,
+      duree: 0.34 + Math.random() * 0.18,
+      genre: 'eclat',
+      couleur: i % 3 === 0 ? PALETTE.creme : PALETTE.ardoise,
+    });
+  }
+  for (let i = 0; i < 8; i++) {
+    const cote = i % 2 ? 1 : -1;
+    ajouter({
+      x: x + cote * (3 + i * 2),
+      y: y + 10,
+      vx: cote * (18 + i * 5),
+      vy: -8 - Math.random() * 8,
+      vie: 0,
+      duree: 0.7 + i * 0.05,
+      genre: 'fumee',
+      couleur: PALETTE.ardoise,
+    });
+  }
+  for (let i = 0; i < 7; i++) {
+    ajouter({
+      x: x + (Math.random() - 0.5) * 18,
+      y: y + (Math.random() - 0.5) * 12,
+      vx: (Math.random() - 0.5) * 40,
+      vy: -20 - Math.random() * 30,
+      vie: 0,
+      duree: 0.6 + Math.random() * 0.3,
+      genre: 'rouille',
+      couleur: i % 2 ? PALETTE.orange : PALETTE.rouge,
+    });
+  }
+}
+
 export function majParticules(dt) {
   for (let i = particules.length - 1; i >= 0; i--) {
     const p = particules[i];
@@ -66,6 +116,11 @@ export function majParticules(dt) {
     p.x += p.vx * dt;
     p.y += p.vy * dt;
     if (p.genre === 'etoile') p.vy += 220 * dt; // les étoiles retombent
+    if (p.genre === 'eclat') p.vy += 260 * dt;  // l'éclat retombe, il pèse
+    if (p.genre === 'rouille') {
+      p.vy += 150 * dt;                          // l'écaille tombe plus mollement
+      p.vx *= 1 - 1.6 * dt;                      // et se freine dans l'air
+    }
   }
 }
 
@@ -85,6 +140,23 @@ export function dessinerParticules(ctx) {
         Math.round(p.y + p.dy * (10 + avance) - h / 2),
         l, h,
       );
+      continue;
+    }
+    if (p.genre === 'eclat') {
+      // Un éclat garde sa taille et s'éteint d'un coup : un morceau, pas un nuage.
+      ctx.globalAlpha = reste > 0.2 ? 1 : reste / 0.2;
+      ctx.fillStyle = p.couleur;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), PIXEL, PIXEL);
+      continue;
+    }
+    if (p.genre === 'rouille') {
+      // L'écaille tourne : elle s'aplatit puis se redresse, sans jamais tourner
+      // vraiment — deux rectangles suffisent à le faire croire.
+      const tour = Math.abs(Math.cos(p.vie * 14));
+      const l = Math.max(PIXEL, Math.round(tour * 2) * PIXEL);
+      ctx.globalAlpha = reste;
+      ctx.fillStyle = p.couleur;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), l, PIXEL);
       continue;
     }
     const taille = p.genre === 'etoile'
