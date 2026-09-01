@@ -322,10 +322,29 @@ const bulleFond = toile(TUILE_PX, (rect, disque) => {
 
 // Un plus pour construire, une croix pour détruire : deux formes qui se
 // distinguent en niveaux de gris, la couleur ne fait que confirmer.
-const outilConstruction = toile(TUILE_PX, (rect) => {
-  rect(6, 3, 4, 10, PALETTE.creme);
-  rect(3, 6, 10, 4, PALETTE.creme);
-});
+// Le milieu de la tuile tombe entre les colonnes 7 et 8 : un trait d'épaisseur
+// paire posé à (16 - épaisseur) / 2 l'enjambe exactement. Les deux signes
+// passent par ces deux fonctions, donc aucun ne peut être décalé d'un pixel.
+function traitPlus(rect, couleur, marge = 2, epaisseur = 2) {
+  const a = (TUILE_PX - epaisseur) / 2;
+  const l = TUILE_PX - marge * 2;
+  rect(a, marge, epaisseur, l, couleur);
+  rect(marge, a, l, epaisseur, couleur);
+}
+
+// La croix est décrite par une condition symétrique en x et en y : elle est
+// centrée par construction. « écart » donne la finesse du trait.
+function traitCroix(rect, couleur, marge = 2, ecart = 0) {
+  for (let y = marge; y < TUILE_PX - marge; y++) {
+    for (let x = marge; x < TUILE_PX - marge; x++) {
+      const premiere = Math.abs(x - y) <= ecart;
+      const seconde = Math.abs(x + y - (TUILE_PX - 1)) <= ecart;
+      if (premiere || seconde) rect(x, y, 1, 1, couleur);
+    }
+  }
+}
+
+const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.creme));
 
 // Flèche de retour : on revient à l'usine.
 const outilRetour = toile(TUILE_PX, (rect) => {
@@ -334,11 +353,13 @@ const outilRetour = toile(TUILE_PX, (rect) => {
   for (let i = 0; i < 4; i++) rect(3 + i, 9 + i, 2, 1, PALETTE.creme);
 });
 
+// Le rouge sur l'ardoise du bouton ne se distingue que par la teinte : leurs
+// clartés sont les mêmes (rapport 1,05 : 1). La croix est donc tracée en crème
+// — qui, lui, tranche (4,9 : 1) — avec le rouge en cœur du trait. La forme et
+// la clarté portent l'information ; le rouge ne fait que confirmer.
 const outilDestruction = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 10; i++) {
-    rect(3 + i, 3 + i, 3, 2, PALETTE.rouge);
-    rect(12 - i, 3 + i, 3, 2, PALETTE.rouge);
-  }
+  traitCroix(rect, PALETTE.creme, 2, 1);
+  traitCroix(rect, PALETTE.rouge, 2, 0);
 });
 
 const bulleExtracteur = toile(TUILE_PX, (rect) => {

@@ -42,6 +42,7 @@ export function brancherPointeur(canvas, vue, monde) {
     },
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
+    appuis: [],                  // boutons d'outil qui viennent d'être touchés
   };
   const trace = etat.trace;
   let pointeur = null;
@@ -200,6 +201,7 @@ export function brancherPointeur(canvas, vue, monde) {
     }
     for (let i = 0; i < etat.boutons.length; i++) {
       if (!dansRect(rectBouton(i), p.x, p.y)) continue;
+      etat.appuis.push(i);
       actionsBoutons[i]();
       return true;
     }

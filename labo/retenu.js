@@ -2,6 +2,8 @@
 // ce fichier n'anime rien lui-même, il appelle le code de src/render/.
 
 import { PALETTE, TUILE_PX } from '../src/design.js';
+import { INTERFACE } from '../src/render/sprites.js';
+import { marquerAppui, majAppuis, ecrasement } from '../src/render/bouton.js';
 import { dessinerAlerte } from '../src/render/alerte.js';
 import {
   pose, destruction, majParticules, dessinerParticules,
@@ -32,7 +34,37 @@ function machine(ctx, taille) {
   ctx.fillRect(c - 9, taille - 11, 18, 3);
 }
 
+// Les deux boutons d'outil, dessinés par le jeu lui-même, avec l'écrasement
+// que joue la barre d'outils quand le doigt appuie.
+const BOUTON = 32; // le bouton du jeu fait 48 ; réduit ici pour tenir à deux
+function boutonJeu(ctx, x, y, icone, indice) {
+  const e = ecrasement(indice);
+  ctx.save();
+  if (e) {
+    ctx.translate(x + BOUTON / 2, y + BOUTON / 2);
+    ctx.scale(e.x, e.y);
+    ctx.translate(-x - BOUTON / 2, -y - BOUTON / 2);
+  }
+  ctx.drawImage(INTERFACE.bouton, x, y, BOUTON, BOUTON);
+  ctx.drawImage(INTERFACE[icone], x, y, BOUTON, BOUTON);
+  ctx.restore();
+}
+
 export const RETENUS = [
+  {
+    titre: 'Boutons retenus',
+    note: 'trait fin centré au pixel près, croix crème à cœur rouge, écrasement élastique',
+    duree: 2.4,
+    dessiner(ctx, t, taille) {
+      if (t < 0.02 && this.attend !== 'plus') { marquerAppui(0); this.attend = 'plus'; }
+      if (t > 1.1 && t < 1.14 && this.attend !== 'croix') { marquerAppui(1); this.attend = 'croix'; }
+      if (t > 1.5) this.attend = null;
+      const y = (taille - BOUTON) / 2;
+      boutonJeu(ctx, (taille - 2 * BOUTON - 4) / 2, y, 'outilConstruction', 0);
+      boutonJeu(ctx, (taille - 2 * BOUTON - 4) / 2 + BOUTON + 4, y, 'outilDestruction', 1);
+      majAppuis(1 / 60);
+    },
+  },
   {
     titre: 'Bulle retenue',
     note: 'jaillissement puis secousse, trois points de tailles et d’angles différents',

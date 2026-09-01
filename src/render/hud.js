@@ -5,6 +5,7 @@ import {
   BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, rectBouton, rectBulle, rectOption,
 } from '../design.js';
 import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
+import { ecrasement } from './bouton.js';
 
 import { nombreItems } from '../sim/world.js';
 
@@ -162,8 +163,18 @@ function dessinerOutils(ctx, interfaceJeu) {
   for (let i = 0; i < interfaceJeu.boutons.length; i++) {
     const r = rectBouton(i);
     const b = interfaceJeu.boutons[i];
+    // Un bouton qu'on vient de toucher s'aplatit puis rebondit : l'appui ne
+    // peut pas sembler ignoré.
+    const e = ecrasement(i);
+    ctx.save();
+    if (e) {
+      ctx.translate(r.x + r.l / 2, r.y + r.h / 2);
+      ctx.scale(e.x, e.y);
+      ctx.translate(-r.x - r.l / 2, -r.y - r.h / 2);
+    }
     ctx.drawImage(b.actif ? INTERFACE.boutonActif : INTERFACE.bouton, r.x, r.y, r.l, r.h);
     ctx.drawImage(INTERFACE[b.icone], r.x, r.y, r.l, r.h);
+    ctx.restore();
   }
 
   if (interfaceJeu.menu <= 0 || !interfaceJeu.ancre) return;

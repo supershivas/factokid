@@ -8,6 +8,7 @@ import {
   majParticules, dessinerParticules, fumee, pose, destruction,
 } from './render/particules.js';
 import { marquerPose, majPoses } from './render/pose.js';
+import { marquerAppui, majAppuis } from './render/bouton.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
@@ -37,6 +38,8 @@ function effetsDeConstruction() {
     destruction(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
   }
   interfaceJeu.debris.length = 0;
+  for (const i of interfaceJeu.appuis) marquerAppui(i);
+  interfaceJeu.appuis.length = 0;
 }
 
 // Une mine qui creuse fume.
@@ -59,6 +62,7 @@ demarrerBoucle(
     fumeeDesMines(dt);
     majParticules(dt);
     majPoses(dt);
+    majAppuis(dt);
 
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);

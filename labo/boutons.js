@@ -93,7 +93,11 @@ const semisCroix = (marge, ecart) => (pixel) => {
 // Rien que le signe : deux pixels d'épaisseur, douze de long.
 
 const plusFin = icone((rect) => plus(rect, C));
-const croixFine = icone((rect) => croix(rect, R));
+
+// Le rouge et l'ardoise du bouton ont la même clarté (1,05 : 1) : posé seul,
+// le rouge ne tient que par la teinte. La croix est donc tracée en crème, qui
+// tranche (4,9 : 1), avec le rouge en cœur du trait.
+const croixFine = icone((rect) => { croix(rect, C, 2, 1); croix(rect, R, 2, 0); });
 
 // --- 2. contour -----------------------------------------------------------
 // Le trait est cerné de noir : il tient sur n'importe quel fond, et le signe
@@ -221,8 +225,8 @@ function proposition(titre, note, plus, croix, animation) {
 
 export const BOUTONS = [
   proposition(
-    '1. Trait fin — écrasement élastique',
-    'deux pixels d’épaisseur, rien de plus ; au clic le signe s’aplatit puis rebondit',
+    '1. Trait fin — écrasement élastique  ✔ retenu',
+    'crème pour la clarté, rouge en cœur ; au clic le signe s’aplatit puis rebondit',
     plusFin, croixFine,
     (ctx, x, y, sprite, t) => {
       const k = t >= 0 && t < 0.7 ? ressort(t) : 0;
