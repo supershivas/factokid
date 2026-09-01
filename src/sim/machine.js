@@ -35,6 +35,7 @@ export function creerMachine(type, cx, cy, { carte, item } = {}) {
     produits: 0,
     consommes: 0,
     bloquee: false,
+    bloqueeDepuis: 0,
   };
   for (const { item } of jauges(machine)) machine.stocks[item] = 0;
   return machine;
@@ -136,6 +137,11 @@ function peutVerser(machine, item) {
   return machine.sorties.some((c) => (!c.matiere || c.matiere === item) && peutAccepter(c));
 }
 
+// Le temps passé bloqué, pour ne signaler que les vrais bouchons.
+function majBlocage(machine, dt) {
+  machine.bloqueeDepuis = machine.bloquee ? machine.bloqueeDepuis + dt : 0;
+}
+
 // Un trieur range une seule matière : celle que le joueur a choisie part par
 // la branche « triée », tout le reste par l'autre. Le premier convoyeur tracé
 // prend la matière choisie, le second ramasse le reste.
@@ -156,6 +162,7 @@ function majTrieur(machine, dt) {
 }
 
 export function majMachine(machine, dt) {
+  majBlocage(machine, dt);
   if (machine.def.tri) { majTrieur(machine, dt); return; }
   if (machine.def.source || machine.def.mine) { verserAuTour(machine, dt); return; }
   if (machine.def.accepteTout) return; // le monde la vide vers l'usine

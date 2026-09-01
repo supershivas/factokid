@@ -75,6 +75,7 @@ export function creerConvoyeur(chemin, source, cible) {
     cible,
     sorties: [],  // convoyeurs alimentés par ce bout : un embranchement
     tour: 0,      // à qui le prochain item revient
+    bloque: 0,    // depuis combien de temps la tête n'avance plus
   };
 }
 
@@ -155,12 +156,15 @@ export function avancer(convoyeur, dt, livrer) {
     else convoyeur.queue -= m;
   }
 
+  let bouchon = false;
   while (items.length > 0 && items[0].ecart <= 0) {
-    if (!livrer(items[0].type)) break; // aval saturé : la file s'accumule
+    if (!livrer(items[0].type)) { bouchon = true; break; } // aval saturé
     const reste = items.shift().ecart;
     if (items.length === 0) convoyeur.queue = 0;
     else items[0].ecart += reste;
   }
+  // Un bouchon qui dure se signale : la tête est arrivée et rien ne la prend.
+  convoyeur.bloque = bouchon ? convoyeur.bloque + dt : 0;
 }
 
 // Position logique d'une distance mesurée depuis l'entrée du convoyeur.

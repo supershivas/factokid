@@ -47,6 +47,10 @@ export const BULLE = CIBLE_TACTILE; // jamais en dessous de la cible tactile
 export const BULLE_ECART = 8;
 export const BULLE_ANIMATION = 0.18; // secondes
 
+// Un bouchon ne se signale qu'après avoir duré : sinon l'écran clignote au
+// moindre à-coup.
+export const ALERTE_DELAI = 1.2; // secondes
+
 // Panneau d'information d'un élément construit : son nom et ses options.
 export const PANNEAU = { x: 12, y: 452, l: 336, h: 104 };
 export const OPTION = CIBLE_TACTILE;

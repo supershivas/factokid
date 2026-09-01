@@ -132,6 +132,10 @@ Toute action produit un retour dans la même frame : surbrillance de la cellule,
 déformation courte de l'icône, ou changement de couleur. Aucune action ne doit
 pouvoir sembler ignorée.
 
+Un bouchon qui dure se signale par une bulle de bande dessinée en éclats,
+avec ses « !!! », qui sort de l'endroit bloqué. Une seule par bouchon, à
+l'endroit d'où il part : ce qui est bloqué en amont se tait.
+
 ---
 
 ## 3. Stack
