@@ -197,6 +197,8 @@ export function raccorderA(scene, nouveau, hote, cellule) {
   const i = hote.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
   if (i < 0) return;
   const suite = couperEn(scene, hote, i);
+  // Les items sortent par la cellule de jonction, qui touche le bout du tapis.
+  nouveau.sortieImposee = { cx: cellule.cx, cy: cellule.cy };
   if (suite) {
     nouveau.sorties.push(suite);
     suite.sources.push(nouveau);

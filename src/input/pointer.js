@@ -10,6 +10,7 @@ import {
 } from '../design.js';
 import { OUTILS, CONSTRUCTIBLES } from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
+import { MACHINES } from '../data/machines.js';
 import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes, coinCellule } from '../sim/grid.js';
 import {
@@ -124,14 +125,24 @@ export function brancherPointeur(canvas, vue, monde) {
 
   function ouvrirPanneau(machine, convoyeur) {
     if (machine) {
-      etat.panneau = { nom: machine.def.nom, icone: machine.type, options: optionsMachine(machine) };
+      etat.panneau = {
+        nom: machine.def.nom,
+        description: machine.def.description,
+        icone: machine.type,
+        options: optionsMachine(machine),
+      };
     } else if (convoyeur) {
       const role = convoyeur.role;
+      const trieur = convoyeur.source && convoyeur.source.def && convoyeur.source.def.tri
+        ? convoyeur.source : null;
       etat.panneau = {
-        nom: role === 'triee' ? ITEMS[convoyeur.source.matiereTriee].nom
+        nom: role === 'triee' && trieur ? ITEMS[trieur.matiereTriee].nom
           : role === 'reste' ? 'le reste' : 'convoyeur',
+        description: role === 'triee' ? 'emporte la matière que le trieur range'
+          : role === 'reste' ? 'emporte tout ce que le trieur ne range pas'
+            : MACHINES.convoyeur.description,
         icone: 'bulleConvoyeur',
-        options: [],
+        options: trieur ? optionsMachine(trieur) : [],
       };
     } else return;
     surgirPanneau();
@@ -424,9 +435,18 @@ export function brancherPointeur(canvas, vue, monde) {
       return;
     }
     const machine = machineEn(monde.usine, c.cx, c.cy);
-    if (machine && machine.carte && machine.def.source) {
-      allerCarte(monde.cartes.indexOf(machine.carte));
+    if (!machine) {
+      // Un appui court sur une branche de trieur ouvre aussi son filtre.
+      const convoyeur = convoyeurEn(monde.usine, c.cx, c.cy);
+      if (convoyeur && convoyeur.role) ouvrirPanneau(null, convoyeur);
+      return;
     }
+    if (machine.carte && machine.def.source) {
+      allerCarte(monde.cartes.indexOf(machine.carte));
+      return;
+    }
+    // Le trieur : un appui court ouvre le choix de la matière rangée.
+    if (machine.def.tri) ouvrirPanneau(machine, null);
   }
 
   majBoutons();

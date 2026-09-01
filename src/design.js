@@ -52,14 +52,15 @@ export const BULLE_ANIMATION = 0.18; // secondes
 export const ALERTE_DELAI = 1.2; // secondes
 
 // Panneau d'information d'un élément construit : son nom et ses options.
-export const PANNEAU = { x: 12, y: 452, l: 336, h: 104 };
+export const PANNEAU = { x: 12, y: 408, l: 336, h: 148 };
+export const PANNEAU_TEXTE = { x: 12, y: 70 }; // décalages dans le panneau
 export const OPTION = CIBLE_TACTILE;
 export const OPTION_ECART = 8;
 
 export function rectOption(j) {
   return {
     x: PANNEAU.x + 12 + j * (OPTION + OPTION_ECART),
-    y: PANNEAU.y + PANNEAU.h - OPTION - 12,
+    y: PANNEAU.y + PANNEAU.h - OPTION - 10,
     l: OPTION,
     h: OPTION,
   };

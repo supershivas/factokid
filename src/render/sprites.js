@@ -119,17 +119,19 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(0, 4, 12, 8, PALETTE.ardoise);
   rect(4, 4, 8, 12, PALETTE.ardoise);
 
-  // File intérieure : le long du petit côté, y = 5 puis x = 5.
+  // Chaque file longe son propre bord de la bande. Celle du bord extérieur
+  // fait le tour long et tourne en (10,5) ; celle du bord intérieur coupe au
+  // plus court et tourne en (5,10). L'angle lui-même reste vide, sinon les
+  // deux crans s'y superposent en L.
+  // File extérieure : y = 5 jusqu'au coin, puis x = 10 vers le bas.
   rect(1, 5, 2, 1, PALETTE.bleu);
-  rect(5, 5, 1, 2, PALETTE.bleu);
-  rect(5, 9, 1, 2, PALETTE.bleu);
-  rect(5, 13, 1, 2, PALETTE.bleu);
+  rect(5, 5, 2, 1, PALETTE.bleu);
+  rect(10, 8, 1, 2, PALETTE.bleu);
+  rect(10, 12, 1, 2, PALETTE.bleu);
 
-  // File extérieure : le long du grand côté, y = 10 puis x = 10.
+  // File intérieure : y = 10 jusqu'au coin, puis x = 5 vers le bas.
   rect(1, 10, 2, 1, PALETTE.bleu);
-  rect(5, 10, 2, 1, PALETTE.bleu);
-  rect(9, 10, 2, 1, PALETTE.bleu);
-  rect(10, 13, 1, 2, PALETTE.bleu);
+  rect(5, 13, 1, 2, PALETTE.bleu);
 });
 
 // Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les

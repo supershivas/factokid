@@ -2,7 +2,7 @@
 
 import {
   PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, LIGNES, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
-  BULLE, PANNEAU, OPTION, rectBouton, rectBulle, rectOption,
+  BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, rectBouton, rectBulle, rectOption,
 } from '../design.js';
 import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
 
@@ -52,13 +52,36 @@ const LETTRES = {
   x: ['000', '101', '010', '010', '101'],
   y: ['000', '101', '101', '011', '001', '110'],
   z: ['000', '111', '001', '010', '111'],
+  "'": ['010', '010', '000', '000', '000'],
+  ',': ['000', '000', '000', '000', '010', '100'],
+  '.': ['000', '000', '000', '000', '010'],
+  '-': ['000', '000', '111', '000', '000'],
+  ' ': ['000', '000', '000', '000', '000'],
 };
 
 // Les accents se posent au-dessus de la lettre, sans changer sa forme.
-const ACCENTS = { 'é': ['e', '001'], 'è': ['e', '100'], 'ê': ['e', '010'], 'à': ['a', '100'] };
+const ACCENTS = {
+  'é': ['e', '001'], 'è': ['e', '100'], 'ê': ['e', '010'], 'ë': ['e', '101'],
+  'à': ['a', '100'], 'â': ['a', '010'], 'ô': ['o', '010'], 'î': ['i', '010'],
+  'û': ['u', '010'], 'ù': ['u', '100'], 'ç': ['c', '000'],
+};
 
 export function largeurMot(texte, echelle) {
   return texte.length * 4 * echelle - echelle;
+}
+
+// Découpe un texte en lignes qui tiennent dans la largeur donnée.
+export function decouperTexte(texte, largeur, echelle) {
+  const lignes = [];
+  let courante = '';
+  for (const mot of texte.split(' ')) {
+    const essai = courante ? courante + ' ' + mot : mot;
+    if (largeurMot(essai, echelle) <= largeur) { courante = essai; continue; }
+    if (courante) lignes.push(courante);
+    courante = mot;
+  }
+  if (courante) lignes.push(courante);
+  return lignes;
 }
 
 export function dessinerMot(ctx, texte, x, y, echelle, couleur) {
@@ -185,7 +208,16 @@ function dessinerPanneau(ctx, interfaceJeu) {
   ctx.strokeRect(PANNEAU.x + 1, PANNEAU.y + 1, PANNEAU.l - 2, PANNEAU.h - 2);
 
   ctx.drawImage(INTERFACE[p.icone] || ICONES[p.icone], PANNEAU.x + 12, PANNEAU.y + 12, CELLULE, CELLULE);
-  dessinerMot(ctx, p.nom, PANNEAU.x + 12 + CELLULE + 12, PANNEAU.y + 24, TEXTE_PETIT, PALETTE.creme);
+  dessinerMot(ctx, p.nom, PANNEAU.x + 12 + CELLULE + 12, PANNEAU.y + 26, TEXTE_PETIT, PALETTE.creme);
+
+  // Une ligne qui dit à quoi sert l'élément : le nom seul ne suffit pas.
+  const lignes = decouperTexte(p.description || '', PANNEAU.l - 24, TEXTE_PETIT);
+  for (let i = 0; i < lignes.length; i++) {
+    dessinerMot(
+      ctx, lignes[i], PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y + i * 14,
+      TEXTE_PETIT, PALETTE.ardoise,
+    );
+  }
 
   for (let j = 0; j < p.options.length; j++) {
     const r = rectOption(j);

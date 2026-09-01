@@ -74,6 +74,7 @@ export function creerConvoyeur(chemin, source, cible) {
     sources: source ? [source] : [], // ce qui déverse ici : plusieurs, si fusion
     cible,
     sorties: [],  // convoyeurs alimentés par ce bout : un embranchement
+    sortieImposee: null, // point de sortie forcé, quand ce tapis en rejoint un
     tour: 0,      // à qui le prochain item revient
     bloque: 0,    // depuis combien de temps la tête n'avance plus
   };
@@ -123,7 +124,11 @@ export function reconstruire(convoyeur, chemin, cible, itemsImposes) {
 // alimentée, sinon la cellule d'après.
 export function majSortie(convoyeur) {
   const branche = convoyeur.sorties[0] && convoyeur.sorties[0].chemin[0];
-  convoyeur.celluleSortie = convoyeur.cible || branche || apres(convoyeur.chemin);
+  // Un raccord impose son point de sortie : la cellule de jonction, qui touche
+  // le bout du tapis. Sans elle, la sortie viserait la cellule d'après, non
+  // adjacente, et les items fileraient en diagonale hors du tapis.
+  convoyeur.celluleSortie = convoyeur.sortieImposee
+    || convoyeur.cible || branche || apres(convoyeur.chemin);
   convoyeur.points = polyligne(convoyeur.chemin, convoyeur.celluleEntree, convoyeur.celluleSortie);
 }
 
