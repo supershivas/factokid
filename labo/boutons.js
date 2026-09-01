@@ -30,113 +30,130 @@ function icone(peindre) {
   return c;
 }
 
-// Une croix diagonale réglable : épaisseur et décalage servent à poser un
-// contour sous la couleur.
-function diagonale(rect, couleur, epaisseur, decalage = 0) {
-  for (let i = 0; i < 10; i++) {
-    rect(3 + i + decalage, 3 + i + decalage, epaisseur, epaisseur, couleur);
-    rect(12 - i - decalage, 3 + i + decalage, epaisseur, epaisseur, couleur);
+// --- deux tracés, centrés au pixel près -----------------------------------
+//
+// La tuile fait 16 : son milieu tombe entre les colonnes 7 et 8. Un trait est
+// donc centré si son épaisseur est paire et posée à (16 - épaisseur) / 2, et
+// s'il commence et finit à la même distance des deux bords. Toutes les formes
+// ci-dessous passent par ces deux fonctions : aucune n'est placée à la main,
+// donc aucune ne peut être décalée d'un pixel.
+
+// Un plus : deux traits d'épaisseur paire qui se croisent au milieu.
+function plus(rect, couleur, marge = 2, epaisseur = 2) {
+  const a = (TUILE - epaisseur) / 2;
+  const l = TUILE - marge * 2;
+  rect(a, marge, epaisseur, l, couleur);
+  rect(marge, a, l, epaisseur, couleur);
+}
+
+// Une croix : les deux diagonales du carré. Le motif est décrit par une
+// condition symétrique en x et en y, ce qui le rend centré par construction —
+// « écart » donne la finesse du trait, 0 pour le plus fin.
+function croix(rect, couleur, marge = 2, ecart = 0) {
+  for (let y = marge; y < TUILE - marge; y++) {
+    for (let x = marge; x < TUILE - marge; x++) {
+      const surLaPremiere = Math.abs(x - y) <= ecart;
+      const surLaSeconde = Math.abs(x + y - (TUILE - 1)) <= ecart;
+      if (surLaPremiere || surLaSeconde) rect(x, y, 1, 1, couleur);
+    }
   }
 }
 
-// --- 1. biseau ------------------------------------------------------------
-// Contour noir, face claire, ombre portée en bas à droite : le signe a du
-// relief sans une seule couleur de plus.
+// Le même tracé, évidé : on peint le contour puis on regarde ce qui reste.
+// Sert aux styles creusé et double trait.
+function contour(rect, dessin, couleur, remplissage) {
+  const plein = new Set();
+  dessin((x, y) => plein.add(x + ',' + y));
+  for (const cle of plein) {
+    const [x, y] = cle.split(',').map(Number);
+    const entoure = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+      .every(([dx, dy]) => plein.has((x + dx) + ',' + (y + dy)));
+    const teinte = entoure ? remplissage : couleur;
+    if (teinte) rect(x, y, 1, 1, teinte);
+  }
+}
 
-const plusBiseau = icone((rect) => {
-  rect(5, 1, 6, 14, N); rect(1, 5, 14, 6, N);
-  rect(6, 2, 4, 12, C); rect(2, 6, 12, 4, C);
-  rect(9, 2, 1, 12, A); rect(2, 9, 12, 1, A);
+// Les deux tracés sous forme de semis de pixels, pour `contour`.
+const semisPlus = (marge, epaisseur) => (pixel) => {
+  const a = (TUILE - epaisseur) / 2;
+  for (let i = marge; i < TUILE - marge; i++) {
+    for (let e = 0; e < epaisseur; e++) { pixel(a + e, i); pixel(i, a + e); }
+  }
+};
+
+const semisCroix = (marge, ecart) => (pixel) => {
+  for (let y = marge; y < TUILE - marge; y++) {
+    for (let x = marge; x < TUILE - marge; x++) {
+      if (Math.abs(x - y) <= ecart || Math.abs(x + y - (TUILE - 1)) <= ecart) pixel(x, y);
+    }
+  }
+};
+
+// --- 1. trait fin ---------------------------------------------------------
+// Rien que le signe : deux pixels d'épaisseur, douze de long.
+
+const plusFin = icone((rect) => plus(rect, C));
+const croixFine = icone((rect) => croix(rect, R));
+
+// --- 2. contour -----------------------------------------------------------
+// Le trait est cerné de noir : il tient sur n'importe quel fond, et le signe
+// garde exactement la même emprise.
+
+const plusContour = icone((rect) => {
+  plus(rect, N, 1, 4);
+  plus(rect, C, 2, 2);
 });
 
-const croixBiseau = icone((rect) => {
-  diagonale(rect, N, 4, -1);
-  diagonale(rect, R, 2);
-  diagonale(rect, A, 1, 1);
-});
-
-// --- 2. coins coupés ------------------------------------------------------
-// Les bras sont épais et leurs angles rabattus : rien ne pique, la forme reste
-// franche au pouce.
-
-const plusCoupe = icone((rect) => {
-  rect(7, 2, 2, 1, C); rect(6, 3, 4, 10, C); rect(7, 13, 2, 1, C);
-  rect(2, 7, 1, 2, C); rect(3, 6, 10, 4, C); rect(13, 7, 1, 2, C);
-});
-
-const croixCoupe = icone((rect) => {
-  diagonale(rect, R, 3);
-  rect(3, 3, 1, 1, N); rect(12, 3, 1, 1, N);
-  rect(3, 12, 1, 1, N); rect(12, 12, 1, 1, N);
+const croixContour = icone((rect) => {
+  croix(rect, N, 1, 1);
+  croix(rect, R, 2, 0);
 });
 
 // --- 3. briques -----------------------------------------------------------
-// Chaque bras est fait de deux blocs séparés d'un pixel : le signe dit le
-// métier — on assemble, on démonte.
+// Le trait est coupé en segments : le signe dit le métier, on assemble et on
+// démonte. Les coupures tombent aux rangs 6 et 9, à égale distance du milieu,
+// donc le motif reste symétrique.
+
+const seam = (i) => i !== 6 && i !== 9;
 
 const plusBrique = icone((rect) => {
-  rect(6, 2, 4, 4, C); rect(6, 10, 4, 4, C);
-  rect(2, 6, 4, 4, C); rect(10, 6, 4, 4, C);
-  rect(6, 6, 4, 4, C);
+  for (let i = 2; i < 14; i++) {
+    if (!seam(i)) continue;
+    rect(7, i, 2, 1, C);
+    rect(i, 7, 1, 2, C);
+  }
 });
 
 const croixBrique = icone((rect) => {
-  rect(2, 2, 4, 4, R); rect(10, 2, 4, 4, R);
-  rect(2, 10, 4, 4, R); rect(10, 10, 4, 4, R);
-  rect(6, 6, 4, 4, R);
+  for (let i = 2; i < 14; i++) {
+    if (!seam(i)) continue;
+    rect(i, i, 1, 1, R);
+    rect(TUILE - 1 - i, i, 1, 1, R);
+  }
 });
 
-// --- 4. gros et doux ------------------------------------------------------
-// Bras courts, très épais, bouts arrondis d'un pixel : la forme d'un jouet.
+// --- 4. long et fin -------------------------------------------------------
+// Le même trait de deux pixels, mais mené jusqu'aux bords : le signe respire,
+// et il se voit de plus loin sans peser davantage.
 
-const plusDoux = icone((rect) => {
-  rect(6, 3, 4, 10, C); rect(3, 6, 10, 4, C);
-  rect(7, 2, 2, 1, C); rect(7, 13, 2, 1, C);
-  rect(2, 7, 1, 2, C); rect(13, 7, 1, 2, C);
-});
-
-const croixDoux = icone((rect) => {
-  diagonale(rect, R, 3);
-  rect(4, 4, 2, 2, R); rect(10, 4, 2, 2, R);
-  rect(4, 10, 2, 2, R); rect(10, 10, 2, 2, R);
-});
+const plusLong = icone((rect) => plus(rect, C, 1, 2));
+const croixLongue = icone((rect) => croix(rect, R, 1, 0));
 
 // --- 5. creusé ------------------------------------------------------------
-// Le signe est gravé dans la plaque au lieu d'être posé dessus. Au clic, il
-// se remplit de couleur depuis le centre.
+// Le signe est gravé dans la plaque au lieu d'être posé dessus. Au clic, il se
+// remplit de couleur depuis le centre.
 
-const plusCreux = icone((rect) => {
-  rect(6, 2, 4, 12, N); rect(2, 6, 12, 4, N);
-});
+const plusCreux = icone((rect) => plus(rect, N, 2, 4));
+const plusRempli = icone((rect) => { plus(rect, N, 2, 4); plus(rect, C, 3, 2); });
+const croixCreuse = icone((rect) => croix(rect, N, 2, 1));
+const croixRemplie = icone((rect) => { croix(rect, N, 2, 1); croix(rect, R, 3, 0); });
 
-const plusRempli = icone((rect) => {
-  rect(6, 2, 4, 12, N); rect(2, 6, 12, 4, N);
-  rect(7, 3, 2, 10, C); rect(3, 7, 10, 2, C);
-});
+// --- 6. double trait ------------------------------------------------------
+// Le signe n'est plus qu'un liseré : le trait le plus fin possible, creux au
+// milieu.
 
-const croixCreuse = icone((rect) => diagonale(rect, N, 4, -1));
-
-const croixRemplie = icone((rect) => {
-  diagonale(rect, N, 4, -1);
-  diagonale(rect, R, 2);
-});
-
-// --- 6. éclat -------------------------------------------------------------
-// Le plus a quatre pointes, la croix a les bouts ébréchés : deux signes qui se
-// distinguent même du coin de l'œil.
-
-const plusEclat = icone((rect) => {
-  rect(6, 3, 4, 10, C); rect(3, 6, 10, 4, C);
-  rect(7, 1, 2, 2, C); rect(7, 13, 2, 2, C);
-  rect(1, 7, 2, 2, C); rect(13, 7, 2, 2, C);
-  rect(7, 7, 2, 2, J);
-});
-
-const croixEclat = icone((rect) => {
-  diagonale(rect, R, 2);
-  rect(1, 1, 2, 2, R); rect(13, 1, 2, 2, R);
-  rect(1, 13, 2, 2, R); rect(13, 13, 2, 2, R);
-});
+const plusDouble = icone((rect) => contour(rect, semisPlus(2, 4), C, null));
+const croixDouble = icone((rect) => contour(rect, semisCroix(2, 2), R, null));
 
 // --- la plaque et le rendu d'un bouton ------------------------------------
 
@@ -187,6 +204,8 @@ function proposition(titre, note, plus, croix, animation) {
   return {
     titre,
     note,
+    plus,          // les deux sprites, pour les vérifier et les reprendre tels quels
+    croix,
     duree: 2.4,
     dessiner(ctx, t, taille) {
       // Le plus s'enfonce à 0,15 s, la croix à 1,25 s.
@@ -202,9 +221,9 @@ function proposition(titre, note, plus, croix, animation) {
 
 export const BOUTONS = [
   proposition(
-    '1. Biseau — écrasement élastique',
-    'le signe s’aplatit puis rebondit, comme une touche qui cède',
-    plusBiseau, croixBiseau,
+    '1. Trait fin — écrasement élastique',
+    'deux pixels d’épaisseur, rien de plus ; au clic le signe s’aplatit puis rebondit',
+    plusFin, croixFine,
     (ctx, x, y, sprite, t) => {
       const k = t >= 0 && t < 0.7 ? ressort(t) : 0;
       plaque(ctx, x, y, k > 0.5);
@@ -215,9 +234,9 @@ export const BOUTONS = [
     },
   ),
   proposition(
-    '2. Coins coupés — quart de tour',
-    'le plus pivote et devient croix le temps d’un clin d’œil : les deux signes sont le même',
-    plusCoupe, croixCoupe,
+    '2. Contour — quart de tour',
+    'le trait est cerné de noir ; au clic il pivote de 45° : les deux signes sont le même',
+    plusContour, croixContour,
     (ctx, x, y, sprite, t) => {
       const p = t >= 0 && t < 0.6 ? Math.sin(Math.PI * (t / 0.6)) : 0;
       plaque(ctx, x, y, p > 0.5);
@@ -229,7 +248,7 @@ export const BOUTONS = [
   ),
   proposition(
     '3. Briques — enfoncement',
-    'la touche s’enfonce, l’ombre se pince, tout remonte d’un coup',
+    'le trait est coupé en segments ; la touche s’enfonce, l’ombre se pince, tout remonte',
     plusBrique, croixBrique,
     (ctx, x, y, sprite, t) => {
       const k = t >= 0 && t < 0.6 ? Math.exp(-9 * t) : 0;
@@ -243,9 +262,9 @@ export const BOUTONS = [
     },
   ),
   proposition(
-    '4. Gros et doux — éclat',
-    'le signe grossit d’un cran et quatre rayons claquent, comme à la pose',
-    plusDoux, croixDoux,
+    '4. Long et fin — éclat',
+    'le même trait mené jusqu’aux bords ; au clic il grossit d’un cran et quatre rayons claquent',
+    plusLong, croixLongue,
     (ctx, x, y, sprite, t) => {
       const k = t >= 0 && t < 0.7 ? ressort(t, 20, 8) : 0;
       plaque(ctx, x, y, k > 0.5);
@@ -263,7 +282,7 @@ export const BOUTONS = [
     '5. Creusé — remplissage',
     'le signe est gravé ; au clic, la couleur le remplit depuis le centre',
     plusCreux, croixCreuse,
-    (ctx, x, y, sprite, t, role) => {
+    (ctx, x, y, sprite, t) => {
       plaque(ctx, x, y, false);
       poser(ctx, x, y, sprite, null, t);
       if (t < 0 || t > 0.9) return;
@@ -279,9 +298,9 @@ export const BOUTONS = [
     },
   ),
   proposition(
-    '6. Éclat — rebond',
-    'le signe saute, retombe et s’écrase une fois : le clic a du poids',
-    plusEclat, croixEclat,
+    '6. Double trait — rebond',
+    'un simple liseré, creux au milieu ; au clic il saute, retombe et s’écrase une fois',
+    plusDouble, croixDouble,
     (ctx, x, y, sprite, t) => {
       const saut = t >= 0 && t < 0.34 ? Math.sin(Math.PI * (t / 0.34)) : 0;
       const pose = t >= 0.34 && t < 0.8 ? ressort(t - 0.34, 26, 11) : 0;
