@@ -6,9 +6,10 @@
 // il ne le modifie jamais.
 
 import {
-  CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU,
-  rectBouton, rectBulle, rectOption, dansRect,
+  CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
+  BOUTON_PAUSE, rectBouton, rectBulle, rectOption, rectMenu, dansRect,
 } from '../design.js';
+import { celluleMiniCarte } from '../render/minicarte.js';
 import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
@@ -41,6 +42,8 @@ export function brancherPointeur(canvas, vue, monde) {
       actif: false, source: null, chemin: [], reprise: null, branche: null,
       origine: null, contact: null,
     },
+    menuPause: null,             // null, 'menu' ou 'recettes'
+    boutonsMenu: [],
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
     appuis: [],                  // boutons d'outil qui viennent d'être touchés
@@ -54,6 +57,7 @@ export function brancherPointeur(canvas, vue, monde) {
   let minuterie = null;
   let appuiLongFait = false;
   let dernierPoint = null;
+  let actionsMenu = [];
   let animMenu = null;
   let animPanneau = null;
 
@@ -201,7 +205,55 @@ export function brancherPointeur(canvas, vue, monde) {
     return false;
   }
 
+  // Le menu pause arrête le jeu : c'est une dérogation assumée au temps réel,
+  // et le seul endroit où le temps s'arrête.
+  function ouvrirMenuPause() {
+    etat.menuPause = 'menu';
+    etat.panneau = null;
+    fermerMenu();
+    majMenuPause();
+  }
+
+  function majMenuPause() {
+    const boutons = [
+      { icone: 'menuReprise', nom: 'reprendre', action: () => { etat.menuPause = null; } },
+      { icone: 'bonbon', nom: 'recettes', action: () => { etat.menuPause = 'recettes'; } },
+      {
+        icone: 'outilPause',
+        nom: toutEnPause() ? 'tout relancer' : 'tout arrêter',
+        action: () => {
+          const pause = !toutEnPause();
+          for (const m of monde.scene.machines) m.pause = pause;
+          majMenuPause();
+        },
+      },
+    ];
+    etat.boutonsMenu = boutons.map((b) => ({ icone: b.icone, nom: b.nom }));
+    actionsMenu = boutons.map((b) => b.action);
+  }
+
+  function toutEnPause() {
+    return monde.scene.machines.length > 0 && monde.scene.machines.every((m) => m.pause);
+  }
+
+  // Le menu avale tout : rien du jeu ne se touche tant qu'il est ouvert.
+  function menuPauseTouche(p) {
+    if (!etat.menuPause) return false;
+    if (etat.menuPause === 'recettes') { etat.menuPause = 'menu'; return true; }
+    for (let j = 0; j < etat.boutonsMenu.length; j++) {
+      if (dansRect(rectMenu(j), p.x, p.y)) { actionsMenu[j](); return true; }
+    }
+    return true;
+  }
+
   function interfaceTouchee(p) {
+    if (dansRect(BOUTON_PAUSE, p.x, p.y)) { ouvrirMenuPause(); return true; }
+    // Un doigt sur la mini-carte y emmène la fenêtre : un geste, pas deux.
+    if (dansRect(MINICARTE, p.x, p.y)) {
+      const c = celluleMiniCarte(p);
+      centrerCamera(c.cx, c.cy);
+      return true;
+    }
     if (etat.menu > 0 && etat.ancre) {
       for (let j = 0; j < etat.bulles.length; j++) {
         if (dansRect(rectBulle(etat.ancre, j, etat.menu), p.x, p.y)) { actionsBulles[j](); return true; }
@@ -353,6 +405,7 @@ export function brancherPointeur(canvas, vue, monde) {
     const p = point(e);
     e.preventDefault();
     appuiLongFait = false;
+    if (menuPauseTouche(p)) { relacher(); return; }
     if (panneauTouche(p)) { relacher(); return; }
     if (interfaceTouchee(p)) { relacher(); return; }
 
@@ -538,6 +591,7 @@ export function brancherPointeur(canvas, vue, monde) {
 
   centrerCamera(DEPART.regard.cx, DEPART.regard.cy);
   majBoutons();
+  majMenuPause();
   canvas.addEventListener('pointerdown', debut);
   canvas.addEventListener('pointermove', deplacement);
   canvas.addEventListener('pointerup', fin);

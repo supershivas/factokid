@@ -11,6 +11,8 @@ import { marquerPose, majPoses } from './render/pose.js';
 import { marquerAppui, majAppuis } from './render/bouton.js';
 import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
+import { creerDemarrage, avancerDemarrage, dessinerDemarrage } from './render/demarrage.js';
+import { spriteItem } from './render/sprites.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
 import { brancherPointeur } from './input/pointer.js';
@@ -18,7 +20,13 @@ import { demarrerBoucle } from './loop.js';
 
 const canvas = document.getElementById('jeu');
 const vue = creerVue(canvas);
+
+// Deux préparations : l'atlas des tuiles, déjà peint à l'import de sprites.js,
+// et le monde qu'on bâtit ici. La barre en rend compte, puis s'efface.
+const demarrage = creerDemarrage(2);
+demarrage.faites = 1;
 const monde = creerMonde();
+demarrage.faites = 2;
 const interfaceJeu = brancherPointeur(canvas, vue, monde);
 const ctx = vue.ctx;
 
@@ -57,8 +65,17 @@ function fumeeDesMines(dt) {
 }
 
 demarrerBoucle(
-  (dt) => majMonde(monde, dt),
+  (dt) => {
+    // Le menu pause arrête le temps : c'est le seul endroit où la simulation
+    // s'interrompt, et c'est le joueur qui le demande.
+    if (interfaceJeu.menuPause || !demarrage.fini) return;
+    majMonde(monde, dt);
+  },
   (fps, dt) => {
+    if (!avancerDemarrage(demarrage, dt)) {
+      dessinerDemarrage(ctx, demarrage, spriteItem('bonbon'));
+      return;
+    }
     effetsDeConstruction();
     fumeeDesMines(dt);
     majParticules(dt);

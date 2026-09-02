@@ -58,6 +58,34 @@ export const BULLE = CIBLE_TACTILE; // jamais en dessous de la cible tactile
 export const BULLE_ECART = 8;
 export const BULLE_ANIMATION = 0.18; // secondes
 
+// Bandeau haut : le compteur à gauche, le bouton pause, la mini-carte à droite.
+// La mini-carte montre le monde entier à deux unités par cellule : 42 × 60
+// pour 21 × 30 cellules, ce qui tient dans les 80 unités du bandeau.
+export const MINICARTE_PAS = 2;
+export const MINICARTE = {
+  x: LARGEUR_LOGIQUE - 12 - COLONNES * MINICARTE_PAS,
+  y: 10,
+  l: COLONNES * MINICARTE_PAS,
+  h: LIGNES * MINICARTE_PAS,
+};
+export const BOUTON_PAUSE = {
+  x: MINICARTE.x - 12 - CIBLE_TACTILE, y: 16, l: CIBLE_TACTILE, h: CIBLE_TACTILE,
+};
+
+// Menu pause : des boutons de même largeur, empilés au milieu de l'écran.
+export const MENU_BOUTON = { l: 240, h: 56 };
+export const MENU_ECART = 12;
+export const MENU_Y = 200;
+
+export function rectMenu(j) {
+  return {
+    x: (LARGEUR_LOGIQUE - MENU_BOUTON.l) / 2,
+    y: MENU_Y + j * (MENU_BOUTON.h + MENU_ECART),
+    l: MENU_BOUTON.l,
+    h: MENU_BOUTON.h,
+  };
+}
+
 // Un bouchon ne se signale qu'après avoir duré : sinon l'écran clignote au
 // moindre à-coup.
 export const ALERTE_DELAI = 1.2; // secondes

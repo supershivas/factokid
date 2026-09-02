@@ -15,7 +15,11 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **Temps réel.** La simulation continue quand la fenêtre n'est pas visible :
   au retour, le temps écoulé est rattrapé, dans la limite de `RATTRAPAGE_MAX`.
   Rien ne progresse en revanche quand l'app est fermée : pas d'idle, pas de
-  production hors ligne.
+  production hors ligne. **Seule exception : le menu pause**, où le temps
+  s'arrête parce que le joueur l'a demandé.
+- **Une mini-carte, toujours visible**, dans le bandeau haut : le monde entier
+  à deux unités par cellule, avec le cadre de la fenêtre. La toucher y emmène
+  la vue — un geste, pas deux.
 - **Grille avec convoyeurs.** Les objets transportés sont discrets et visibles :
   ils défilent un par un et s'accumulent quand l'aval est saturé.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.
@@ -242,7 +246,11 @@ src/
     recipes.js      table des recettes
     progression.js  paliers de déblocage, courbe
   render/
-    canvas.js       mise à l'échelle, culling
+    canvas.js       mise à l'échelle
+    minicarte.js    le monde entier dans le bandeau haut
+    menu.js         menu pause et page des recettes
+    texte.js        fonte bitmap 3 × 5
+    demarrage.js    barre de chargement
     particules.js   fumée et étoiles
     sprites.js      atlas, dessin des tuiles
     hud.js          compteurs, boutons

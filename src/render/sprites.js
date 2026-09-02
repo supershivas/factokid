@@ -353,6 +353,19 @@ const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
 const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 2, 1));
 
+// Deux barres noires : le menu pause, en haut de l'écran.
+const outilPause = toile(TUILE_PX, (rect) => {
+  rect(4, 3, 3, 10, PALETTE.noir);
+  rect(9, 3, 3, 10, PALETTE.noir);
+});
+
+// La flèche de reprise du menu : noire, comme les autres signes posés sur les
+// plaques claires.
+const menuReprise = toile(TUILE_PX, (rect) => {
+  for (let i = 0; i < 5; i++) rect(5 + i, 3 + i, 1, 10 - 2 * i, PALETTE.noir);
+  rect(10, 7, 1, 2, PALETTE.noir);
+});
+
 // La main qui tire le monde : une paume et quatre doigts, en noir sur la
 // plaque claire de la barre d'outils.
 const outilMain = toile(TUILE_PX, (rect) => {
@@ -429,7 +442,7 @@ export const INTERFACE = {
   bouton, boutonActif, plaqueOption, bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
   bullePause, bulleReprise,
-  outilConstruction, outilDestruction, outilMain,
+  outilConstruction, outilDestruction, outilMain, outilPause, menuReprise,
 };
 
 // --- items ----------------------------------------------------------------
