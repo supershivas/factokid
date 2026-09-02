@@ -10,11 +10,15 @@
 // voit couler ce qui est arrêté. Chaque vignette montre donc la seconde
 // moitié de sa boucle à l'arrêt.
 
-import { PALETTE, CELLULE, TUILE_PX, PIXEL, GRILLE_X, GRILLE_Y } from '../src/design.js';
+import { PALETTE, CELLULE, GRILLE_X, GRILLE_Y } from '../src/design.js';
 import { creerConvoyeur } from '../src/sim/belt.js';
 import { majChevrons, dessinerChevrons } from '../src/render/chevron.js';
 import { spriteChevron } from '../src/render/sprites.js';
 
+// Ces propositions ont été dessinées sur la grille de seize : elles la gardent,
+// pour rester ce qu'elles étaient le jour où on les a comparées.
+const TUILE_PX = 16;
+const PIXEL = CELLULE / TUILE_PX; // trois unités logiques par pixel, comme alors
 const CASES = 3;
 export const FORMAT = { largeur: CELLULE * CASES, hauteur: CELLULE, echelle: 2 };
 

@@ -1,7 +1,11 @@
 // Dix couples d'icônes pour construire et détruire.
 // Chaque proposition doit se lire au pouce, en niveaux de gris, sans mot.
 
-import { PALETTE, TUILE_PX } from '../src/design.js';
+import { PALETTE } from '../src/design.js';
+
+// Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
+// qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
+const TUILE_PX = 16;
 
 const C = PALETTE.creme;
 const R = PALETTE.rouge;

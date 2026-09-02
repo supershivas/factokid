@@ -1,7 +1,11 @@
 // Dix façons de détruire un élément.
 // Chaque vignette retire la même tuile de convoyeur, entre deux voisines.
 
-import { PALETTE, TUILE_PX } from '../src/design.js';
+import { PALETTE } from '../src/design.js';
+
+// Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
+// qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
+const TUILE_PX = 16;
 import { borne, sortieCubique, entreeCubique, tremble } from './atelier.js';
 
 const CELLULE = 24;

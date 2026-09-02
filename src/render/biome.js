@@ -41,10 +41,10 @@ function melange(a, b, part) {
 // image à l'autre. Un point d'un pixel, ou un trait d'un pixel d'épaisseur et
 // de deux à trois de long — jamais plus.
 const POINTS = {
-  point: [[3, 3], [10, 5], [6, 10], [13, 12], [2, 13]],
-  couche: [[2, 4], [9, 2], [5, 9], [11, 12], [4, 14]],
-  rang: [[2, 3], [7, 3], [12, 3], [2, 8], [7, 8], [12, 8], [2, 13], [7, 13], [12, 13]],
-  debout: [[4, 4], [11, 6], [6, 11], [13, 13], [2, 9]],
+  point: [[5, 5], [15, 8], [9, 15], [20, 18], [3, 20]],
+  couche: [[3, 6], [14, 3], [8, 14], [17, 18], [6, 21]],
+  rang: [[3, 5], [11, 5], [18, 5], [3, 12], [11, 12], [18, 12], [3, 19], [11, 19], [18, 19]],
+  debout: [[6, 6], [17, 9], [9, 17], [20, 20], [3, 14]],
 };
 
 const cache = new Map();
@@ -61,7 +61,7 @@ function tuile(fond, dessus, motif) {
   g.fillStyle = dessus;
   for (const [x, y] of POINTS[motif]) {
     if (motif === 'point') g.fillRect(x, y, 1, 1);
-    else if (motif === 'debout') g.fillRect(x, y, 1, 2);
+    else if (motif === 'debout') g.fillRect(x, y, 1, 3);
     else g.fillRect(x, y, 3, 1);
   }
   // Un seul pixel au coin : quatre cellules qui se touchent font un point.

@@ -2,7 +2,11 @@
 // La bulle est blanche, ses points sont rouges et vibrent. Ce qui change d'une
 // proposition à l'autre, c'est la façon dont elle arrive.
 
-import { PALETTE, TUILE_PX } from '../src/design.js';
+import { PALETTE } from '../src/design.js';
+
+// Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
+// qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
+const TUILE_PX = 16;
 import { borne, ressortAmorti, sortieCubique, tremble } from './atelier.js';
 
 const PIXEL = 3; // le sprite fait 16 × 16, dessiné sur 48 unités logiques

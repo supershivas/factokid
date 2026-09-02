@@ -1,13 +1,17 @@
 // Les deux propositions retenues, telles qu'elles tournent dans le jeu :
 // ce fichier n'anime rien lui-même, il appelle le code de src/render/.
 
-import { PALETTE, TUILE_PX } from '../src/design.js';
+import { PALETTE } from '../src/design.js';
 import { INTERFACE } from '../src/render/sprites.js';
 import { marquerAppui, majAppuis, ecrasement } from '../src/render/bouton.js';
 import { dessinerAlerte } from '../src/render/alerte.js';
 import {
   pose, destruction, majParticules, dessinerParticules,
 } from '../src/render/particules.js';
+
+// Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
+// qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
+const TUILE_PX = 16;
 
 const CELLULE = 24;
 

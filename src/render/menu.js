@@ -13,8 +13,8 @@ import { MACHINES } from '../data/machines.js';
 import { ICONES, INTERFACE, spriteItem } from './sprites.js';
 import { dessinerMot } from './texte.js';
 
-// L'item est dessiné sur 6 pixels d'art : ×4 le porte à 24, échelle entière.
-const ITEM_RECETTE = 24;
+// L'item est dessiné sur 9 pixels d'art : ×3 le porte à 27, échelle entière.
+const ITEM_RECETTE = 27;
 
 // Quelle machine fait quelle recette : la page des recettes le dit en montrant
 // la machine elle-même, jamais son nom seul.

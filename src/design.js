@@ -4,9 +4,9 @@
 export const LARGEUR_LOGIQUE = 360;
 export const HAUTEUR_LOGIQUE = 640;
 
-export const TUILE_PX = 16;      // pixel art natif
+export const TUILE_PX = 24;      // pixel art natif
 export const CELLULE = 48;       // unités logiques par cellule
-export const PIXEL = CELLULE / TUILE_PX; // 3 unités logiques par pixel d'art
+export const PIXEL = CELLULE / TUILE_PX; // 2 unités logiques par pixel d'art
 
 // La fenêtre : 7 × 10 cellules (336 × 480), centrée horizontalement. C'est ce
 // qu'on voit à la fois, et ça n'a pas bougé — l'échelle, la cible tactile et la

@@ -19,7 +19,7 @@ import { dessinerChevrons, COULEUR_CHEVRON, COULEUR_CRETE } from './chevron.js';
 import { parcourirItems, celluleDe } from '../sim/belt.js';
 
 const REPOUSSE = REPOUSSE_TICKS / TICKS_PAR_SECONDE;
-const TAILLE_ITEM_PX = 6;
+const TAILLE_ITEM_PX = 9;
 const TAILLE_ITEM = TAILLE_ITEM_PX * (CELLULE / TUILE_PX); // 18 unités logiques
 
 function toile(taille, peindre) {
@@ -53,59 +53,59 @@ function decale(rect, ox, oy) {
 
 const formes = {
   carre: (rect, couleur) => {
-    rect(0, 0, 6, 6, PALETTE.noir);
-    rect(1, 1, 4, 4, couleur);
-    rect(1, 1, 1, 1, PALETTE.creme);
+    rect(0, 0, 9, 9, PALETTE.noir);
+    rect(2, 2, 6, 6, couleur);
+    rect(2, 2, 1, 1, PALETTE.creme);
   },
   triangle: (rect, couleur) => {
     const n = PALETTE.noir;
-    rect(2, 0, 2, 1, n);
-    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
-    rect(1, 2, 1, 1, n); rect(2, 2, 2, 1, couleur); rect(4, 2, 1, 1, n);
-    rect(0, 3, 1, 1, n); rect(1, 3, 4, 1, couleur); rect(5, 3, 1, 1, n);
-    rect(0, 4, 1, 1, n); rect(1, 4, 4, 1, couleur); rect(5, 4, 1, 1, n);
-    rect(0, 5, 6, 1, n);
+    rect(3, 0, 3, 2, n);
+    rect(2, 2, 1, 1, n); rect(3, 2, 3, 1, couleur); rect(6, 2, 2, 1, n);
+    rect(2, 3, 1, 2, n); rect(3, 3, 3, 2, couleur); rect(6, 3, 2, 2, n);
+    rect(0, 5, 2, 1, n); rect(2, 5, 6, 1, couleur); rect(8, 5, 1, 1, n);
+    rect(0, 6, 2, 2, n); rect(2, 6, 6, 2, couleur); rect(8, 6, 1, 2, n);
+    rect(0, 8, 9, 1, n);
   },
   // Le caramel : une barre plate, silhouette qu'aucune autre matière n'a.
   barre: (rect, couleur) => {
     const n = PALETTE.noir;
-    rect(0, 1, 6, 1, n);
-    rect(0, 2, 6, 2, couleur);
-    rect(1, 2, 1, 1, PALETTE.creme);
-    rect(0, 4, 6, 1, n);
+    rect(0, 2, 9, 1, n);
+    rect(0, 3, 9, 3, couleur);
+    rect(2, 3, 1, 2, PALETTE.creme);
+    rect(0, 6, 9, 2, n);
   },
   bonbon: (rect, couleur) => {
     const n = PALETTE.noir;
-    rect(2, 0, 2, 1, n);
-    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
-    rect(0, 2, 6, 2, couleur);
-    rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
-    rect(2, 5, 2, 1, n);
+    rect(3, 0, 3, 2, n);
+    rect(2, 2, 1, 1, n); rect(3, 2, 3, 1, couleur); rect(6, 2, 2, 1, n);
+    rect(0, 3, 9, 3, couleur);
+    rect(2, 6, 1, 2, n); rect(3, 6, 3, 2, couleur); rect(6, 6, 2, 2, n);
+    rect(3, 8, 3, 1, n);
   },
   // Le papier : une feuille dont tout le coin est corné. Le pli traverse la
   // silhouette en biais : même en gris, on ne la confond pas avec le sucre.
   feuille: (rect, couleur) => {
     const n = PALETTE.noir;
-    rect(0, 0, 3, 1, n);
-    rect(3, 1, 1, 1, n);
-    rect(4, 2, 1, 1, n);
-    rect(0, 1, 1, 4, n);
-    rect(5, 3, 1, 2, n);
-    rect(0, 5, 6, 1, n);
-    rect(1, 1, 2, 1, couleur);
-    rect(1, 2, 3, 1, couleur);
-    rect(1, 3, 4, 1, couleur);
-    rect(1, 4, 4, 1, couleur);
-    rect(1, 1, 1, 1, PALETTE.creme);
+    rect(0, 0, 5, 2, n);
+    rect(5, 2, 1, 1, n);
+    rect(6, 3, 2, 2, n);
+    rect(0, 2, 2, 6, n);
+    rect(8, 5, 1, 3, n);
+    rect(0, 8, 9, 1, n);
+    rect(2, 2, 3, 1, couleur);
+    rect(2, 3, 4, 2, couleur);
+    rect(2, 5, 6, 1, couleur);
+    rect(2, 6, 6, 2, couleur);
+    rect(2, 2, 1, 1, PALETTE.creme);
   },
   rond: (rect, couleur) => {
     const n = PALETTE.noir;
-    rect(2, 0, 2, 1, n);
-    rect(1, 1, 1, 1, n); rect(2, 1, 2, 1, couleur); rect(4, 1, 1, 1, n);
-    rect(0, 2, 1, 2, n); rect(1, 2, 4, 2, couleur); rect(5, 2, 1, 2, n);
-    rect(1, 4, 1, 1, n); rect(2, 4, 2, 1, couleur); rect(4, 4, 1, 1, n);
-    rect(2, 5, 2, 1, n);
-    rect(2, 1, 1, 1, PALETTE.creme);
+    rect(3, 0, 3, 2, n);
+    rect(2, 2, 1, 1, n); rect(3, 2, 3, 1, couleur); rect(6, 2, 2, 1, n);
+    rect(0, 3, 2, 3, n); rect(2, 3, 6, 3, couleur); rect(8, 3, 1, 3, n);
+    rect(2, 6, 1, 2, n); rect(3, 6, 3, 2, couleur); rect(6, 6, 2, 2, n);
+    rect(3, 8, 3, 1, n);
+    rect(3, 2, 2, 1, PALETTE.creme);
   },
 };
 
@@ -115,37 +115,38 @@ const formes = {
 // Les crans du tapis : de petites encoches creusées dans le bord noir, jamais
 // dans la bande. Le milieu appartient aux chevrons, qui bougent ; le bord, lui,
 // ne bouge pas — les deux motifs ne se brouillent donc jamais.
-function cransHorizontaux(rect, y, x0 = 1, x1 = 16) {
-  for (let x = x0; x < x1; x += 4) rect(x, y, 2, 1, PALETTE.ardoise);
+function cransHorizontaux(rect, y, x0 = 2, x1 = 24) {
+  for (let x = x0; x < x1; x += 6) rect(x, y, 3, 1, PALETTE.ardoise);
 }
 
-function cransVerticaux(rect, x, y0 = 1, y1 = 16) {
-  for (let y = y0; y < y1; y += 4) rect(x, y, 1, 2, PALETTE.ardoise);
+function cransVerticaux(rect, x, y0 = 2, y1 = 24) {
+  for (let y = y0; y < y1; y += 6) rect(x, y, 1, 3, PALETTE.ardoise);
 }
 
 // Convoyeur droit : flux vers l'est.
+// La bande occupe les rangées 6 à 17 ; ses deux bords noirs, 4-5 et 18-19.
 const convoyeurDroit = toile(TUILE_PX, (rect) => {
-  rect(0, 3, 16, 1, PALETTE.noir);
-  rect(0, 4, 16, 8, PALETTE.ardoise);
-  rect(0, 12, 16, 1, PALETTE.noir);
-  cransHorizontaux(rect, 3);
-  cransHorizontaux(rect, 12);
+  rect(0, 4, 24, 2, PALETTE.noir);
+  rect(0, 6, 24, 12, PALETTE.ardoise);
+  rect(0, 18, 24, 2, PALETTE.noir);
+  cransHorizontaux(rect, 4);
+  cransHorizontaux(rect, 19);
 });
 
 // Convoyeur en virage : entre par l'ouest, sort par le sud. La bande est nue :
 // depuis que les chevrons défilent, deux motifs mobiles l'un sur l'autre se
 // brouilleraient.
 const convoyeurVirage = toile(TUILE_PX, (rect) => {
-  rect(0, 3, 13, 10, PALETTE.noir);
-  rect(3, 3, 10, 13, PALETTE.noir);
-  rect(0, 4, 12, 8, PALETTE.ardoise);
-  rect(4, 4, 8, 12, PALETTE.ardoise);
+  rect(0, 4, 20, 16, PALETTE.noir);
+  rect(4, 4, 16, 20, PALETTE.noir);
+  rect(0, 6, 18, 12, PALETTE.ardoise);
+  rect(6, 6, 12, 18, PALETTE.ardoise);
   // Bord extérieur : le haut, puis la descente à droite. Bord intérieur : le
   // court morceau en bas à gauche.
-  cransHorizontaux(rect, 3, 1, 12);
-  cransVerticaux(rect, 12, 5, 16);
-  cransHorizontaux(rect, 12, 0, 3);
-  cransVerticaux(rect, 3, 13, 16);
+  cransHorizontaux(rect, 4, 2, 18);
+  cransVerticaux(rect, 19, 8, 24);
+  cransHorizontaux(rect, 19, 0, 4);
+  cransVerticaux(rect, 4, 20, 24);
 });
 
 // Le chevron qui dit le sens de circulation. Il défile le long du tapis, à sa
@@ -153,17 +154,17 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
 // qu'un item passe, et voit que ça avance sans en attendre deux.
 // Deux teintes : le chevron ordinaire, et celui que la crête de lumière
 // traverse.
-// Une pointe d'un pixel, deux ailes de trois : un simple trait plié, sans
-// épaisseur ni renflement. La pointe est en (9,7) et les ailes reculent
+// Une pointe d'un pixel, deux ailes de cinq : un simple trait plié, sans
+// épaisseur ni renflement. La pointe est en (14,11) et les ailes reculent
 // symétriquement : le signe est exactement centré en largeur. En hauteur il
-// tient sur la rangée 7 — une pointe impaire ne peut pas tomber au milieu
+// tient sur la rangée 11 — une pointe impaire ne peut pas tomber au milieu
 // d'une bande paire, et c'est un demi-pixel d'art, invisible en jeu.
 function chevronTeinte(couleur) {
   return toile(TUILE_PX, (rect) => {
-    rect(9, 7, 1, 1, couleur);
-    for (let i = 1; i <= 3; i++) {
-      rect(9 - i, 7 - i, 1, 1, couleur);
-      rect(9 - i, 7 + i, 1, 1, couleur);
+    rect(14, 11, 1, 1, couleur);
+    for (let i = 1; i <= 5; i++) {
+      rect(14 - i, 11 - i, 1, 1, couleur);
+      rect(14 - i, 11 + i, 1, 1, couleur);
     }
   });
 }
@@ -175,25 +176,25 @@ export const spriteChevron = (vif) => (vif ? chevronVif : chevronOrdinaire);
 // Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les
 // quatre rotations couvrent les quatre jonctions à trois branches.
 const convoyeurT = toile(TUILE_PX, (rect) => {
-  rect(0, 3, 16, 10, PALETTE.noir);
-  rect(3, 3, 10, 13, PALETTE.noir);
-  rect(0, 4, 16, 8, PALETTE.ardoise);
-  rect(4, 4, 8, 12, PALETTE.ardoise);
-  cransHorizontaux(rect, 3);
-  cransHorizontaux(rect, 12, 0, 3);
-  cransHorizontaux(rect, 12, 13, 16);
-  cransVerticaux(rect, 3, 13, 16);
-  cransVerticaux(rect, 12, 13, 16);
+  rect(0, 4, 24, 16, PALETTE.noir);
+  rect(4, 4, 16, 20, PALETTE.noir);
+  rect(0, 6, 24, 12, PALETTE.ardoise);
+  rect(6, 6, 12, 18, PALETTE.ardoise);
+  cransHorizontaux(rect, 4);
+  cransHorizontaux(rect, 19, 0, 4);
+  cransHorizontaux(rect, 19, 20, 24);
+  cransVerticaux(rect, 4, 20, 24);
+  cransVerticaux(rect, 19, 20, 24);
 });
 
 // Convoyeur en croix : les quatre bords sont reliés.
 const convoyeurCroix = toile(TUILE_PX, (rect) => {
-  rect(0, 3, 16, 10, PALETTE.noir);
-  rect(3, 0, 10, 16, PALETTE.noir);
-  rect(0, 4, 16, 8, PALETTE.ardoise);
-  rect(4, 0, 8, 16, PALETTE.ardoise);
-  for (const y of [3, 12]) { cransHorizontaux(rect, y, 0, 3); cransHorizontaux(rect, y, 13, 16); }
-  for (const x of [3, 12]) { cransVerticaux(rect, x, 0, 3); cransVerticaux(rect, x, 13, 16); }
+  rect(0, 4, 24, 16, PALETTE.noir);
+  rect(4, 0, 16, 24, PALETTE.noir);
+  rect(0, 6, 24, 12, PALETTE.ardoise);
+  rect(6, 0, 12, 24, PALETTE.ardoise);
+  for (const y of [4, 19]) { cransHorizontaux(rect, y, 0, 4); cransHorizontaux(rect, y, 20, 24); }
+  for (const x of [4, 19]) { cransVerticaux(rect, x, 0, 4); cransVerticaux(rect, x, 20, 24); }
 });
 
 // Le téléporteur a disparu avec les cartes séparées : tout voyage sur des
@@ -201,55 +202,55 @@ const convoyeurCroix = toile(TUILE_PX, (rect) => {
 // il reviendra, en déblocage de fin.
 
 const trieur = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(7, 2, 2, 4, PALETTE.creme);
-  rect(4, 6, 8, 2, PALETTE.creme);
-  rect(3, 8, 2, 5, PALETTE.creme);
-  rect(11, 8, 2, 5, PALETTE.creme);
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
+  rect(11, 3, 3, 6, PALETTE.creme);
+  rect(6, 9, 12, 3, PALETTE.creme);
+  rect(5, 12, 3, 8, PALETTE.creme);
+  rect(17, 12, 3, 8, PALETTE.creme);
 });
 
 // La confiserie : deux entonnoirs qui versent, et un bonbon sur la façade.
 const confiserie = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(3, 2, 3, 2, PALETTE.creme);
-  rect(10, 2, 3, 2, PALETTE.creme);
-  rect(4, 4, 8, 1, PALETTE.creme);
-  rect(2, 10, 12, 4, PALETTE.noir);
-  formes.bonbon(decale(rect, 5, 10), PALETTE.orange);
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
+  rect(5, 3, 4, 3, PALETTE.creme);
+  rect(15, 3, 5, 3, PALETTE.creme);
+  rect(6, 6, 12, 2, PALETTE.creme);
+  rect(3, 15, 18, 6, PALETTE.noir);
+  formes.bonbon(decale(rect, 8, 15), PALETTE.orange);
 });
 
 // La chaufferie : une cuve sur un feu, où le sucre fond en caramel.
 const chaufferie = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(3, 3, 10, 6, PALETTE.noir);
-  rect(4, 5, 8, 3, PALETTE.jaune);
-  rect(4, 4, 8, 1, PALETTE.creme);
-  for (let i = 0; i < 3; i++) rect(4 + i * 3, 11, 2, 3, PALETTE.orange);
-  rect(3, 14, 10, 1, PALETTE.rouge);
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
+  rect(5, 5, 15, 9, PALETTE.noir);
+  rect(6, 8, 12, 4, PALETTE.jaune);
+  rect(6, 6, 12, 2, PALETTE.creme);
+  for (let i = 0; i < 3; i++) rect(6 + i * 5, 17, 3, 4, PALETTE.orange);
+  rect(5, 21, 15, 2, PALETTE.rouge);
 });
 
 // La plieuse : deux volets qui se referment sur une feuille de papier.
 const plieuse = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(2, 3, 4, 10, PALETTE.noir);
-  rect(10, 3, 4, 10, PALETTE.noir);
-  rect(3, 4, 2, 8, PALETTE.creme);
-  rect(11, 4, 2, 8, PALETTE.creme);
-  formes.feuille(decale(rect, 5, 5), PALETTE.bleu);
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
+  rect(3, 5, 6, 15, PALETTE.noir);
+  rect(15, 5, 6, 15, PALETTE.noir);
+  rect(5, 6, 3, 12, PALETTE.creme);
+  rect(17, 6, 3, 12, PALETTE.creme);
+  formes.feuille(decale(rect, 8, 8), PALETTE.bleu);
 });
 
 // La livraison : un bocal ouvert où tombent les bonbons.
 const livraison = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-  rect(3, 2, 10, 2, PALETTE.creme);
-  rect(4, 4, 8, 9, PALETTE.noir);
-  rect(5, 5, 6, 7, PALETTE.vert);
-  rect(5, 5, 6, 2, PALETTE.noir);
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
+  rect(5, 3, 15, 3, PALETTE.creme);
+  rect(6, 6, 12, 14, PALETTE.noir);
+  rect(8, 8, 9, 10, PALETTE.vert);
+  rect(8, 8, 9, 3, PALETTE.noir);
 });
 
 // --- cartes ---------------------------------------------------------------
@@ -257,27 +258,27 @@ const livraison = toile(TUILE_PX, (rect) => {
 // Un gisement porte la forme de sa matière, posée sur un socle.
 function gisement(item) {
   return toile(TUILE_PX, (rect) => {
-    rect(2, 11, 12, 3, PALETTE.ardoise);
-    rect(2, 14, 12, 1, PALETTE.noir);
-    rect(4, 8, 8, 3, PALETTE.ardoise);
-    formes[item.forme](decale(rect, 5, 2), PALETTE[item.couleur]);
+    rect(3, 17, 18, 4, PALETTE.ardoise);
+    rect(3, 21, 18, 2, PALETTE.noir);
+    rect(6, 12, 12, 5, PALETTE.ardoise);
+    formes[item.forme](decale(rect, 8, 3), PALETTE[item.couleur]);
   });
 }
 
 // Gisement ramassé : le socle reste, la matière repousse.
 const gisementVide = toile(TUILE_PX, (rect) => {
-  rect(2, 11, 12, 3, PALETTE.ardoise);
-  rect(2, 14, 12, 1, PALETTE.noir);
+  rect(3, 17, 18, 4, PALETTE.ardoise);
+  rect(3, 21, 18, 2, PALETTE.noir);
 });
 
 // Un extracteur : un chevalet posé sur le gisement, qui le récolte tout seul.
 const extracteur = toile(TUILE_PX, (rect) => {
-  rect(2, 12, 12, 3, PALETTE.ardoise);
-  rect(2, 15, 12, 1, PALETTE.noir);
-  rect(7, 3, 2, 9, PALETTE.creme);
-  rect(4, 6, 8, 2, PALETTE.noir);
-  rect(4, 6, 8, 1, PALETTE.jaune);
-  rect(3, 3, 3, 2, PALETTE.jaune);
+  rect(3, 18, 18, 5, PALETTE.ardoise);
+  rect(3, 23, 18, 1, PALETTE.noir);
+  rect(11, 5, 3, 13, PALETTE.creme);
+  rect(6, 9, 12, 3, PALETTE.noir);
+  rect(6, 9, 12, 2, PALETTE.jaune);
+  rect(5, 5, 4, 3, PALETTE.jaune);
 });
 
 export const ICONES = {
@@ -293,7 +294,7 @@ for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(it
 // lit, pas son cadre. L'outil actif se distingue par sa pleine intensité,
 // l'autre s'efface (voir hud.js).
 const bouton = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.creme);
+  rect(0, 0, 24, 24, PALETTE.creme);
 });
 
 // Les boutons du panneau, eux, restent sombres : leurs icônes sont claires —
@@ -301,16 +302,16 @@ const bouton = toile(TUILE_PX, (rect) => {
 // pas. La barre d'outils est claire, le panneau est sombre : chacun garde le
 // fond sur lequel ses signes se lisent.
 const plaqueOption = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
 });
 
 const boutonActif = bouton;
 
 const bulleFond = toile(TUILE_PX, (rect, disque) => {
-  disque(8, 8, 8, PALETTE.noir);
-  disque(8, 8, 7, PALETTE.creme);
-  disque(8, 8, 5.5, PALETTE.ardoise);
+  disque(12, 12, 12, PALETTE.noir);
+  disque(12, 12, 10.5, PALETTE.creme);
+  disque(12, 12, 8.25, PALETTE.ardoise);
 });
 
 // Un plus pour construire, une croix pour détruire : deux formes qui se
@@ -318,7 +319,7 @@ const bulleFond = toile(TUILE_PX, (rect, disque) => {
 // Le milieu de la tuile tombe entre les colonnes 7 et 8 : un trait d'épaisseur
 // paire posé à (16 - épaisseur) / 2 l'enjambe exactement. Les deux signes
 // passent par ces deux fonctions, donc aucun ne peut être décalé d'un pixel.
-function traitPlus(rect, couleur, marge = 2, epaisseur = 2) {
+function traitPlus(rect, couleur, marge = 3, epaisseur = 4) {
   const a = (TUILE_PX - epaisseur) / 2;
   const l = TUILE_PX - marge * 2;
   rect(a, marge, epaisseur, l, couleur);
@@ -327,7 +328,7 @@ function traitPlus(rect, couleur, marge = 2, epaisseur = 2) {
 
 // La croix est décrite par une condition symétrique en x et en y : elle est
 // centrée par construction. « écart » donne la finesse du trait.
-function traitCroix(rect, couleur, marge = 2, ecart = 0) {
+function traitCroix(rect, couleur, marge = 3, ecart = 1) {
   for (let y = marge; y < TUILE_PX - marge; y++) {
     for (let x = marge; x < TUILE_PX - marge; x++) {
       const premiere = Math.abs(x - y) <= ecart;
@@ -342,91 +343,128 @@ const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir
 // Sur la plaque claire, le rouge tranche largement (5,2 : 1) : la croix peut
 // donc être rouge pleine, sans trait de renfort. La forme la distingue déjà du
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
-const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 2, 1));
+const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 3, 2));
 
 // Deux barres noires : le menu pause, en haut de l'écran.
 const outilPause = toile(TUILE_PX, (rect) => {
-  rect(4, 3, 3, 10, PALETTE.noir);
-  rect(9, 3, 3, 10, PALETTE.noir);
+  rect(6, 5, 5, 15, PALETTE.noir);
+  rect(14, 5, 4, 15, PALETTE.noir);
 });
 
 // La flèche de reprise du menu : noire, comme les autres signes posés sur les
 // plaques claires.
 const menuReprise = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 5; i++) rect(5 + i, 3 + i, 1, 10 - 2 * i, PALETTE.noir);
-  rect(10, 7, 1, 2, PALETTE.noir);
+  for (let i = 0; i < 7; i++) rect(8 + i, 5 + i, 1, 15 - 2 * i, PALETTE.noir);
+  rect(15, 11, 2, 3, PALETTE.noir);
 });
 
-// La main qui tire le monde : une paume et quatre doigts, en noir sur la
-// plaque claire de la barre d'outils.
+// La main qui tire le monde. Elle est écrite en silhouette, un caractère par
+// pixel, et n'est peinte que par son bord : contour noir, intérieur clair.
+// C'est le dessin des outils « main » des logiciels de dessin, et c'est ce qui
+// la rend lisible — à cette taille, une main pleine n'est qu'une tache.
+const SILHOUETTE_MAIN = [
+  '........................',
+  '........................',
+  '..........###...........',
+  '..........###.###.......',
+  '......###.###.###.......',
+  '......###.###.###.......',
+  '......###.###.###.###...',
+  '......###.###.###.###...',
+  '......###.###.###.###...',
+  '......###.###.###.###...',
+  '......###############...',
+  '....##################..',
+  '....##################..',
+  '.####################...',
+  '.####################...',
+  '.####################...',
+  '..###################...',
+  '...##################...',
+  '....################....',
+  '.....##############.....',
+  '......############......',
+  '........................',
+  '........................',
+  '........................',
+];
+
+// Ne peindre que le bord d'une silhouette : un pixel entouré de pixels pleins
+// est un dedans, tout le reste est un contour.
+function silhouette(rect, lignes, contour, dedans) {
+  const plein = (x, y) => Boolean(lignes[y] && lignes[y][x] === '#');
+  for (let y = 0; y < lignes.length; y++) {
+    for (let x = 0; x < lignes[y].length; x++) {
+      if (!plein(x, y)) continue;
+      const entoure = plein(x - 1, y) && plein(x + 1, y)
+        && plein(x, y - 1) && plein(x, y + 1);
+      rect(x, y, 1, 1, entoure ? dedans : contour);
+    }
+  }
+}
+
 const outilMain = toile(TUILE_PX, (rect) => {
-  const n = PALETTE.noir;
-  rect(4, 4, 2, 5, n);
-  rect(7, 2, 2, 7, n);
-  rect(10, 4, 2, 5, n);
-  rect(3, 8, 10, 5, n);
-  rect(2, 7, 2, 4, n);
-  rect(5, 13, 6, 1, n);
+  silhouette(rect, SILHOUETTE_MAIN, PALETTE.noir, PALETTE.creme);
 });
 
 // Pause et reprise, pour le panneau d'une machine.
 const bullePause = toile(TUILE_PX, (rect) => {
-  rect(4, 3, 3, 10, PALETTE.creme);
-  rect(9, 3, 3, 10, PALETTE.creme);
+  rect(6, 5, 5, 15, PALETTE.creme);
+  rect(14, 5, 4, 15, PALETTE.creme);
 });
 
 // Le vert seul ne tranche pas sur l'ardoise du bouton (2,1 : 1) : la flèche
 // est donc cernée de crème, qui tranche (4,9 : 1), et garde son cœur vert.
 const bulleReprise = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 5; i++) rect(5 + i, 3 + i, 1, 10 - 2 * i, PALETTE.creme);
-  rect(10, 7, 1, 2, PALETTE.creme);
-  for (let i = 0; i < 3; i++) rect(6 + i, 5 + i, 1, 6 - 2 * i, PALETTE.vert);
+  for (let i = 0; i < 7; i++) rect(8 + i, 5 + i, 1, 15 - 2 * i, PALETTE.creme);
+  rect(15, 11, 2, 3, PALETTE.creme);
+  for (let i = 0; i < 5; i++) rect(9 + i, 8 + i, 1, 9 - 2 * i, PALETTE.vert);
 });
 
 const bulleExtracteur = toile(TUILE_PX, (rect) => {
-  rect(2, 11, 12, 3, PALETTE.ardoise);
-  rect(7, 3, 2, 8, PALETTE.creme);
-  rect(4, 6, 8, 1, PALETTE.jaune);
-  rect(3, 3, 3, 2, PALETTE.jaune);
+  rect(3, 17, 18, 4, PALETTE.ardoise);
+  rect(11, 5, 3, 12, PALETTE.creme);
+  rect(6, 9, 12, 2, PALETTE.jaune);
+  rect(5, 5, 4, 3, PALETTE.jaune);
 });
 
 const bulleConvoyeur = toile(TUILE_PX, (rect) => {
-  rect(2, 5, 12, 1, PALETTE.noir);
-  rect(2, 6, 12, 5, PALETTE.ardoise);
-  rect(2, 11, 12, 1, PALETTE.noir);
-  for (let x = 3; x < 14; x += 4) rect(x, 8, 2, 1, PALETTE.bleu);
+  rect(3, 8, 18, 1, PALETTE.noir);
+  rect(3, 9, 18, 8, PALETTE.ardoise);
+  rect(3, 17, 18, 1, PALETTE.noir);
+  for (let x = 5; x < 21; x += 6) rect(x, 12, 3, 1, PALETTE.bleu);
 });
 
 // Bulles des machines constructibles : le même motif que la machine posée,
 // sans son cadre, pour qu'il tienne dans le rond de la bulle.
 const bulleTrieur = toile(TUILE_PX, (rect) => {
-  rect(7, 3, 2, 4, PALETTE.creme);
-  rect(4, 7, 8, 2, PALETTE.creme);
-  rect(3, 9, 2, 4, PALETTE.creme);
-  rect(11, 9, 2, 4, PALETTE.creme);
+  rect(11, 5, 3, 6, PALETTE.creme);
+  rect(6, 11, 12, 3, PALETTE.creme);
+  rect(5, 14, 3, 6, PALETTE.creme);
+  rect(17, 14, 3, 6, PALETTE.creme);
 });
 
 const bulleChaufferie = toile(TUILE_PX, (rect) => {
-  rect(3, 3, 10, 6, PALETTE.noir);
-  rect(4, 4, 8, 1, PALETTE.creme);
-  rect(4, 5, 8, 3, PALETTE.jaune);
-  for (let i = 0; i < 3; i++) rect(4 + i * 3, 11, 2, 3, PALETTE.orange);
+  rect(5, 5, 15, 9, PALETTE.noir);
+  rect(6, 6, 12, 2, PALETTE.creme);
+  rect(6, 8, 12, 4, PALETTE.jaune);
+  for (let i = 0; i < 3; i++) rect(6 + i * 5, 17, 3, 4, PALETTE.orange);
 });
 
 const bulleConfiserie = toile(TUILE_PX, (rect) => {
-  rect(3, 2, 3, 2, PALETTE.creme);
-  rect(10, 2, 3, 2, PALETTE.creme);
-  rect(5, 4, 2, 2, PALETTE.creme);
-  rect(9, 4, 2, 2, PALETTE.creme);
-  formes.bonbon(decale(rect, 5, 7), PALETTE.orange);
+  rect(5, 3, 4, 3, PALETTE.creme);
+  rect(15, 3, 5, 3, PALETTE.creme);
+  rect(8, 6, 3, 3, PALETTE.creme);
+  rect(14, 6, 3, 3, PALETTE.creme);
+  formes.bonbon(decale(rect, 8, 11), PALETTE.orange);
 });
 
 const bulliePlieuse = toile(TUILE_PX, (rect) => {
-  rect(2, 3, 3, 10, PALETTE.noir);
-  rect(11, 3, 3, 10, PALETTE.noir);
-  rect(3, 4, 2, 8, PALETTE.creme);
-  rect(11, 4, 2, 8, PALETTE.creme);
-  formes.feuille(decale(rect, 5, 5), PALETTE.bleu);
+  rect(3, 5, 5, 15, PALETTE.noir);
+  rect(17, 5, 4, 15, PALETTE.noir);
+  rect(5, 6, 3, 12, PALETTE.creme);
+  rect(17, 6, 3, 12, PALETTE.creme);
+  formes.feuille(decale(rect, 8, 8), PALETTE.bleu);
 });
 
 export const INTERFACE = {
@@ -662,15 +700,15 @@ function dessinerMachine(ctx, machine) {
 // de large : le signe se lit à sa forme, sans couleur ni mot.
 function marquePause(ctx, machine, coin) {
   if (!machine.pause) return;
-  const x = coin.x + CELLULE - 8 * PIXEL;
-  const y = coin.y + 1 * PIXEL;
+  const x = coin.x + CELLULE - 12 * PIXEL;
+  const y = coin.y + 2 * PIXEL;
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(x - PIXEL, y - PIXEL, 9 * PIXEL, 9 * PIXEL);
+  ctx.fillRect(x - PIXEL, y - PIXEL, 12 * PIXEL, 12 * PIXEL);
   ctx.fillStyle = PALETTE.creme;
-  ctx.fillRect(x, y, 7 * PIXEL, 7 * PIXEL);
+  ctx.fillRect(x, y, 10 * PIXEL, 10 * PIXEL);
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(x + 2 * PIXEL, y + 2 * PIXEL, PIXEL, 3 * PIXEL);
-  ctx.fillRect(x + 4 * PIXEL, y + 2 * PIXEL, PIXEL, 3 * PIXEL);
+  ctx.fillRect(x + 3 * PIXEL, y + 3 * PIXEL, PIXEL, 4 * PIXEL);
+  ctx.fillRect(x + 6 * PIXEL, y + 3 * PIXEL, PIXEL, 4 * PIXEL);
 }
 
 // Les bulles passent au-dessus de tout : elles se dessinent en dernier.

@@ -31,7 +31,8 @@ export function dessinerDemarrage(ctx, demarrage, bonbon) {
 
   // Un bonbon au-dessus de la barre : c'est ce qu'on vient faire ici.
   const cx = LARGEUR_LOGIQUE / 2;
-  ctx.drawImage(bonbon, Math.round(cx - 24), 260, 48, 48);
+  // Le bonbon fait 9 pixels d'art : ×5 le porte à 45, échelle entière.
+  ctx.drawImage(bonbon, Math.round(cx - 22), 260, 45, 45);
 
   // La barre avance au plus lent des deux : le travail réellement fait, et le
   // temps minimal d'affichage. Elle n'annonce donc jamais une fin qui n'est pas

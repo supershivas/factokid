@@ -2,7 +2,11 @@
 // Chaque vignette pose la même tuile de convoyeur, au même endroit : seule la
 // façon dont elle arrive change.
 
-import { PALETTE, TUILE_PX } from '../src/design.js';
+import { PALETTE } from '../src/design.js';
+
+// Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
+// qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
+const TUILE_PX = 16;
 import { borne, ressortAmorti, sortieCubique, entreeCubique, tremble } from './atelier.js';
 
 const CELLULE = 24; // une cellule de jeu, à l'échelle de la vignette

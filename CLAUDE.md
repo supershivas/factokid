@@ -134,7 +134,7 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Valeur | Réglage |
 |---|---|
 | Résolution logique | 360 × 640 |
-| Pixel art natif | 16 × 16 par tuile |
+| Pixel art natif | 24 × 24 par tuile |
 | Cellule de grille | 48 unités logiques |
 | Fenêtre | 7 × 10 cellules |
 | Monde | 21 × 30 cellules, soit neuf fenêtres |

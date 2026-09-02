@@ -9,7 +9,11 @@
 // l'encre, « . » pour rien. On juge donc la forme dans le code autant qu'à
 // l'écran.
 
-import { PALETTE, TUILE_PX, BOUTON } from '../src/design.js';
+import { PALETTE,  BOUTON } from '../src/design.js';
+
+// Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
+// qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
+const TUILE_PX = 16;
 
 export const FORMAT = { largeur: 64, hauteur: 64, echelle: 2 };
 
