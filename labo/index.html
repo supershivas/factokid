@@ -56,6 +56,15 @@
   </p>
   <div class="grille" id="chevrons"></div>
 
+  <h2>La main — combien de pixels ?</h2>
+  <p class="note">
+    Le bouton fait 48 unités logiques : c'est la cible tactile, elle ne bouge
+    pas. Pour que la mise à l'échelle reste entière, la grille de dessin doit
+    donc diviser 48 — 16 pixels d'art (×3, ce qu'on fait aujourd'hui), 24 (×2)
+    ou 48 (×1). Rien entre les deux. Voici la même main aux trois finesses.
+  </p>
+  <div class="grille" id="resolution"></div>
+
   <h2>La main — dix versions</h2>
   <p class="note">
     L'outil qui déplace le monde, à sa taille réelle sur la plaque de la barre
@@ -99,6 +108,10 @@
 
     const poses = document.getElementById('poses');
     for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+
+    const { RESOLUTIONS } = await import('./resolution.js');
+    const resolution = document.getElementById('resolution');
+    for (const v of RESOLUTIONS) poserVignette(resolution, v.titre, v.note, v.dessiner, v.duree, v.format);
 
     const { VIGNETTES: MAINS } = await import('./mains.js');
     const mains = document.getElementById('mains');
