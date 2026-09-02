@@ -113,12 +113,10 @@ const formes = {
 
 const sol = toile(TUILE_PX, (rect) => {
   rect(0, 0, TUILE_PX, TUILE_PX, PALETTE.noir);
-  // Coins de cellule marqués : la grille se lit sans lignes pleines.
-  const a = PALETTE.ardoise;
-  rect(0, 0, 3, 1, a);   rect(0, 0, 1, 3, a);
-  rect(13, 0, 3, 1, a);  rect(15, 0, 1, 3, a);
-  rect(0, 15, 3, 1, a);  rect(0, 13, 1, 3, a);
-  rect(13, 15, 3, 1, a); rect(15, 13, 1, 3, a);
+  // Un seul pixel au coin de chaque cellule : la grille se lit, et ne se
+  // regarde pas. Quatre cellules se touchant, la jonction fait un point, pas
+  // une croix.
+  rect(0, 0, 1, 1, PALETTE.ardoise);
 });
 
 // Les crans du tapis : de petites encoches creusées dans le bord noir, jamais
