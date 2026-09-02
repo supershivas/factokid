@@ -358,53 +358,44 @@ const menuReprise = toile(TUILE_PX, (rect) => {
   rect(15, 11, 2, 3, PALETTE.noir);
 });
 
-// La main qui tire le monde. Elle est écrite en silhouette, un caractère par
-// pixel, et n'est peinte que par son bord : contour noir, intérieur clair.
-// C'est le dessin des outils « main » des logiciels de dessin, et c'est ce qui
-// la rend lisible — à cette taille, une main pleine n'est qu'une tache.
+// La main qui tire le monde, écrite en silhouette : un caractère par pixel,
+// peinte pleine. C'est le dessin des mains d'interface — une masse noire, des
+// doigts séparés par de fines fentes qui s'arrêtent avant la paume, un pouce
+// qui sort en bas à gauche, et le bas de la paume arrondi. Pas de contour :
+// à cette taille, un liseré fait une main creuse, pas une main.
 const SILHOUETTE_MAIN = [
   '........................',
   '........................',
-  '..........###...........',
-  '..........###.###.......',
-  '......###.###.###.......',
-  '......###.###.###.......',
-  '......###.###.###.###...',
-  '......###.###.###.###...',
-  '......###.###.###.###...',
-  '......###.###.###.###...',
-  '......###############...',
-  '....##################..',
-  '....##################..',
-  '.####################...',
-  '.####################...',
-  '.####################...',
-  '..###################...',
-  '...##################...',
-  '....################....',
-  '.....##############.....',
-  '......############......',
-  '........................',
+  '..........#.............',
+  '.........###..#.........',
+  '......#..###.###........',
+  '.....###.###.###........',
+  '.....###.###.###..#.....',
+  '.....###.###.###.###....',
+  '.....###.###.###.###....',
+  '.....###.###.###.###....',
+  '.....###.###.###.###....',
+  '.....###.###.###.###....',
+  '.....###.###.###.###....',
+  '....#################...',
+  '....#################...',
+  '.##.#################...',
+  '###.#################...',
+  '####.################...',
+  '.###.################...',
+  '..##.################...',
+  '.....###############....',
+  '.......###########......',
   '........................',
   '........................',
 ];
 
-// Ne peindre que le bord d'une silhouette : un pixel entouré de pixels pleins
-// est un dedans, tout le reste est un contour.
-function silhouette(rect, lignes, contour, dedans) {
-  const plein = (x, y) => Boolean(lignes[y] && lignes[y][x] === '#');
-  for (let y = 0; y < lignes.length; y++) {
-    for (let x = 0; x < lignes[y].length; x++) {
-      if (!plein(x, y)) continue;
-      const entoure = plein(x - 1, y) && plein(x + 1, y)
-        && plein(x, y - 1) && plein(x, y + 1);
-      rect(x, y, 1, 1, entoure ? dedans : contour);
+const outilMain = toile(TUILE_PX, (rect) => {
+  for (let y = 0; y < SILHOUETTE_MAIN.length; y++) {
+    for (let x = 0; x < SILHOUETTE_MAIN[y].length; x++) {
+      if (SILHOUETTE_MAIN[y][x] === '#') rect(x, y, 1, 1, PALETTE.noir);
     }
   }
-}
-
-const outilMain = toile(TUILE_PX, (rect) => {
-  silhouette(rect, SILHOUETTE_MAIN, PALETTE.noir, PALETTE.creme);
 });
 
 // Pause et reprise, pour le panneau d'une machine.

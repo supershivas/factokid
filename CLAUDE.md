@@ -109,8 +109,9 @@ géographie, pas d'un multiplicateur. C'est ce que le téléporteur annulait, et
 c'est pourquoi il a disparu. Il pourra revenir bien plus tard, en déblocage de
 fin, pour relier deux points éloignés.
 
-**La main déplace, le doigt construit.** Un troisième outil dans la barre : en
-main, le doigt tire le monde ; en construction, il trace. Pendant un tracé,
+**La main déplace, le doigt construit.** Un troisième outil dans la barre, et
+c'est celui du repos : on regarde le monde avant de le changer. En main, le
+doigt tire le monde ; en construction, il trace. Pendant un tracé,
 arriver au bord de la fenêtre fait défiler tout seul, pour qu'un convoyeur
 traverse deux écrans sans que le doigt se lève.
 

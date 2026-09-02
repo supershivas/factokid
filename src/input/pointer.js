@@ -29,7 +29,8 @@ const SEUIL_GLISSE = 6;         // unités logiques au-delà desquelles c'est un
 
 export function brancherPointeur(canvas, vue, monde) {
   const etat = {
-    outil: 'construction',
+    // La main est l'outil du repos : on regarde le monde avant de le changer.
+    outil: 'main',
     constructible: CONSTRUCTIBLES[0].id,
     menuOuvert: false,
     menu: 0,
