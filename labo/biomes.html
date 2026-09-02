@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chantier des biomes</title>
+<style>
+  :root {
+    --noir: #1a1c2c; --ardoise: #566c86; --creme: #f4f4f4;
+    --rouge: #b13e53; --jaune: #ffcd75; --bleu: #41a6f6;
+  }
+  html, body { margin: 0; background: #0e0f1a; color: var(--creme); }
+  body { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 40px 0 4px; color: var(--jaune); }
+  p.note { color: var(--ardoise); margin: 0 0 20px; max-width: 62ch; }
+  a { color: var(--bleu); }
+  .grille { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .vignette { margin: 0; background: var(--noir); border: 1px solid #2a2d44; border-radius: 8px;
+              padding: 10px; display: flex; flex-direction: column; align-items: center; }
+  .vignette canvas { image-rendering: pixelated; display: block; border-radius: 4px; }
+  figcaption { margin-top: 8px; text-align: center; }
+  figcaption b { display: block; font-weight: 600; }
+  figcaption span { display: block; color: var(--ardoise); font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>Chantier des biomes</h1>
+  <p class="note">
+    Une page à part : l'atelier des animations est déjà chargé.
+    <a href="./index.html">Aller à l'atelier des animations</a>.
+  </p>
+  <p class="note">
+    Contrainte de départ : un biome doit se voir au premier coup d'œil sans
+    jamais concurrencer ce qui roule dessus. Les items et les tapis sont clairs
+    et saturés ; le sol reste donc sombre, et ne parle que par sa texture.
+  </p>
+
+  <h2>Les quatre sols</h2>
+  <p class="note">Chacun à trois cases sur quatre, tel qu'il couvrirait la carte.</p>
+  <div class="grille" id="sols"></div>
+
+  <h2>Passages d'un biome à l'autre — quatre façons</h2>
+  <p class="note">
+    Les plaines de sucre rencontrent les champs de fraises, à chaque fois au
+    même endroit. Un passage doit se lire comme un lieu, pas comme une couture.
+  </p>
+  <div class="grille" id="passages"></div>
+
+  <script type="module">
+    import { poserVignette } from './atelier.js';
+    const { SOLS, PASSAGES } = await import('./biomes.js');
+
+    const sols = document.getElementById('sols');
+    for (const v of SOLS) poserVignette(sols, v.titre, v.note, v.dessiner.bind(v), v.duree, v.format);
+
+    const passages = document.getElementById('passages');
+    for (const v of PASSAGES) poserVignette(passages, v.titre, v.note, v.dessiner, v.duree, v.format);
+  </script>
+</body>
+</html>
