@@ -3,7 +3,7 @@
 
 import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
 import { creerVue } from './render/canvas.js';
-import { dessinerScene, dessinerCarte, bordureGrille } from './render/sprites.js';
+import { dessinerScene, bordureGrille } from './render/sprites.js';
 import {
   majParticules, dessinerParticules, fumee, pose, destruction,
 } from './render/particules.js';
@@ -43,14 +43,14 @@ function effetsDeConstruction() {
   interfaceJeu.appuis.length = 0;
 }
 
-// Une mine qui creuse fume.
+// Un extracteur qui creuse fume. La fumée est posée en coordonnées du monde :
+// c'est le rendu qui la décale avec le reste.
 let horlogeFumee = 0;
 function fumeeDesMines(dt) {
-  if (interfaceJeu.vue < 0) return;
   horlogeFumee += dt;
   if (horlogeFumee < 0.18) return;
   horlogeFumee = 0;
-  for (const machine of monde.cartes[interfaceJeu.vue].scene.machines) {
+  for (const machine of monde.scene.machines) {
     if (!machine.def.mine || machine.creuse === false) continue;
     fumee(GRILLE_X + machine.cx * CELLULE + CELLULE / 2, GRILLE_Y + machine.cy * CELLULE + 10);
   }
@@ -65,13 +65,11 @@ demarrerBoucle(
     majPoses(dt);
     majAppuis(dt);
     // Les chevrons de la scène qu'on regarde : c'est du rendu, pas du jeu.
-    majChevrons(interfaceJeu.vue < 0 ? monde.usine : monde.cartes[interfaceJeu.vue].scene, dt);
+    majChevrons(monde.scene, dt);
 
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
-    if (interfaceJeu.vue < 0) dessinerScene(ctx, monde.usine, interfaceJeu.trace);
-    else dessinerCarte(ctx, monde.cartes[interfaceJeu.vue], interfaceJeu.trace);
-    dessinerParticules(ctx);
+    dessinerScene(ctx, monde, interfaceJeu.trace, dessinerParticules);
     bordureGrille(ctx);
     dessinerHud(ctx, monde, fps, interfaceJeu);
   },

@@ -2,7 +2,7 @@
 // élément. Icônes et chiffres ; les seuls mots sont là pour l'adulte.
 
 import {
-  PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, LIGNES, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
+  PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
   BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, rectBouton, rectBulle, rectOption,
 } from '../design.js';
 import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
@@ -127,7 +127,7 @@ export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const livraison = monde.usine.machines.find((m) => m.def.entree);
+  const livraison = monde.scene.machines.find((m) => m.def.entree);
 
   // Un seul compteur : les bonbons finis. Tout le reste se lit sur la grille,
   // dans les jauges des machines et dans ce qui circule.
@@ -143,7 +143,7 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   // Séparations discrètes des bandeaux.
   ctx.fillStyle = PALETTE.ardoise;
   ctx.fillRect(12, GRILLE_Y - 10, LARGEUR_LOGIQUE - 24, 1);
-  ctx.fillRect(12, GRILLE_Y + LIGNES * CELLULE + 10, LARGEUR_LOGIQUE - 24, 1);
+  ctx.fillRect(12, GRILLE_Y + HAUTEUR_VUE + 10, LARGEUR_LOGIQUE - 24, 1);
 }
 
 // Barre d'outils, et bulles des éléments constructibles qui en sortent.
@@ -175,7 +175,7 @@ function dessinerOutils(ctx, interfaceJeu) {
   // par-dessus le jeu, pas comme une pièce de plus sur la grille.
   ctx.globalAlpha = 0.55 * interfaceJeu.menu;
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(0, 0, LARGEUR_LOGIQUE, GRILLE_Y + LIGNES * CELLULE);
+  ctx.fillRect(0, 0, LARGEUR_LOGIQUE, GRILLE_Y + HAUTEUR_VUE);
   ctx.globalAlpha = 1;
 
   // La progression vient d'un ressort : elle dépasse un peu, puis se pose.

@@ -1,7 +1,7 @@
 // Machines : production, consommation, stocks. Ne dessine rien.
 //
 // Quatre rôles, tous décrits par une entrée de data/machines.js :
-//   `source`  — le téléporteur : rempli par les cartes, verse sur un tapis ;
+//   `mine`    — l'extracteur : se remplit du gisement qu'il occupe ;
 //   `tri`     — le trieur : reçoit mélangé, range, une sortie par matière ;
 //   `recette` — l'assembleur : plusieurs ingrédients, un produit ;
 //   `entree`  — la livraison : consomme et fait disparaître.
@@ -10,9 +10,9 @@ import { MACHINES, TICKS_PAR_SECONDE } from '../data/machines.js';
 import { RECETTES } from '../data/recipes.js';
 import { pousser, peutAccepter } from './belt.js';
 
-// `carte` dit à quelle carte la machine se rattache, `item` la matière d'une
-// mine. L'un et l'autre décident de ce que la machine stocke.
-export function creerMachine(type, cx, cy, { carte, item } = {}) {
+// `item` dit la matière du gisement qu'un extracteur occupe : c'est ce qu'il
+// stocke.
+export function creerMachine(type, cx, cy, { item } = {}) {
   const def = MACHINES[type];
   const recette = def.recette ? RECETTES[def.recette] : null;
   const ticks = recette ? recette.ticksParItem : def.ticksParItem;
@@ -24,7 +24,6 @@ export function creerMachine(type, cx, cy, { carte, item } = {}) {
     cy,
     periode: ticks ? ticks / TICKS_PAR_SECONDE : 0,
     horloge: 0,
-    carte,          // pour un téléporteur ou une mine : la carte concernée
     item,           // pour une mine : la matière du gisement occupé
     stocks: {},
     file: [],       // pour un trieur : ce qui attend d'être rangé, mélangé
@@ -48,31 +47,24 @@ export function attendus(machine) {
   if (recette) return Object.keys(recette.entrees).map((item) => ({ item, capacite: def.capacite }));
   if (def.tri) return []; // un trieur prend tout : voir accepte()
   if (def.entree) return [{ item: def.entree, capacite: def.capacite }];
-  // La sortie d'une carte prend tout ce que la carte produit.
-  if (def.accepteTout) return machine.carte.items.map((item) => ({ item, capacite: def.capacite }));
   return [];
 }
 
-// Ce que la machine stocke, donc ce que le rendu doit montrer. Le téléporteur
-// stocke sans rien accepter d'un tapis : il est rempli par les cartes.
-// Combien de convoyeurs peuvent arriver sur cette machine. Un téléporteur en
-// accepte un par côté : plusieurs mines peuvent l'alimenter.
+// Combien de convoyeurs peuvent arriver sur cette machine : autant que sa
+// recette a d'ingrédients, deux pour un trieur.
 export function maxEntrees(machine) {
-  if (machine.def.accepteTout) return 4;
   return machine.def.tri ? 2 : attendus(machine).length;
 }
 
+// Ce que la machine stocke, donc ce que le rendu doit montrer.
 export function jauges(machine) {
   if (machine.def.tri) return [];
   if (machine.def.mine) return [{ item: machine.item, capacite: machine.def.capacite }];
-  if (machine.def.source) {
-    return machine.carte.items.map((item) => ({ item, capacite: machine.def.capacite }));
-  }
   return attendus(machine);
 }
 
 export function aUneSortie(machine) {
-  return Boolean(machine.def.source || machine.def.tri || machine.def.mine || machine.recette);
+  return Boolean(machine.def.tri || machine.def.mine || machine.recette);
 }
 
 // Combien de convoyeurs peuvent partir de cette machine.
@@ -94,8 +86,8 @@ export function deposer(machine, type) {
   return true;
 }
 
-// Dépôt venu d'une carte : ignore les règles de tapis, respecte la capacité.
-export function deposerDepuisCarte(machine, type) {
+// Dépôt venu du sol : ignore les règles de tapis, respecte la capacité.
+export function deposerBrut(machine, type) {
   if (!(type in machine.stocks)) return false;
   if (machine.stocks[type] >= machine.def.capacite) return false;
   machine.stocks[type]++;
@@ -173,8 +165,7 @@ export function majMachine(machine, dt) {
   }
   majBlocage(machine, dt);
   if (machine.def.tri) { majTrieur(machine, dt); return; }
-  if (machine.def.source || machine.def.mine) { verserAuTour(machine, dt); return; }
-  if (machine.def.accepteTout) return; // le monde la vide vers l'usine
+  if (machine.def.mine) { verserAuTour(machine, dt); return; }
 
   if (machine.recette) {
     const complet = Object.entries(machine.recette.entrees)

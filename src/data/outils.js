@@ -3,19 +3,21 @@
 // entrée de plus dans CONSTRUCTIBLES.
 
 export const OUTILS = [
+  { id: 'main', icone: 'outilMain' },
   { id: 'construction', icone: 'outilConstruction' },
   { id: 'destruction', icone: 'outilDestruction' },
 ];
 
-// `ou` dit où l'élément se pose : « partout », « usine » ou « carte ».
-// `machine` nomme l'entrée de MACHINES à poser sur une cellule libre.
+// Tout se pose partout : il n'y a plus qu'une carte. `machine` nomme l'entrée
+// de MACHINES à poser sur une cellule libre ; l'extracteur, lui, demande un
+// gisement sous lui.
 export const CONSTRUCTIBLES = [
-  { id: 'convoyeur', icone: 'bulleConvoyeur', ou: 'partout' },
-  { id: 'extracteur', icone: 'bulleExtracteur', ou: 'carte' },
-  { id: 'trieur', icone: 'bulleTrieur', ou: 'usine', machine: 'trieur' },
-  { id: 'chaufferie', icone: 'bulleChaufferie', ou: 'usine', machine: 'chaufferie' },
-  { id: 'confiserie', icone: 'bulleConfiserie', ou: 'usine', machine: 'confiserie' },
-  { id: 'plieuse', icone: 'bulliePlieuse', ou: 'usine', machine: 'plieuse' },
+  { id: 'convoyeur', icone: 'bulleConvoyeur' },
+  { id: 'extracteur', icone: 'bulleExtracteur' },
+  { id: 'trieur', icone: 'bulleTrieur', machine: 'trieur' },
+  { id: 'chaufferie', icone: 'bulleChaufferie', machine: 'chaufferie' },
+  { id: 'confiserie', icone: 'bulleConfiserie', machine: 'confiserie' },
+  { id: 'plieuse', icone: 'bulliePlieuse', machine: 'plieuse' },
 ];
 
 // Les machines qu'on peut poser sont aussi les seules qu'on peut détruire :

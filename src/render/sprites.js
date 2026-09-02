@@ -3,9 +3,13 @@
 // puis affichées à l'échelle entière PIXEL (3 unités logiques par pixel).
 
 import {
-  PALETTE, TUILE_PX, PIXEL, CELLULE, COLONNES, LIGNES, GRILLE_X, GRILLE_Y, ALERTE_DELAI,
+  PALETTE, TUILE_PX, PIXEL, CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE,
+  ALERTE_DELAI,
 } from '../design.js';
+import { decalage, fenetre, celluleVisible } from '../camera.js';
 import { ITEMS } from '../data/items.js';
+import { REPOUSSE_TICKS } from '../data/monde.js';
+import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
 import { dessinerAlerte } from './alerte.js';
@@ -13,6 +17,7 @@ import { chutePose } from './pose.js';
 import { dessinerChevrons, COULEUR_CHEVRON, COULEUR_CRETE } from './chevron.js';
 import { parcourirItems, celluleDe } from '../sim/belt.js';
 
+const REPOUSSE = REPOUSSE_TICKS / TICKS_PAR_SECONDE;
 const TAILLE_ITEM_PX = 6;
 const TAILLE_ITEM = TAILLE_ITEM_PX * (CELLULE / TUILE_PX); // 18 unités logiques
 
@@ -200,17 +205,10 @@ const convoyeurCroix = toile(TUILE_PX, (rect) => {
   for (const x of [3, 12]) { cransVerticaux(rect, x, 0, 3); cransVerticaux(rect, x, 13, 16); }
 });
 
-// Le téléporteur : un anneau ouvert d'où sort la matière ramassée.
-const teleporteur = toile(TUILE_PX, (rect, disque) => {
-  rect(0, 0, 16, 16, PALETTE.noir);
-  rect(1, 1, 14, 14, PALETTE.ardoise);
-  disque(8, 7, 5.5, PALETTE.bleu);
-  disque(8, 7, 4, PALETTE.noir);
-  disque(8, 7, 2, PALETTE.creme);
-  rect(3, 13, 10, 2, PALETTE.bleu);
-});
+// Le téléporteur a disparu avec les cartes séparées : tout voyage sur des
+// tapis, du premier gisement à la livraison. Son sprite reviendra le jour où
+// il reviendra, en déblocage de fin.
 
-// Le trieur : un flux qui entre, deux qui sortent.
 const trieur = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.noir);
   rect(1, 1, 14, 14, PALETTE.ardoise);
@@ -265,16 +263,6 @@ const livraison = toile(TUILE_PX, (rect) => {
 
 // --- cartes ---------------------------------------------------------------
 
-// Sol des cartes : plus organique que la grille de l'usine, pour qu'on sache
-// au premier coup d'œil qu'on n'est plus dans l'atelier.
-const solCarte = toile(TUILE_PX, (rect) => {
-  rect(0, 0, TUILE_PX, TUILE_PX, PALETTE.noir);
-  rect(3, 4, 2, 1, PALETTE.ardoise);
-  rect(10, 2, 1, 2, PALETTE.ardoise);
-  rect(6, 11, 3, 1, PALETTE.ardoise);
-  rect(12, 9, 1, 1, PALETTE.ardoise);
-});
-
 // Un gisement porte la forme de sa matière, posée sur un socle.
 function gisement(item) {
   return toile(TUILE_PX, (rect) => {
@@ -302,8 +290,7 @@ const extracteur = toile(TUILE_PX, (rect) => {
 });
 
 export const ICONES = {
-  teleporteur, trieur, confiserie, plieuse, livraison, chaufferie, extracteur,
-  sortieCarte: teleporteur,
+  trieur, confiserie, plieuse, livraison, chaufferie, extracteur,
 };
 
 const spritesGisements = {};
@@ -366,6 +353,18 @@ const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
 const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 2, 1));
 
+// La main qui tire le monde : une paume et quatre doigts, en noir sur la
+// plaque claire de la barre d'outils.
+const outilMain = toile(TUILE_PX, (rect) => {
+  const n = PALETTE.noir;
+  rect(4, 4, 2, 5, n);
+  rect(7, 2, 2, 7, n);
+  rect(10, 4, 2, 5, n);
+  rect(3, 8, 10, 5, n);
+  rect(2, 7, 2, 4, n);
+  rect(5, 13, 6, 1, n);
+});
+
 // Pause et reprise, pour le panneau d'une machine.
 const bullePause = toile(TUILE_PX, (rect) => {
   rect(4, 3, 3, 10, PALETTE.creme);
@@ -426,23 +425,12 @@ const bulliePlieuse = toile(TUILE_PX, (rect) => {
   formes.feuille(decale(rect, 5, 5), PALETTE.bleu);
 });
 
-// Une bulle de carte porte la forme de ce qu'on y ramasse : deux cartes ne se
-// distinguent jamais par la seule couleur.
-function bulleCarte(item) {
-  return toile(TUILE_PX, (rect) => {
-    rect(3, 3, 10, 10, PALETTE.vert);
-    rect(3, 3, 10, 1, PALETTE.creme);
-    formes[item.forme](decale(rect, 5, 5), PALETTE[item.couleur]);
-  });
-}
-
 export const INTERFACE = {
   bouton, boutonActif, plaqueOption, bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
   bullePause, bulleReprise,
-  outilConstruction, outilDestruction,
+  outilConstruction, outilDestruction, outilMain,
 };
-for (const item of Object.values(ITEMS)) INTERFACE['bulleCarte_' + item.id] = bulleCarte(item);
 
 // --- items ----------------------------------------------------------------
 
@@ -547,20 +535,60 @@ function tuile(ctx, sprite, cx, cy, quarts) {
   ctx.restore();
 }
 
-// Dessine une scène : ses convoyeurs, ce qui circule dessus, ses machines.
-// L'usine et les cartes passent par ici, seul le sol change.
-export function dessinerScene(ctx, scene, trace, solTuile = sol) {
-  for (let cy = 0; cy < LIGNES; cy++) {
-    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solTuile, cx, cy, 0);
+// Dessine le monde vu par la fenêtre : le sol, les gisements, les convoyeurs,
+// ce qui circule dessus, les machines.
+//
+// Tout est découpé à la fenêtre : on ne peint que les cellules visibles, et le
+// dessin est décalé de la caméra. Le monde fait neuf écrans ; en peindre neuf
+// pour en montrer un serait payer neuf fois trop cher.
+export function dessinerScene(ctx, monde, trace, dessinerParticules) {
+  const scene = monde.scene;
+  const f = fenetre();
+  const d = decalage();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE);
+  ctx.clip();
+  ctx.translate(-d.x, -d.y);
+
+  for (let cy = f.cy0; cy <= f.cy1; cy++) {
+    for (let cx = f.cx0; cx <= f.cx1; cx++) tuile(ctx, sol, cx, cy, 0);
   }
-  dessinerConvoyeurs(ctx, scene);
-  for (const machine of scene.machines) dessinerMachine(ctx, machine);
-  dessinerAlertes(ctx, scene);
+  dessinerGisements(ctx, monde, f);
+  dessinerConvoyeurs(ctx, scene, f);
+  for (const machine of scene.machines) {
+    if (celluleVisible(machine.cx, machine.cy, f)) dessinerMachine(ctx, machine);
+  }
+  // Les particules aussi vivent dans le monde : fumée et éclats restent sur la
+  // case qui les a produits, même quand la fenêtre s'en va.
+  if (dessinerParticules) dessinerParticules(ctx);
+  dessinerAlertes(ctx, scene, f);
   if (trace && trace.actif) dessinerTrace(ctx, trace);
+
+  ctx.restore();
+}
+
+// Un gisement porte sa matière ; vidé, il montre où en est sa repousse.
+function dessinerGisements(ctx, monde, f) {
+  for (const g of monde.gisements) {
+    if (!celluleVisible(g.cx, g.cy, f)) continue;
+    if (g.present) {
+      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
+      continue;
+    }
+    tuile(ctx, gisementVide, g.cx, g.cy, 0);
+    const coin = coinCellule(g.cx, g.cy);
+    const part = Math.min(1, g.horloge / REPOUSSE);
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(coin.x + 6, coin.y + 24, 36, 6);
+    ctx.fillStyle = PALETTE.vert;
+    ctx.fillRect(coin.x + 6, coin.y + 24, Math.round(36 * part), 6);
+  }
 }
 
 // Les convoyeurs d'une scène, puis ce qui roule dessus.
-export function dessinerConvoyeurs(ctx, scene) {
+export function dessinerConvoyeurs(ctx, scene, f) {
   // Qui débouche sur quelle cellule : une fusion se voit du côté de la case
   // où les tapis se rejoignent, pas du côté de celui qui repart.
   const arrivees = new Map();
@@ -575,6 +603,7 @@ export function dessinerConvoyeurs(ctx, scene) {
   for (const convoyeur of scene.convoyeurs) {
     const chemin = convoyeur.chemin;
     for (let i = 0; i < chemin.length; i++) {
+      if (!celluleVisible(chemin[i].cx, chemin[i].cy, f)) continue;
       const avant = i === 0 ? convoyeur.celluleEntree : chemin[i - 1];
       const apres = i === chemin.length - 1 ? convoyeur.celluleSortie : chemin[i + 1];
 
@@ -641,8 +670,9 @@ function marquePause(ctx, machine, coin) {
 // Les bulles passent au-dessus de tout : elles se dessinent en dernier.
 // Une seule par bouchon, à l'endroit d'où il part : un tapis bloqué parce que
 // ce qu'il alimente est lui-même bloqué ne dit rien, c'est l'autre qui parle.
-function dessinerAlertes(ctx, scene) {
+function dessinerAlertes(ctx, scene, f) {
   for (const machine of scene.machines) {
+    if (!celluleVisible(machine.cx, machine.cy, f)) continue;
     if (machine.bloqueeDepuis > ALERTE_DELAI) {
       alerte(ctx, machine.cx, machine.cy, machine.bloqueeDepuis - ALERTE_DELAI);
     }
@@ -653,6 +683,7 @@ function dessinerAlertes(ctx, scene) {
     if (convoyeur.cible && convoyeur.cible.bloqueeDepuis > ALERTE_DELAI) continue;
     if (convoyeur.sorties.some((suite) => suite.bloque > ALERTE_DELAI)) continue;
     const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
+    if (!celluleVisible(bout.cx, bout.cy, f)) continue;
     alerte(ctx, bout.cx, bout.cy, convoyeur.bloque - ALERTE_DELAI);
   }
 }
@@ -720,32 +751,6 @@ function dessinerFleches(ctx, machine) {
 }
 
 // Dessine une carte : même grille, même échelle, gisements et mines.
-export function dessinerCarte(ctx, carte, trace) {
-  for (let cy = 0; cy < LIGNES; cy++) {
-    for (let cx = 0; cx < COLONNES; cx++) tuile(ctx, solCarte, cx, cy, 0);
-  }
-
-  for (const g of carte.gisements) {
-    const coin = coinCellule(g.cx, g.cy);
-    if (g.present) {
-      tuile(ctx, spritesGisements[g.item], g.cx, g.cy, 0);
-      continue;
-    }
-    tuile(ctx, gisementVide, g.cx, g.cy, 0);
-    const part = Math.min(1, g.horloge / carte.repousse);
-    ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(coin.x + 6, coin.y + 24, 36, 6);
-    ctx.fillStyle = PALETTE.vert;
-    ctx.fillRect(coin.x + 6, coin.y + 24, Math.round(36 * part), 6);
-  }
-
-  dessinerConvoyeurs(ctx, carte.scene);
-  for (const machine of carte.scene.machines) dessinerMachine(ctx, machine);
-  dessinerAlertes(ctx, carte.scene);
-  if (trace && trace.actif) dessinerTrace(ctx, trace);
-}
-
-
 // Jauge de stock : une rangée de pastilles par ingrédient attendu, à la
 // couleur de l'item. Le bouchon se voit sur la machine, pas seulement sur le
 // convoyeur.
@@ -790,5 +795,5 @@ function dessinerTrace(ctx, trace) {
 export function bordureGrille(ctx) {
   ctx.strokeStyle = PALETTE.ardoise;
   ctx.lineWidth = 1;
-  ctx.strokeRect(GRILLE_X - 0.5, GRILLE_Y - 0.5, COLONNES * CELLULE + 1, LIGNES * CELLULE + 1);
+  ctx.strokeRect(GRILLE_X - 0.5, GRILLE_Y - 0.5, LARGEUR_VUE + 1, HAUTEUR_VUE + 1);
 }

@@ -31,33 +31,24 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   gestes sans renoncer à la contrainte de performance de la section 3.
 - **Prestige.** L'état de la partie en cours et l'état permanent sont deux
   structures distinctes, sauvegardées séparément, dès le premier commit.
-- **Les matières viennent des cartes, pas de nulle part.** Il n'y a plus de
-  machine qui produit à partir de rien : chaque matière brute a sa carte. Le
-  joueur touche un gisement, le héros le ramasse, la matière arrive au
-  téléporteur. Un gisement repousse après un délai.
-- **Un téléporteur par carte**, posé sur la grille de l'usine, et le même en
-  bas de la carte. Il accepte un convoyeur par côté : plusieurs mines peuvent
-  l'alimenter. Une carte peut porter plusieurs matières : son téléporteur
-  les sort mélangées sur un seul convoyeur. Le toucher côté usine ouvre son
-  panneau et mène à sa carte ; le toucher côté carte ramène à l'usine.
-- **Le héros ramasse, la mine automatise.** On désigne des gisements, le héros
-  les fait dans l'ordre et rapporte au téléporteur. Une mine posée sur un
-  gisement le récolte seule, plus lentement qu'un joueur attentif.
+- **Les matières viennent du sol, pas de nulle part.** Il n'y a plus de machine
+  qui produit à partir de rien : chaque matière brute a ses gisements, posés
+  sur la grande grille. Un extracteur posé dessus le récolte ; un gisement
+  repousse après un délai.
 - **L'usine fabrique des bonbons.** La chaîne tient en trois recettes : le
   sucre fond en caramel ; caramel, fraise et menthe font la pastille ; la
-  pastille et le papier font le bonbon. Deux cartes fournissent les quatre
-  matières brutes, mélangées deux par deux.
+  pastille et le papier font le bonbon. Les quatre matières brutes sortent de
+  gisements posés sur la grande carte.
 - **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
   confiserie et plieuse sont des éléments constructibles comme le convoyeur :
-  on les pose sur une cellule libre de l'usine, et l'outil destruction les
-  retire. Le téléporteur et la livraison, eux, restent en place.
+  on les pose sur une cellule libre, et l'outil destruction les retire. La
+  livraison, elle, reste en place.
 - **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur a deux
   branches : la matière que le joueur a choisie, et tout le reste. Le premier
   convoyeur tracé prend la matière choisie, le second ramasse le reste. La
   matière se change à tout moment depuis le panneau du trieur.
-- **Les mines se relient au téléporteur.** Une mine garde sa récolte dans son
-  propre stock ; il faut tracer un convoyeur jusqu'au téléporteur de la carte.
-  Même grille, même geste que dans l'usine.
+- **Un extracteur garde sa récolte** dans son propre stock : il faut tracer un
+  convoyeur de là jusqu'à ce qu'on veut nourrir.
 - **Les machines n'ont pas d'orientation.** Elles acceptent un convoyeur par
   côté, quel qu'il soit. Un enfant relie sans avoir à penser au sens ; les
   flèches d'entrée et de sortie suffisent à dire ce qui se passe. Pas de
@@ -66,8 +57,8 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   tracé devant un extracteur au repos le prend au passage. Le tapis est coupé
   juste avant la cellule voisine : la machine déverse dans la suite, à côté de
   ce qui l'alimentait déjà. Rien n'est inséré au milieu d'une file.
-- **Le héros n'existe plus.** Sur une carte, on pose un extracteur sur un
-  gisement et on le relie au téléporteur : c'est tout ce qu'il y a à y faire.
+- **Le héros n'existe plus.** On pose un extracteur sur un gisement et on le
+  relie : c'est tout ce qu'il y a à y faire.
 - **Tout bâtiment se met en pause**, depuis son panneau d'appui long. Il cesse
   de travailler et cesse de se signaler : c'est ainsi qu'on assume un bouchon
   au lieu de démonter la chaîne. Une machine en pause porte un petit carré
@@ -77,23 +68,34 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   disparaît tout seul de la grille, même un tapis que plus rien n'alimente.
 - **Un seul compteur à l'écran** : les bonbons finis. Le reste se lit sur la
   grille, dans les jauges des machines et dans ce qui circule.
-- **On revient d'une carte par son téléporteur**, jamais par un bouton retour :
-  un geste, pas deux chemins.
 - **Appui court, appui long.** Un appui court fait la fonction principale de
-  l'élément touché — un téléporteur mène à sa carte, un gisement se désigne.
-  Un appui long ouvre ses informations et ses réglages.
+  l'élément touché — un gisement propose son extracteur, un trieur ouvre son
+  filtre. Un appui long ouvre les informations et les réglages.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
 
-### Deux écrans, une seule grille
+### Une seule carte, plus grande que l'écran
 
-L'usine et les cartes partagent la même grille logique, le même canvas et le
-même geste. Une carte n'est pas un niveau : c'est la même surface, remplie de
-gisements au lieu de machines. Changer d'écran ne change ni l'échelle, ni la
-mise en page, ni le code de rendu.
+Il n'y a plus d'écran d'usine ni de carte de minage : **une seule grille**, où
+l'on mine et où l'on construit au même endroit. Elle fait neuf fenêtres —
+21 × 30 cellules pour une fenêtre de 7 × 10 — et la caméra s'y promène.
 
-La simulation de l'usine continue pendant qu'on est sur une carte.
+C'est le seul système que la carte générale ajoute, et il ne touche pas à la
+simulation : déplacer la vue ne change rien à ce qui circule. Tout le jeu
+raisonne en cellules du monde ; seuls le rendu et l'entrée savent laquelle est
+visible.
+
+**La distance est la ressource.** Le gisement à trois cases coûte trois
+convoyeurs, celui à vingt en coûte vingt : la progression sort de la
+géographie, pas d'un multiplicateur. C'est ce que le téléporteur annulait, et
+c'est pourquoi il a disparu. Il pourra revenir bien plus tard, en déblocage de
+fin, pour relier deux points éloignés.
+
+**La main déplace, le doigt construit.** Un troisième outil dans la barre : en
+main, le doigt tire le monde ; en construction, il trace. Pendant un tracé,
+arriver au bord de la fenêtre fait défiler tout seul, pour qu'un convoyeur
+traverse deux écrans sans que le doigt se lève.
 
 ### Règle de croissance
 
@@ -117,7 +119,8 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Résolution logique | 360 × 640 |
 | Pixel art natif | 16 × 16 par tuile |
 | Cellule de grille | 48 unités logiques |
-| Grille de départ | 7 × 10 cellules |
+| Fenêtre | 7 × 10 cellules |
+| Monde | 21 × 30 cellules, soit neuf fenêtres |
 | Cible tactile minimale | 48 unités logiques |
 | Mise à l'échelle | entière uniquement (×1, ×2, ×3), jamais fractionnaire |
 | Rendu | `image-rendering: pixelated`, pas d'interpolation |
@@ -220,6 +223,7 @@ preview.html        aperçu desktop (même bundle, cadre différent)
 vendor/             Motion, rangé tel quel, jamais modifié
 src/
   main.js           point d'entrée, sélection du conteneur
+  camera.js         quelle partie du monde la fenêtre montre
   loop.js           boucle à pas fixe
   anim.js           ressorts d'interface (Motion)
   sim/
@@ -227,12 +231,12 @@ src/
     scene.js        une grille, ses machines, ses convoyeurs
     belt.js         files compressées, déplacement des items
     machine.js      production, consommation, stocks
-    carte.js        gisements, ramassage, repousse
+    gisement.js     gisements, extraction, repousse
     world.js        état de la partie en cours
   data/
     items.js        table des items
     machines.js     table des machines
-    cartes.js       cartes et gisements
+    monde.js        gisements du monde
     depart.js       disposition de départ, chemin pré-tracé
     outils.js       outils et éléments constructibles
     recipes.js      table des recettes
@@ -289,9 +293,10 @@ Rien d'autre que ceci tant que ce n'est pas validé :
    de tracé reste construit et ne débouche sur rien.
 
 Depuis, le lot a grossi sur décision : deuxième matière et première recette
-(a + b = c), cartes, téléporteur et trieur, puis la chaîne complète du bonbon
-et la construction des trieurs et des transformateurs. Ces ajouts sont décrits
-en section 1.
+(a + b = c), gisements et trieur, la chaîne complète du bonbon, la
+construction des trieurs et des transformateurs, puis la carte générale — une
+seule grille de neuf fenêtres, où l'on mine et où l'on construit au même
+endroit. Ces ajouts sont décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
 Mesuré à 208 items, 60 fps, image médiane 16,7 ms — avant que l'espacement ne

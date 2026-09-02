@@ -2,14 +2,6 @@
 // Toute constante de gameplay vit dans ce dossier.
 
 export const MACHINES = {
-  teleporteur: {
-    id: 'teleporteur',
-    description: "apporte ce qu'on ramasse sur sa carte",
-    nom: 'téléporteur',
-    source: true,       // rempli par sa carte, jamais par un tapis
-    capacite: 8,
-    ticksParItem: 20,   // cadence à laquelle il verse sur le tapis
-  },
   trieur: {
     id: 'trieur',
     description: "range une matière, le reste à part",
@@ -56,13 +48,6 @@ export const MACHINES = {
     mine: true,           // se remplit du gisement qu'il occupe
     capacite: 4,
     ticksParItem: 20,     // cadence à laquelle elle verse sur le tapis
-  },
-  sortieCarte: {
-    id: 'sortieCarte',
-    description: "renvoie la récolte à l'usine",
-    nom: 'téléporteur',
-    accepteTout: true,    // tout ce qu'on lui apporte part vers l'usine
-    capacite: 8,
   },
   convoyeur: {
     id: 'convoyeur',

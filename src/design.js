@@ -8,15 +8,26 @@ export const TUILE_PX = 16;      // pixel art natif
 export const CELLULE = 48;       // unités logiques par cellule
 export const PIXEL = CELLULE / TUILE_PX; // 3 unités logiques par pixel d'art
 
-// Grille de départ : 7 × 10 (336 × 480), centrée horizontalement.
+// La fenêtre : 7 × 10 cellules (336 × 480), centrée horizontalement. C'est ce
+// qu'on voit à la fois, et ça n'a pas bougé — l'échelle, la cible tactile et la
+// mise en page en dépendent.
 // Dérogation validée : 10 × 10 ne tient pas dans 360 de large à 48/cellule.
-export const COLONNES = 7;
-export const LIGNES = 10;
-export const GRILLE_X = (LARGEUR_LOGIQUE - COLONNES * CELLULE) / 2; // 12
+export const COLONNES_VUE = 7;
+export const LIGNES_VUE = 10;
+
+// Le monde : neuf fenêtres. La grille est plus grande que l'écran, et la
+// caméra s'y promène. C'est la seule différence entre la fenêtre et le monde —
+// tout le reste du jeu raisonne en cellules, sans savoir laquelle est visible.
+export const COLONNES = 21;
+export const LIGNES = 30;
+
+export const GRILLE_X = (LARGEUR_LOGIQUE - COLONNES_VUE * CELLULE) / 2; // 12
 export const GRILLE_Y = 80;
+export const LARGEUR_VUE = COLONNES_VUE * CELLULE;
+export const HAUTEUR_VUE = LIGNES_VUE * CELLULE;
 
 export const BANDEAU_HAUT = GRILLE_Y;
-export const BANDEAU_BAS = HAUTEUR_LOGIQUE - (GRILLE_Y + LIGNES * CELLULE); // 80
+export const BANDEAU_BAS = HAUTEUR_LOGIQUE - (GRILLE_Y + HAUTEUR_VUE); // 80
 
 export const CIBLE_TACTILE = 48;
 
@@ -40,7 +51,7 @@ export const INDEX_PALETTE = [
 // Barre d'outils : deux boutons à la cible tactile pleine, et les bulles des
 // éléments constructibles qui sortent au-dessus du bouton construction.
 export const BOUTON = CIBLE_TACTILE;
-export const BOUTON_Y = GRILLE_Y + LIGNES * CELLULE + 16;
+export const BOUTON_Y = GRILLE_Y + HAUTEUR_VUE + 16;
 export const BOUTON_X = 12;
 export const BOUTON_ECART = 8;
 export const BULLE = CIBLE_TACTILE; // jamais en dessous de la cible tactile
