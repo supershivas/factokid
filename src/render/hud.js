@@ -233,7 +233,7 @@ function dessinerPanneau(ctx, interfaceJeu) {
 
   for (let j = 0; j < p.options.length; j++) {
     const r = rectOption(j);
-    ctx.drawImage(INTERFACE.bouton, r.x, r.y, r.l, r.h);
+    ctx.drawImage(INTERFACE.plaqueOption, r.x, r.y, r.l, r.h);
     const option = p.options[j];
     const sprite = option.item ? spriteItem(option.item) : INTERFACE[option.icone];
     // Ce qui est choisi est entouré ; le reste est simplement en retrait.

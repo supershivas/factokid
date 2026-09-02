@@ -318,6 +318,15 @@ const bouton = toile(TUILE_PX, (rect) => {
   rect(0, 0, 16, 16, PALETTE.creme);
 });
 
+// Les boutons du panneau, eux, restent sombres : leurs icônes sont claires —
+// la pause, l'extracteur — et une icône crème sur une plaque crème ne se voit
+// pas. La barre d'outils est claire, le panneau est sombre : chacun garde le
+// fond sur lequel ses signes se lisent.
+const plaqueOption = toile(TUILE_PX, (rect) => {
+  rect(0, 0, 16, 16, PALETTE.noir);
+  rect(1, 1, 14, 14, PALETTE.ardoise);
+});
+
 const boutonActif = bouton;
 
 const bulleFond = toile(TUILE_PX, (rect, disque) => {
@@ -363,9 +372,12 @@ const bullePause = toile(TUILE_PX, (rect) => {
   rect(9, 3, 3, 10, PALETTE.creme);
 });
 
+// Le vert seul ne tranche pas sur l'ardoise du bouton (2,1 : 1) : la flèche
+// est donc cernée de crème, qui tranche (4,9 : 1), et garde son cœur vert.
 const bulleReprise = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 5; i++) rect(5 + i, 3 + i, 1, 10 - 2 * i, PALETTE.vert);
-  rect(10, 7, 1, 2, PALETTE.vert);
+  for (let i = 0; i < 5; i++) rect(5 + i, 3 + i, 1, 10 - 2 * i, PALETTE.creme);
+  rect(10, 7, 1, 2, PALETTE.creme);
+  for (let i = 0; i < 3; i++) rect(6 + i, 5 + i, 1, 6 - 2 * i, PALETTE.vert);
 });
 
 const bulleExtracteur = toile(TUILE_PX, (rect) => {
@@ -425,7 +437,7 @@ function bulleCarte(item) {
 }
 
 export const INTERFACE = {
-  bouton, boutonActif, bulleFond, bulleConvoyeur, bulleExtracteur,
+  bouton, boutonActif, plaqueOption, bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
   bullePause, bulleReprise,
   outilConstruction, outilDestruction,
