@@ -56,6 +56,15 @@
   </p>
   <div class="grille" id="chevrons"></div>
 
+  <h2>La main — dix versions</h2>
+  <p class="note">
+    L'outil qui déplace le monde, à sa taille réelle sur la plaque de la barre
+    d'outils. Seize pixels de côté et un seul ton d'encre : ce qui se lit n'est
+    pas le dessin mais la silhouette, et les doigts ne se voient que par les
+    vides qui les séparent.
+  </p>
+  <div class="grille" id="mains"></div>
+
   <h2>Plus et croix — six styles et leur animation au clic</h2>
   <p class="note">
     Le plus s'enfonce d'abord, la croix ensuite ; la vignette rejoue la
@@ -90,6 +99,10 @@
 
     const poses = document.getElementById('poses');
     for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+
+    const { VIGNETTES: MAINS } = await import('./mains.js');
+    const mains = document.getElementById('mains');
+    for (const v of MAINS) poserVignette(mains, v.titre, v.note, v.dessiner, v.duree, v.format);
 
     const { CHEVRONS } = await import('./chevrons.js');
     const chevrons = document.getElementById('chevrons');

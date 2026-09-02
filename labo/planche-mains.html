@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Planche — la main</title>
+<style>
+  html, body { margin: 0; background: #0e0f1a; color: #f4f4f4; }
+  body { font: 13px/1.4 ui-monospace, Menlo, monospace; padding: 20px; }
+  h1 { font-size: 16px; margin: 0 0 12px; }
+  .ligne { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .ligne b { width: 300px; font-weight: 600; }
+  .ligne b span { display: block; color: #566c86; font-weight: 400; }
+  canvas { image-rendering: pixelated; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>La main — dix versions, à trois tailles</h1>
+<div id="planche"></div>
+<script type="module">
+  import { VIGNETTES } from './mains.js';
+  const planche = document.getElementById('planche');
+  for (const v of VIGNETTES) {
+    const ligne = document.createElement('div');
+    ligne.className = 'ligne';
+    const t = document.createElement('b');
+    t.innerHTML = `${v.titre}<span>${v.note}</span>`;
+    ligne.append(t);
+    for (const echelle of [4, 2, 1]) {
+      const c = document.createElement('canvas');
+      c.width = 64 * echelle; c.height = 64 * echelle;
+      const g = c.getContext('2d');
+      g.setTransform(echelle, 0, 0, echelle, 0, 0);
+      g.imageSmoothingEnabled = false;
+      g.fillStyle = '#1a1c2c'; g.fillRect(0, 0, 64, 64);
+      v.dessiner(g, 0, 64, 64);
+      ligne.append(c);
+    }
+    planche.append(ligne);
+  }
+</script>
+</body>
+</html>
