@@ -44,17 +44,32 @@ function detacherCible(convoyeur) {
   convoyeur.cible = null;
 }
 
-// Détruire une tuile ne détruit pas tout le convoyeur : il est coupé là. Ce
-// qui précède reste posé et ne débouche plus sur rien, ce qui suit disparaît.
+// Détruire une tuile n'enlève que celle-là. Ce qui précède reste posé et ne
+// débouche plus sur rien ; ce qui suit reste posé aussi, et n'est plus
+// alimenté. L'outil destruction retire un convoyeur à la fois — jamais toute
+// la section sous les doigts de l'enfant.
 export function couperConvoyeur(scene, convoyeur, cx, cy) {
   const i = convoyeur.chemin.findIndex((c) => c.cx === cx && c.cy === cy);
   if (i < 0) return;
-  if (i === 0) { retirerConvoyeur(scene, convoyeur); return; }
-  for (let k = i; k < convoyeur.chemin.length; k++) {
-    poser(scene.grille, convoyeur.chemin[k].cx, convoyeur.chemin[k].cy, null);
+
+  // La suite devient un tapis à part entière, que rien n'alimente plus.
+  if (i < convoyeur.chemin.length - 1) {
+    const suite = couperEn(scene, convoyeur, i);
+    if (suite) {
+      const k = convoyeur.sorties.indexOf(suite);
+      if (k >= 0) convoyeur.sorties.splice(k, 1);
+      const s = suite.sources.indexOf(convoyeur);
+      if (s >= 0) suite.sources.splice(s, 1);
+      if (suite.source === convoyeur) suite.source = suite.sources[0] || null;
+    }
   }
+
+  // Il ne reste que l'amont, dernière cellule comprise : on la retire.
+  if (convoyeur.chemin.length <= 1) { retirerConvoyeur(scene, convoyeur); return; }
+  poser(scene.grille, cx, cy, null);
   detacherCible(convoyeur);
-  reconstruire(convoyeur, convoyeur.chemin.slice(0, i), null);
+  reconstruire(convoyeur, convoyeur.chemin.slice(0, -1), null);
+  majSortie(convoyeur);
 }
 
 // Reprendre un tracé interrompu : on ajoute des cellules au bout, sans perdre
@@ -72,28 +87,9 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
 
 function estMachine(x) { return Boolean(x && x.def); }
 
-// Un convoyeur que plus rien n'alimente ne peut plus rien recevoir : il reste
-// à l'écran sans jamais servir. On l'enlève, et de proche en proche.
-function alimente(convoyeur) {
-  return estMachine(convoyeur.source) || convoyeur.sources.length > 0;
-}
-
-let nettoyageEnCours = false;
-
-function nettoyerOrphelins(scene) {
-  if (nettoyageEnCours) return;
-  nettoyageEnCours = true;
-  let encore = true;
-  while (encore) {
-    encore = false;
-    for (const c of [...scene.convoyeurs]) {
-      if (alimente(c)) continue;
-      retirerConvoyeur(scene, c);
-      encore = true;
-    }
-  }
-  nettoyageEnCours = false;
-}
+// Un convoyeur que plus rien n'alimente reste posé : il ne sert plus, mais il
+// est à l'enfant de le retirer, une tuile à la fois. Rien ne disparaît tout
+// seul de la grille.
 
 export function retirerConvoyeur(scene, convoyeur) {
   const i = scene.convoyeurs.indexOf(convoyeur);
@@ -119,7 +115,6 @@ export function retirerConvoyeur(scene, convoyeur) {
     const i = convoyeur.cible.entrees.indexOf(convoyeur);
     if (i >= 0) convoyeur.cible.entrees.splice(i, 1);
   }
-  nettoyerOrphelins(scene);
 }
 
 // Retirer une machine construite : ses tapis restent posés, ils perdent
@@ -141,7 +136,6 @@ export function retirerMachine(scene, machine) {
     if (aval.source === machine) aval.source = aval.sources[0] || null;
   }
   machine.sorties.length = 0;
-  nettoyerOrphelins(scene);
 }
 
 // Une sortie, un convoyeur, une entrée : chaque machine n'a qu'une sortie, et
@@ -160,11 +154,11 @@ export function poserConvoyeur(scene, chemin, source, cible) {
     if (memePlace) retirerConvoyeur(scene, memePlace);
   }
   const limite = estMachine(source) ? maxSorties(source) : BRANCHES_MAX;
-  while (source.sorties.length >= limite) retirerConvoyeur(scene, source.sorties[0]);
+  liberer(scene, source.sorties, limite);
   if (cible) {
     const dejaLa = cible.entrees.find((c) => c.source === source && c.role === role);
     if (dejaLa) retirerConvoyeur(scene, dejaLa);
-    while (cible.entrees.length >= maxEntrees(cible)) retirerConvoyeur(scene, cible.entrees[0]);
+    liberer(scene, cible.entrees, maxEntrees(cible));
   }
   const convoyeur = creerConvoyeur(chemin, source, cible);
   scene.convoyeurs.push(convoyeur);
@@ -314,6 +308,21 @@ export function raccorderAuVoisinage(scene, machine) {
     return suite;
   }
   return null;
+}
+
+// Fait de la place dans une liste de tapis : on retire les plus anciens
+// jusqu'à ce qu'il en reste moins que la limite.
+//
+// La liste elle-même est raccourcie, sans faire confiance à ce que
+// retirerConvoyeur en enlèvera : un tapis déjà retiré de la scène y resterait
+// sinon pour toujours, et la boucle ne se terminerait jamais. C'est le genre
+// de blocage qui fige la page et oblige à recharger.
+function liberer(scene, liste, limite) {
+  while (liste.length >= limite) {
+    const premier = liste[0];
+    retirerConvoyeur(scene, premier);
+    if (liste[0] === premier) liste.shift();
+  }
 }
 
 const BRANCHES_MAX = 3;

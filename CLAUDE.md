@@ -68,6 +68,17 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   ce qui l'alimentait déjà. Rien n'est inséré au milieu d'une file.
 - **Le héros n'existe plus.** Sur une carte, on pose un extracteur sur un
   gisement et on le relie au téléporteur : c'est tout ce qu'il y a à y faire.
+- **Tout bâtiment se met en pause**, depuis son panneau d'appui long. Il cesse
+  de travailler et cesse de se signaler : c'est ainsi qu'on assume un bouchon
+  au lieu de démonter la chaîne. Une machine en pause porte un petit carré
+  crème à deux barres.
+- **La destruction retire un élément à la fois.** Détruire une tuile de
+  convoyeur n'enlève que celle-là : l'amont et l'aval restent posés. Rien ne
+  disparaît tout seul de la grille, même un tapis que plus rien n'alimente.
+- **Un seul compteur à l'écran** : les bonbons finis. Le reste se lit sur la
+  grille, dans les jauges des machines et dans ce qui circule.
+- **On revient d'une carte par son téléporteur**, jamais par un bouton retour :
+  un geste, pas deux chemins.
 - **Appui court, appui long.** Un appui court fait la fonction principale de
   l'élément touché — un téléporteur mène à sa carte, un gisement se désigne.
   Un appui long ouvre ses informations et ses réglages.

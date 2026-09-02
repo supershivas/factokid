@@ -81,18 +81,13 @@ export function brancherPointeur(canvas, vue, monde) {
         if (o.id === 'construction') {
           // Le convoyeur est ce qu'on pose le plus souvent : il est prêt.
           etat.constructible = 'convoyeur';
-          ouvrirMenu(bullesConstructibles(), rectBouton(etat.vue < 0 ? 0 : 1));
+          ouvrirMenu(bullesConstructibles(), rectBouton(0));
         } else fermerMenu();
         majBoutons();
       },
     }));
-    if (etat.vue >= 0) {
-      outils.unshift({
-        icone: 'outilRetour',
-        actif: false,
-        action: () => quitterCarte(),
-      });
-    }
+    // Pas de bouton retour sur une carte : on revient en touchant son
+    // téléporteur, comme on y est venu. Un geste, pas deux chemins.
     etat.boutons = outils.map((o) => ({ icone: o.icone, actif: o.actif }));
     actionsBoutons = outils.map((o) => o.action);
   }
@@ -100,7 +95,9 @@ export function brancherPointeur(canvas, vue, monde) {
   function ouvrirMenu(contenu, ancre) {
     etat.menuOuvert = true;
     etat.ancre = ancre;
-    etat.bulles = contenu.map((c) => ({ icone: c.icone, grise: c.grise, choisie: c.choisie }));
+    etat.bulles = contenu.map((c) => ({
+      icone: c.icone, nom: c.nom, grise: c.grise, choisie: c.choisie,
+    }));
     actionsBulles = contenu.map((c) => c.action);
     animMenu = viser('menu', 1, animMenu);
   }
@@ -118,6 +115,7 @@ export function brancherPointeur(canvas, vue, monde) {
     const ici = etat.vue < 0 ? 'usine' : 'carte';
     return CONSTRUCTIBLES.map((c) => ({
       icone: c.icone,
+      nom: MACHINES[c.id].nom,
       grise: c.ou !== 'partout' && c.ou !== ici,
       choisie: c.id === etat.constructible,
       action: () => {
@@ -171,23 +169,28 @@ export function brancherPointeur(canvas, vue, monde) {
     surgirPanneau();
   }
 
+  // Toute machine se met en pause depuis son panneau : elle cesse de
+  // travailler, et cesse donc de signaler un bouchon qu'on assume.
+  function optionPause(machine) {
+    return {
+      icone: machine.pause ? 'bulleReprise' : 'bullePause',
+      action: () => { machine.pause = !machine.pause; ouvrirPanneau(machine, null); },
+    };
+  }
+
   function optionsMachine(machine) {
-    // Un téléporteur mène à sa carte.
-    if (machine.carte && machine.def.source) {
-      return [{
-        icone: 'bulleCarte_' + machine.carte.items[0],
-        action: () => allerCarte(monde.cartes.indexOf(machine.carte)),
-      }];
-    }
+    // Le téléporteur n'a pas de bouton vers sa carte : un appui court y mène
+    // déjà. Deux chemins pour un même geste, c'est un de trop.
+    //
     // Un trieur laisse choisir la matière qu'il range.
     if (machine.def.tri) {
       return machine.def.triables.map((item) => ({
         item,
         choisie: item === machine.matiereTriee,
         action: () => { machine.matiereTriee = item; ouvrirPanneau(machine, null); },
-      }));
+      })).concat(optionPause(machine));
     }
-    return [];
+    return [optionPause(machine)];
   }
 
   function panneauTouche(p) {
@@ -252,9 +255,12 @@ export function brancherPointeur(canvas, vue, monde) {
 
   function ajouter(c) {
     const avant = derniere();
+    // Un tapis dont la source a été détruite n'a plus de cellule d'origine :
+    // il n'y a alors rien à prolonger, et surtout rien à déréférencer.
+    if (!avant) return;
     if (c.cx === avant.cx && c.cy === avant.cy) return;
     const avantAvant = trace.chemin.length >= 2 ? trace.chemin[trace.chemin.length - 2] : trace.source;
-    if (c.cx === avantAvant.cx && c.cy === avantAvant.cy) { trace.chemin.pop(); return; }
+    if (avantAvant && c.cx === avantAvant.cx && c.cy === avantAvant.cy) { trace.chemin.pop(); return; }
     if (!adjacentes(avant, c) || dejaTracee(c)) return;
     if (!celluleLibre(scene(), c.cx, c.cy)) {
       // Buter sur un convoyeur, c'est vouloir s'y raccorder : on retient le
@@ -274,6 +280,7 @@ export function brancherPointeur(canvas, vue, monde) {
   function relier(c) {
     for (let garde = 0; garde < 64; garde++) {
       const avant = derniere();
+      if (!avant) return;
       if (avant.cx === c.cx && avant.cy === c.cy) return;
       const pas = avant.cx !== c.cx
         ? { cx: avant.cx + Math.sign(c.cx - avant.cx), cy: avant.cy }
@@ -399,7 +406,9 @@ export function brancherPointeur(canvas, vue, monde) {
         trace.chemin = [];
         trace.reprise = convoyeur;
         trace.branche = null;
-        trace.origine = null;
+        // Le bout du tapis sert d'origine : sa source a pu être détruite, et
+        // c'est de la cellule qu'on repart, pas de la machine.
+        trace.origine = bout;
         return;
       }
       if (!auBout || convoyeur.sorties.length > 0) {

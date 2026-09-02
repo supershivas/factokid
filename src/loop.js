@@ -9,6 +9,12 @@ import { TICKS_PAR_SECONDE, RATTRAPAGE_MAX, PERIODE_HORS_ECRAN } from './data/ma
 
 const PAS = 1 / TICKS_PAR_SECONDE;
 
+// Retard maximal rattrapé en une image. Sans ce plafond, une image longue —
+// une destruction en rafale, un ramasse-miettes — fait grossir l'accumulateur,
+// l'image suivante simule davantage, donc dure plus longtemps encore : la
+// boucle s'emballe et ne revient jamais. Le retard au-delà est abandonné.
+const PLAFOND_IMAGE = 0.25; // secondes, soit quinze pas
+
 export function demarrerBoucle(maj, rendu) {
   let precedent = performance.now();
   let accumulateur = 0;
@@ -17,8 +23,8 @@ export function demarrerBoucle(maj, rendu) {
   let images = 0;
   let compteurFps = 0;
 
-  function avancer(maintenant) {
-    const ecoule = Math.min((maintenant - precedent) / 1000, RATTRAPAGE_MAX);
+  function avancer(maintenant, plafond) {
+    const ecoule = Math.min((maintenant - precedent) / 1000, plafond);
     precedent = maintenant;
     accumulateur += ecoule;
     while (accumulateur >= PAS) {
@@ -29,7 +35,7 @@ export function demarrerBoucle(maj, rendu) {
   }
 
   function image(maintenant) {
-    const ecoule = avancer(maintenant);
+    const ecoule = avancer(maintenant, PLAFOND_IMAGE);
 
     images++;
     compteurFps += ecoule;
@@ -46,11 +52,18 @@ export function demarrerBoucle(maj, rendu) {
   function visibilite() {
     if (document.hidden) {
       // Plus rien à dessiner : on simule seulement, à pas grossier.
-      if (horsEcran === null) horsEcran = setInterval(() => avancer(performance.now()), PERIODE_HORS_ECRAN);
+      if (horsEcran === null) {
+        horsEcran = setInterval(
+          () => avancer(performance.now(), RATTRAPAGE_MAX), PERIODE_HORS_ECRAN,
+        );
+      }
       return;
     }
     clearInterval(horsEcran);
     horsEcran = null;
+    // Retour à l'écran : le temps qu'aucun des deux n'a couvert se rattrape
+    // ici, en une fois, dans la limite prévue.
+    avancer(performance.now(), RATTRAPAGE_MAX);
     images = 0;
     compteurFps = 0;
     requestAnimationFrame(image);

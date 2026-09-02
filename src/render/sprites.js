@@ -3,7 +3,7 @@
 // puis affichées à l'échelle entière PIXEL (3 unités logiques par pixel).
 
 import {
-  PALETTE, TUILE_PX, CELLULE, COLONNES, LIGNES, GRILLE_X, GRILLE_Y, ALERTE_DELAI,
+  PALETTE, TUILE_PX, PIXEL, CELLULE, COLONNES, LIGNES, GRILLE_X, GRILLE_Y, ALERTE_DELAI,
 } from '../design.js';
 import { ITEMS } from '../data/items.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
@@ -116,11 +116,24 @@ const sol = toile(TUILE_PX, (rect) => {
   rect(13, 15, 3, 1, a); rect(15, 13, 1, 3, a);
 });
 
+// Les crans du tapis : de petites encoches creusées dans le bord noir, jamais
+// dans la bande. Le milieu appartient aux chevrons, qui bougent ; le bord, lui,
+// ne bouge pas — les deux motifs ne se brouillent donc jamais.
+function cransHorizontaux(rect, y, x0 = 1, x1 = 16) {
+  for (let x = x0; x < x1; x += 4) rect(x, y, 2, 1, PALETTE.ardoise);
+}
+
+function cransVerticaux(rect, x, y0 = 1, y1 = 16) {
+  for (let y = y0; y < y1; y += 4) rect(x, y, 1, 2, PALETTE.ardoise);
+}
+
 // Convoyeur droit : flux vers l'est.
 const convoyeurDroit = toile(TUILE_PX, (rect) => {
   rect(0, 3, 16, 1, PALETTE.noir);
   rect(0, 4, 16, 8, PALETTE.ardoise);
   rect(0, 12, 16, 1, PALETTE.noir);
+  cransHorizontaux(rect, 3);
+  cransHorizontaux(rect, 12);
 });
 
 // Convoyeur en virage : entre par l'ouest, sort par le sud. La bande est nue :
@@ -131,6 +144,12 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(3, 3, 10, 13, PALETTE.noir);
   rect(0, 4, 12, 8, PALETTE.ardoise);
   rect(4, 4, 8, 12, PALETTE.ardoise);
+  // Bord extérieur : le haut, puis la descente à droite. Bord intérieur : le
+  // court morceau en bas à gauche.
+  cransHorizontaux(rect, 3, 1, 12);
+  cransVerticaux(rect, 12, 5, 16);
+  cransHorizontaux(rect, 12, 0, 3);
+  cransVerticaux(rect, 3, 13, 16);
 });
 
 // Le chevron qui dit le sens de circulation. Il défile le long du tapis, à sa
@@ -138,13 +157,18 @@ const convoyeurVirage = toile(TUILE_PX, (rect) => {
 // qu'un item passe, et voit que ça avance sans en attendre deux.
 // Deux teintes : le chevron ordinaire, et celui que la crête de lumière
 // traverse.
+// Une pointe d'un pixel, deux ailes de trois : un simple trait plié, sans
+// épaisseur ni renflement. La pointe est en (9,7) et les ailes reculent
+// symétriquement : le signe est exactement centré en largeur. En hauteur il
+// tient sur la rangée 7 — une pointe impaire ne peut pas tomber au milieu
+// d'une bande paire, et c'est un demi-pixel d'art, invisible en jeu.
 function chevronTeinte(couleur) {
   return toile(TUILE_PX, (rect) => {
-    for (let i = 0; i < 3; i++) {
-      rect(6 + i, 5 + i, 1, 1, couleur);
-      rect(6 + i, 10 - i, 1, 1, couleur);
+    rect(9, 7, 1, 1, couleur);
+    for (let i = 1; i <= 3; i++) {
+      rect(9 - i, 7 - i, 1, 1, couleur);
+      rect(9 - i, 7 + i, 1, 1, couleur);
     }
-    rect(9, 8, 1, 1, couleur);
   });
 }
 
@@ -159,6 +183,11 @@ const convoyeurT = toile(TUILE_PX, (rect) => {
   rect(3, 3, 10, 13, PALETTE.noir);
   rect(0, 4, 16, 8, PALETTE.ardoise);
   rect(4, 4, 8, 12, PALETTE.ardoise);
+  cransHorizontaux(rect, 3);
+  cransHorizontaux(rect, 12, 0, 3);
+  cransHorizontaux(rect, 12, 13, 16);
+  cransVerticaux(rect, 3, 13, 16);
+  cransVerticaux(rect, 12, 13, 16);
 });
 
 // Convoyeur en croix : les quatre bords sont reliés.
@@ -167,6 +196,8 @@ const convoyeurCroix = toile(TUILE_PX, (rect) => {
   rect(3, 0, 10, 16, PALETTE.noir);
   rect(0, 4, 16, 8, PALETTE.ardoise);
   rect(4, 0, 8, 16, PALETTE.ardoise);
+  for (const y of [3, 12]) { cransHorizontaux(rect, y, 0, 3); cransHorizontaux(rect, y, 13, 16); }
+  for (const x of [3, 12]) { cransVerticaux(rect, x, 0, 3); cransVerticaux(rect, x, 13, 16); }
 });
 
 // Le téléporteur : un anneau ouvert d'où sort la matière ramassée.
@@ -321,17 +352,21 @@ function traitCroix(rect, couleur, marge = 2, ecart = 0) {
 
 const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir));
 
-// Flèche de retour : on revient à l'usine.
-const outilRetour = toile(TUILE_PX, (rect) => {
-  rect(4, 7, 9, 3, PALETTE.noir);
-  for (let i = 0; i < 4; i++) rect(3 + i, 8 - i - 1, 2, 1, PALETTE.noir);
-  for (let i = 0; i < 4; i++) rect(3 + i, 9 + i, 2, 1, PALETTE.noir);
-});
-
 // Sur la plaque claire, le rouge tranche largement (5,2 : 1) : la croix peut
 // donc être rouge pleine, sans trait de renfort. La forme la distingue déjà du
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
 const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 2, 1));
+
+// Pause et reprise, pour le panneau d'une machine.
+const bullePause = toile(TUILE_PX, (rect) => {
+  rect(4, 3, 3, 10, PALETTE.creme);
+  rect(9, 3, 3, 10, PALETTE.creme);
+});
+
+const bulleReprise = toile(TUILE_PX, (rect) => {
+  for (let i = 0; i < 5; i++) rect(5 + i, 3 + i, 1, 10 - 2 * i, PALETTE.vert);
+  rect(10, 7, 1, 2, PALETTE.vert);
+});
 
 const bulleExtracteur = toile(TUILE_PX, (rect) => {
   rect(2, 11, 12, 3, PALETTE.ardoise);
@@ -392,7 +427,8 @@ function bulleCarte(item) {
 export const INTERFACE = {
   bouton, boutonActif, bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
-  outilConstruction, outilDestruction, outilRetour,
+  bullePause, bulleReprise,
+  outilConstruction, outilDestruction,
 };
 for (const item of Object.values(ITEMS)) INTERFACE['bulleCarte_' + item.id] = bulleCarte(item);
 
@@ -572,6 +608,22 @@ function dessinerMachine(ctx, machine) {
   dessinerStock(ctx, machine, coin);
   fileTrieur(ctx, machine, coin);
   dessinerFleches(ctx, machine);
+  marquePause(ctx, machine, coin);
+}
+
+// Une machine en pause porte un petit carré crème, avec deux barres d'un pixel
+// de large : le signe se lit à sa forme, sans couleur ni mot.
+function marquePause(ctx, machine, coin) {
+  if (!machine.pause) return;
+  const x = coin.x + CELLULE - 8 * PIXEL;
+  const y = coin.y + 1 * PIXEL;
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(x - PIXEL, y - PIXEL, 9 * PIXEL, 9 * PIXEL);
+  ctx.fillStyle = PALETTE.creme;
+  ctx.fillRect(x, y, 7 * PIXEL, 7 * PIXEL);
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(x + 2 * PIXEL, y + 2 * PIXEL, PIXEL, 3 * PIXEL);
+  ctx.fillRect(x + 4 * PIXEL, y + 2 * PIXEL, PIXEL, 3 * PIXEL);
 }
 
 // Les bulles passent au-dessus de tout : elles se dessinent en dernier.
@@ -585,6 +637,7 @@ function dessinerAlertes(ctx, scene) {
   }
   for (const convoyeur of scene.convoyeurs) {
     if (convoyeur.bloque <= ALERTE_DELAI) continue;
+    if (convoyeur.cible && convoyeur.cible.pause) continue; // en pause : elle assume
     if (convoyeur.cible && convoyeur.cible.bloqueeDepuis > ALERTE_DELAI) continue;
     if (convoyeur.sorties.some((suite) => suite.bloque > ALERTE_DELAI)) continue;
     const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
@@ -707,9 +760,14 @@ function dessinerStock(ctx, machine, coin) {
 
 function dessinerTrace(ctx, trace) {
   ctx.fillStyle = PALETTE.creme;
-  const depart = coinCellule(trace.source.cx, trace.source.cy);
   ctx.globalAlpha = 0.35;
-  ctx.fillRect(depart.x, depart.y, CELLULE, CELLULE);
+  // Le départ n'est une case que si c'est une machine ou une cellule de tapis :
+  // un tapis privé de sa source n'en a plus, et le tracé se dessine sans elle.
+  const source = trace.origine || trace.source;
+  if (source && source.cx !== undefined) {
+    const depart = coinCellule(source.cx, source.cy);
+    ctx.fillRect(depart.x, depart.y, CELLULE, CELLULE);
+  }
   for (const c of trace.chemin) {
     const coin = coinCellule(c.cx, c.cy);
     ctx.fillRect(coin.x + 6, coin.y + 6, CELLULE - 12, CELLULE - 12);

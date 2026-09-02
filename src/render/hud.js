@@ -1,4 +1,5 @@
-// HUD : compteurs. Icônes et chiffres uniquement, aucun mot à lire.
+// HUD : le compteur des bonbons finis, la barre d'outils, le panneau d'un
+// élément. Icônes et chiffres ; les seuls mots sont là pour l'adulte.
 
 import {
   PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, LIGNES, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
@@ -6,8 +7,6 @@ import {
 } from '../design.js';
 import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
 import { ecrasement } from './bouton.js';
-
-import { nombreItems } from '../sim/world.js';
 
 // Fonte bitmap 3 × 5, chiffres seuls.
 const CHIFFRES = {
@@ -128,26 +127,15 @@ export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const confiserie = monde.usine.machines.find((m) => m.recette);
   const livraison = monde.usine.machines.find((m) => m.def.entree);
 
-  // Bandeau haut : items en circulation, et fréquence d'images.
+  // Un seul compteur : les bonbons finis. Tout le reste se lit sur la grille,
+  // dans les jauges des machines et dans ce qui circule.
   ctx.drawImage(spriteItem('bonbon'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
-  dessinerNombre(ctx, nombreItems(monde), 12 + TAILLE_ITEM + 9, 21, TEXTE_GRAND, PALETTE.creme);
-
-  const largeurFps = largeurNombre(fps, TEXTE_PETIT);
-  ctx.fillStyle = fps >= 55 ? PALETTE.vert : PALETTE.rouge;
-  ctx.fillRect(LARGEUR_LOGIQUE - 12 - largeurFps - 14, 26, 8, 8);
-  dessinerNombre(ctx, fps, LARGEUR_LOGIQUE - 12 - largeurFps, 24, TEXTE_PETIT, PALETTE.creme);
-
-  // Bandeau bas : la barre d'outils à gauche, les compteurs à droite.
-  const basY = GRILLE_Y + LIGNES * CELLULE + 24;
-  ctx.drawImage(ICONES.confiserie, 140, basY - 8, 32, 32);
-  dessinerNombre(ctx, confiserie.produits, 180, basY, TEXTE_PETIT, PALETTE.jaune);
-
-  const largeurC = largeurNombre(livraison.consommes, TEXTE_PETIT);
-  ctx.drawImage(ICONES.livraison, LARGEUR_LOGIQUE - 44, basY - 8, 32, 32);
-  dessinerNombre(ctx, livraison.consommes, LARGEUR_LOGIQUE - 52 - largeurC, basY, TEXTE_PETIT, PALETTE.vert);
+  dessinerNombre(
+    ctx, livraison ? livraison.consommes : 0,
+    12 + TAILLE_ITEM + 9, 21, TEXTE_GRAND, PALETTE.creme,
+  );
 
   dessinerOutils(ctx, interfaceJeu);
   dessinerPanneau(ctx, interfaceJeu);
@@ -201,6 +189,13 @@ function dessinerOutils(ctx, interfaceJeu) {
     ctx.globalAlpha = bulle.grise ? 0.35 : 1;
     ctx.drawImage(INTERFACE.bulleFond, dx, dy, taille, taille);
     ctx.drawImage(INTERFACE[bulle.icone], dx, dy, taille, taille);
+    // Le nom à côté de l'image : l'enfant reconnaît la forme, l'adulte lit.
+    if (bulle.nom) {
+      dessinerMot(
+        ctx, bulle.nom, dx + BULLE + 10, dy + BULLE / 2 - 5, TEXTE_PETIT,
+        bulle.choisie ? PALETTE.creme : PALETTE.ardoise,
+      );
+    }
     ctx.globalAlpha = 1;
     if (bulle.choisie) encadrer(ctx, dx, dy, taille);
   }

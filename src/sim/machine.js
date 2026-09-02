@@ -36,6 +36,7 @@ export function creerMachine(type, cx, cy, { carte, item } = {}) {
     consommes: 0,
     bloquee: false,
     bloqueeDepuis: 0,
+    pause: false,   // une machine en pause ne travaille plus, et ne crie plus
   };
   for (const { item } of jauges(machine)) machine.stocks[item] = 0;
   return machine;
@@ -162,6 +163,14 @@ function majTrieur(machine, dt) {
 }
 
 export function majMachine(machine, dt) {
+  // Une machine en pause ne produit plus, ne consomme plus, et surtout ne se
+  // signale plus : c'est à ça qu'elle sert, faire taire un bouchon qu'on
+  // assume plutôt que de démonter la chaîne.
+  if (machine.pause) {
+    machine.bloquee = false;
+    machine.bloqueeDepuis = 0;
+    return;
+  }
   majBlocage(machine, dt);
   if (machine.def.tri) { majTrieur(machine, dt); return; }
   if (machine.def.source || machine.def.mine) { verserAuTour(machine, dt); return; }
