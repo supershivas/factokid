@@ -31,31 +31,55 @@
     <a href="./index.html">Aller à l'atelier des animations</a>.
   </p>
   <p class="note">
-    Contrainte de départ : un biome doit se voir au premier coup d'œil sans
-    jamais concurrencer ce qui roule dessus. Les items et les tapis sont clairs
-    et saturés ; le sol reste donc sombre, et ne parle que par sa texture.
+    Trois règles, posées d'emblée. <b>Le fond reste sombre mais il est
+    teinté</b> : chaque biome est sa couleur posée sur le noir à trois
+    transparences très basses, si bien qu'il ne monte jamais au niveau des
+    items, qui sont saturés. <b>C'est cette transparence qui fait les
+    passages</b> : entre deux biomes on mélange les deux teintes, il n'y a
+    aucune tuile de raccord à dessiner. <b>Les textures sont minimales</b> :
+    des points d'un pixel, ou des traits d'un pixel d'épaisseur et de deux à
+    trois de long.
   </p>
 
   <h2>Les quatre sols</h2>
   <p class="note">Chacun à trois cases sur quatre, tel qu'il couvrirait la carte.</p>
   <div class="grille" id="sols"></div>
 
-  <h2>Passages d'un biome à l'autre — quatre façons</h2>
+  <h2>Les trois nuances de chaque biome</h2>
+  <p class="note">
+    De la plus sombre à la plus claire. Elles se posent par plaques de deux
+    cases sur deux et sans hasard : les nuances font des zones plutôt qu'un
+    damier, et le sol ne scintille jamais d'une image à l'autre.
+  </p>
+  <div class="grille" id="nuancier"></div>
+
+  <h2>Passages d'un biome à l'autre — quatre largeurs de fondu</h2>
   <p class="note">
     Les plaines de sucre rencontrent les champs de fraises, à chaque fois au
-    même endroit. Un passage doit se lire comme un lieu, pas comme une couture.
+    même endroit. Seule la largeur du fondu change.
   </p>
   <div class="grille" id="passages"></div>
 
+  <h2>Les quatre biomes réunis</h2>
+  <p class="note">
+    Ce que ça donne sur la carte : quatre biomes qui se rejoignent, sans une
+    seule tuile de raccord.
+  </p>
+  <div class="grille" id="carrefour"></div>
+
   <script type="module">
     import { poserVignette } from './atelier.js';
-    const { SOLS, PASSAGES } = await import('./biomes.js');
-
-    const sols = document.getElementById('sols');
-    for (const v of SOLS) poserVignette(sols, v.titre, v.note, v.dessiner.bind(v), v.duree, v.format);
-
-    const passages = document.getElementById('passages');
-    for (const v of PASSAGES) poserVignette(passages, v.titre, v.note, v.dessiner, v.duree, v.format);
+    const { SOLS, NUANCIER, PASSAGES, CARREFOUR } = await import('./biomes.js');
+    const poser = (id, liste) => {
+      const cible = document.getElementById(id);
+      for (const v of liste) {
+        poserVignette(cible, v.titre, v.note, v.dessiner.bind(v), v.duree, v.format);
+      }
+    };
+    poser('sols', SOLS);
+    poser('nuancier', NUANCIER);
+    poser('passages', PASSAGES);
+    poser('carrefour', [CARREFOUR]);
   </script>
 </body>
 </html>
