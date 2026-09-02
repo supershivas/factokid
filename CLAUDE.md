@@ -90,6 +90,19 @@ simulation : déplacer la vue ne change rien à ce qui circule. Tout le jeu
 raisonne en cellules du monde ; seuls le rendu et l'entrée savent laquelle est
 visible.
 
+**Le sol dit ce qu'il donne.** La carte est faite de biomes — plaines de sucre,
+terre, champs de fraises, champs de menthe — et chaque gisement porte la
+matière de son biome. On sait donc où aller chercher quoi rien qu'à la couleur
+du sol, de loin, sans savoir lire. Seule la clairière de départ a un peu de
+tout : c'est ce qui permet de faire un bonbon avant d'avoir traversé quoi que
+ce soit.
+
+Un biome est une **couleur posée sur le noir à une transparence très basse**,
+en trois nuances. Le passage d'un biome à l'autre n'est que le mélange des deux
+teintes, sur deux cellules : il n'existe aucune tuile de raccord, et la largeur
+du fondu est un réglage. Les textures sont minimales — un point d'un pixel, ou
+un trait d'un pixel d'épaisseur et de deux à trois de long.
+
 **La distance est la ressource.** Le gisement à trois cases coûte trois
 convoyeurs, celui à vingt en coûte vingt : la progression sort de la
 géographie, pas d'un multiplicateur. C'est ce que le téléporteur annulait, et
@@ -150,6 +163,11 @@ Ajouter une couleur demande mon accord.
 
 Chaque type d'item doit être identifiable **par sa forme seule**, en niveaux de
 gris. La couleur est une confirmation, jamais l'unique porteuse d'information.
+
+**Dérogation validée : les sols des biomes.** Composer une couleur de la
+palette sur le noir crée des teintes qui n'y figurent pas. Elles restent très
+basses — de 8 % à 14 % — et ne servent qu'au sol, jamais à un élément. Les huit
+couleurs deviennent donc huit familles, et rien d'autre n'y a droit.
 
 ### Typographie
 
@@ -241,12 +259,14 @@ src/
     items.js        table des items
     machines.js     table des machines
     monde.js        gisements du monde
+    biomes.js       biomes, régions, fondu
     depart.js       disposition de départ, chemin pré-tracé
     outils.js       outils et éléments constructibles
     recipes.js      table des recettes
     progression.js  paliers de déblocage, courbe
   render/
     canvas.js       mise à l'échelle
+    biome.js        la teinte de chaque cellule
     minicarte.js    le monde entier dans le bandeau haut
     menu.js         menu pause et page des recettes
     texte.js        fonte bitmap 3 × 5

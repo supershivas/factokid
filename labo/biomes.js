@@ -54,7 +54,7 @@ function melange(a, b, part) {
 // Trois nuances par biome, du plus sombre au plus clair. Elles restent basses,
 // et resserrées : à cellule près, un écart plus large se lit comme un damier
 // de carrés, pas comme un sol.
-const NUANCES = [0.08, 0.12, 0.16];
+const NUANCES = [0.08, 0.11, 0.14];
 
 // --- les biomes ------------------------------------------------------------
 //
@@ -206,7 +206,7 @@ function passage(titre, note, largeurFondu) {
 
 export const PASSAGES = [
   passage('1. Fondu large', 'la couleur passe sur cinq cases : on ne voit pas la frontière', 5),
-  passage('2. Fondu court', 'sur deux cases : on sent le changement sans le heurter', 2),
+  passage('2. Fondu court  ✔ retenu', 'sur deux cases : on sent le changement sans le heurter — c’est celui du jeu', 2),
   passage('3. Bord franc', 'aucun fondu : les deux teintes se touchent', 0.001),
   {
     titre: '4. Fondu en dents',

@@ -4,16 +4,37 @@
 // Elle sert deux choses à la fois : ne pas se perdre dans neuf écrans, et y
 // aller d'un doigt. Le cadre montre où est la fenêtre.
 
-import { PALETTE, MINICARTE, MINICARTE_PAS, CELLULE } from '../design.js';
+import { PALETTE, MINICARTE, MINICARTE_PAS, CELLULE, COLONNES, LIGNES } from '../design.js';
 import { ITEMS } from '../data/items.js';
 import { camera } from '../camera.js';
+import { teinteSol } from './biome.js';
 import { LARGEUR_VUE, HAUTEUR_VUE } from '../design.js';
 
 const P = MINICARTE_PAS;
 
+// Le fond de la mini-carte : les teintes des biomes, peintes une fois pour
+// toutes sur une image d'une cellule par pixel, puis affichée à l'échelle.
+let fond = null;
+
+function preparerFond() {
+  const c = document.createElement('canvas');
+  c.width = COLONNES;
+  c.height = LIGNES;
+  const g = c.getContext('2d');
+  for (let cy = 0; cy < LIGNES; cy++) {
+    for (let cx = 0; cx < COLONNES; cx++) {
+      g.fillStyle = teinteSol(cx, cy);
+      g.fillRect(cx, cy, 1, 1);
+    }
+  }
+  return c;
+}
+
 export function dessinerMiniCarte(ctx, monde) {
+  if (!fond) fond = preparerFond();
   ctx.fillStyle = PALETTE.noir;
   ctx.fillRect(MINICARTE.x - 2, MINICARTE.y - 2, MINICARTE.l + 4, MINICARTE.h + 4);
+  ctx.drawImage(fond, MINICARTE.x, MINICARTE.y, MINICARTE.l, MINICARTE.h);
   ctx.strokeStyle = PALETTE.ardoise;
   ctx.lineWidth = 1;
   ctx.strokeRect(MINICARTE.x - 1.5, MINICARTE.y - 1.5, MINICARTE.l + 3, MINICARTE.h + 3);

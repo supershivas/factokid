@@ -7,6 +7,7 @@ import {
   ALERTE_DELAI,
 } from '../design.js';
 import { decalage, fenetre, celluleVisible } from '../camera.js';
+import { tuileSol } from './biome.js';
 import { ITEMS } from '../data/items.js';
 import { REPOUSSE_TICKS } from '../data/monde.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
@@ -110,14 +111,6 @@ const formes = {
 
 
 // --- tuiles ---------------------------------------------------------------
-
-const sol = toile(TUILE_PX, (rect) => {
-  rect(0, 0, TUILE_PX, TUILE_PX, PALETTE.noir);
-  // Un seul pixel au coin de chaque cellule : la grille se lit, et ne se
-  // regarde pas. Quatre cellules se touchant, la jonction fait un point, pas
-  // une croix.
-  rect(0, 0, 1, 1, PALETTE.ardoise);
-});
 
 // Les crans du tapis : de petites encoches creusées dans le bord noir, jamais
 // dans la bande. Le milieu appartient aux chevrons, qui bougent ; le bord, lui,
@@ -563,8 +556,10 @@ export function dessinerScene(ctx, monde, trace, dessinerParticules) {
   ctx.clip();
   ctx.translate(-d.x, -d.y);
 
+  // Le sol vient des biomes : sa teinte change d'une région à l'autre, et se
+  // mélange là où deux se rencontrent.
   for (let cy = f.cy0; cy <= f.cy1; cy++) {
-    for (let cx = f.cx0; cx <= f.cx1; cx++) tuile(ctx, sol, cx, cy, 0);
+    for (let cx = f.cx0; cx <= f.cx1; cx++) tuile(ctx, tuileSol(cx, cy), cx, cy, 0);
   }
   dessinerGisements(ctx, monde, f);
   dessinerConvoyeurs(ctx, scene, f);
