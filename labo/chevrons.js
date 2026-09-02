@@ -10,7 +10,10 @@
 // voit couler ce qui est arrêté. Chaque vignette montre donc la seconde
 // moitié de sa boucle à l'arrêt.
 
-import { PALETTE, CELLULE, TUILE_PX, PIXEL } from '../src/design.js';
+import { PALETTE, CELLULE, TUILE_PX, PIXEL, GRILLE_X, GRILLE_Y } from '../src/design.js';
+import { creerConvoyeur } from '../src/sim/belt.js';
+import { majChevrons, dessinerChevrons } from '../src/render/chevron.js';
+import { spriteChevron } from '../src/render/sprites.js';
 
 const CASES = 3;
 export const FORMAT = { largeur: CELLULE * CASES, hauteur: CELLULE, echelle: 2 };
@@ -67,9 +70,45 @@ function proposition(titre, note, duree, peindre) {
   };
 }
 
+// Ce que le jeu joue vraiment : le défilement du n° 1 et l'onde du n° 2
+// mêlés. Cette vignette appelle le code de src/render/chevron.js, pas une
+// copie — un faux tapis lui suffit.
+const fauxTapis = creerConvoyeur(
+  [{ cx: 0, cy: 0 }, { cx: 1, cy: 0 }, { cx: 2, cy: 0 }], null, null,
+);
+
+const RETENU = {
+  titre: '1 + 2 retenus — défilement et onde  ✔ dans le jeu',
+  note: 'les chevrons glissent à la vitesse du tapis, une crête de lumière les traverse',
+  duree: 2.4,
+  format: FORMAT,
+  dernier: 0,
+  dessiner(ctx, t, largeur) {
+    tapis(ctx, largeur);
+    // Le tapis se bloque à mi-boucle : les chevrons doivent se figer avec lui.
+    fauxTapis.bloque = t >= 1.44 ? 1 : 0;
+    // On avance du temps écoulé depuis l'image précédente. Le motif étant
+    // périodique, un saut en arrière se rattrape par un saut en avant : la
+    // planche à quatre instants montre alors les bonnes phases.
+    const delta = (((t - this.dernier) % this.duree) + this.duree) % this.duree;
+    this.dernier = t;
+    majChevrons({ convoyeurs: [fauxTapis] }, delta);
+    ctx.save();
+    // Le faux tapis est en (0,0) de la grille : on ramène son dessin ici.
+    ctx.translate(-GRILLE_X, -GRILLE_Y);
+    dessinerChevrons(ctx, fauxTapis, spriteChevron);
+    ctx.restore();
+    if (fauxTapis.bloque) {
+      ctx.fillStyle = PALETTE.rouge;
+      ctx.fillRect(0, CELLULE - PIXEL, largeur, PIXEL);
+    }
+  },
+};
+
 export const CHEVRONS = [
+  RETENU,
   proposition(
-    '1. Défilement',
+    '1. Défilement  ✔ retenu',
     'les chevrons glissent d’un bout à l’autre, à la vitesse du tapis',
     2.4,
     (ctx, t, largeur) => {
@@ -81,7 +120,7 @@ export const CHEVRONS = [
     },
   ),
   proposition(
-    '2. Vague',
+    '2. Vague  ✔ retenu',
     'les chevrons restent en place ; c’est la lumière qui court sur eux',
     2.4,
     (ctx, t, largeur) => {

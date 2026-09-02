@@ -9,6 +9,7 @@ import {
 } from './render/particules.js';
 import { marquerPose, majPoses } from './render/pose.js';
 import { marquerAppui, majAppuis } from './render/bouton.js';
+import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
@@ -63,6 +64,8 @@ demarrerBoucle(
     majParticules(dt);
     majPoses(dt);
     majAppuis(dt);
+    // Les chevrons de la scène qu'on regarde : c'est du rendu, pas du jeu.
+    majChevrons(interfaceJeu.vue < 0 ? monde.usine : monde.cartes[interfaceJeu.vue].scene, dt);
 
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);

@@ -10,6 +10,7 @@ import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
 import { dessinerAlerte } from './alerte.js';
 import { chutePose } from './pose.js';
+import { dessinerChevrons, COULEUR_CHEVRON, COULEUR_CRETE } from './chevron.js';
 import { parcourirItems, celluleDe } from '../sim/belt.js';
 
 const TAILLE_ITEM_PX = 6;
@@ -120,47 +121,36 @@ const convoyeurDroit = toile(TUILE_PX, (rect) => {
   rect(0, 3, 16, 1, PALETTE.noir);
   rect(0, 4, 16, 8, PALETTE.ardoise);
   rect(0, 12, 16, 1, PALETTE.noir);
-  for (let x = 1; x < 16; x += 4) {
-    rect(x, 5, 2, 1, PALETTE.bleu);
-    rect(x, 10, 2, 1, PALETTE.bleu);
-  }
 });
 
-// Convoyeur en virage : entre par l'ouest, sort par le sud.
-// Les crans suivent exactement la même règle que sur la tuile droite : deux
-// files à un et six pixels du bord intérieur de la bande, un cran de deux tous
-// les quatre pixels. Les deux files se rejoignent dans l'angle.
+// Convoyeur en virage : entre par l'ouest, sort par le sud. La bande est nue :
+// depuis que les chevrons défilent, deux motifs mobiles l'un sur l'autre se
+// brouilleraient.
 const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(0, 3, 13, 10, PALETTE.noir);
   rect(3, 3, 10, 13, PALETTE.noir);
   rect(0, 4, 12, 8, PALETTE.ardoise);
   rect(4, 4, 8, 12, PALETTE.ardoise);
-
-  // Chaque file longe son propre bord de la bande. Celle du bord extérieur
-  // fait le tour long et tourne en (10,5) ; celle du bord intérieur coupe au
-  // plus court et tourne en (5,10). L'angle lui-même reste vide, sinon les
-  // deux crans s'y superposent en L.
-  // File extérieure : y = 5 jusqu'au coin, puis x = 10 vers le bas.
-  rect(1, 5, 2, 1, PALETTE.bleu);
-  rect(5, 5, 2, 1, PALETTE.bleu);
-  rect(10, 8, 1, 2, PALETTE.bleu);
-  rect(10, 12, 1, 2, PALETTE.bleu);
-
-  // File intérieure : y = 10 jusqu'au coin, puis x = 5 vers le bas.
-  rect(1, 10, 2, 1, PALETTE.bleu);
-  rect(5, 13, 1, 2, PALETTE.bleu);
 });
 
-// Le chevron qui dit le sens de circulation. Il se pose par-dessus la tuile,
-// tourné vers la sortie de la case : un enfant doit voir où ça va sans
-// attendre qu'un item passe.
-const chevron = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 3; i++) {
-    rect(6 + i, 5 + i, 1, 1, PALETTE.creme);
-    rect(6 + i, 10 - i, 1, 1, PALETTE.creme);
-  }
-  rect(9, 8, 1, 1, PALETTE.creme);
-});
+// Le chevron qui dit le sens de circulation. Il défile le long du tapis, à sa
+// vitesse (voir render/chevron.js) : un enfant voit où ça va sans attendre
+// qu'un item passe, et voit que ça avance sans en attendre deux.
+// Deux teintes : le chevron ordinaire, et celui que la crête de lumière
+// traverse.
+function chevronTeinte(couleur) {
+  return toile(TUILE_PX, (rect) => {
+    for (let i = 0; i < 3; i++) {
+      rect(6 + i, 5 + i, 1, 1, couleur);
+      rect(6 + i, 10 - i, 1, 1, couleur);
+    }
+    rect(9, 8, 1, 1, couleur);
+  });
+}
+
+const chevronOrdinaire = chevronTeinte(COULEUR_CHEVRON);
+const chevronVif = chevronTeinte(COULEUR_CRETE);
+export const spriteChevron = (vif) => (vif ? chevronVif : chevronOrdinaire);
 
 // Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les
 // quatre rotations couvrent les quatre jonctions à trois branches.
@@ -169,12 +159,6 @@ const convoyeurT = toile(TUILE_PX, (rect) => {
   rect(3, 3, 10, 13, PALETTE.noir);
   rect(0, 4, 16, 8, PALETTE.ardoise);
   rect(4, 4, 8, 12, PALETTE.ardoise);
-  for (let x = 1; x < 16; x += 4) {
-    rect(x, 5, 2, 1, PALETTE.bleu);
-    rect(x, 10, 2, 1, PALETTE.bleu);
-  }
-  rect(5, 13, 1, 2, PALETTE.bleu);
-  rect(10, 13, 1, 2, PALETTE.bleu);
 });
 
 // Convoyeur en croix : les quatre bords sont reliés.
@@ -183,14 +167,6 @@ const convoyeurCroix = toile(TUILE_PX, (rect) => {
   rect(3, 0, 10, 16, PALETTE.noir);
   rect(0, 4, 16, 8, PALETTE.ardoise);
   rect(4, 0, 8, 16, PALETTE.ardoise);
-  rect(1, 5, 2, 1, PALETTE.bleu);
-  rect(13, 5, 2, 1, PALETTE.bleu);
-  rect(1, 10, 2, 1, PALETTE.bleu);
-  rect(13, 10, 2, 1, PALETTE.bleu);
-  rect(5, 1, 1, 2, PALETTE.bleu);
-  rect(10, 1, 1, 2, PALETTE.bleu);
-  rect(5, 13, 1, 2, PALETTE.bleu);
-  rect(10, 13, 1, 2, PALETTE.bleu);
 });
 
 // Le téléporteur : un anneau ouvert d'où sort la matière ramassée.
@@ -573,9 +549,11 @@ export function dessinerConvoyeurs(ctx, scene) {
 
       const o = orientation(sens(avant, chemin[i]), sens(chemin[i], apres));
       tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);
-      dessinerChevron(ctx, chemin[i], sens(chemin[i], apres));
     }
   }
+  // Les chevrons passent après toutes les tuiles : un chevron ne doit jamais
+  // se retrouver sous la bande du tapis voisin.
+  for (const convoyeur of scene.convoyeurs) dessinerChevrons(ctx, convoyeur, spriteChevron);
   for (const convoyeur of scene.convoyeurs) {
     parcourirItems(convoyeur, (item, p) => {
       ctx.drawImage(
@@ -584,17 +562,6 @@ export function dessinerConvoyeurs(ctx, scene) {
         TAILLE_ITEM, TAILLE_ITEM,
       );
     });
-  }
-}
-
-// Un chevron par case, tourné vers la sortie.
-function dessinerChevron(ctx, cellule, vers) {
-  for (let q = 0; q < 4; q++) {
-    if (!memeSens(tourner(EST, q), vers)) continue;
-    ctx.globalAlpha = 0.6;
-    tuile(ctx, chevron, cellule.cx, cellule.cy, q);
-    ctx.globalAlpha = 1;
-    return;
   }
 }
 
