@@ -71,6 +71,8 @@ export function brancherPointeur(canvas, vue, monde) {
 
   // --- interface ----------------------------------------------------------
 
+  const indexOutil = (id) => OUTILS.findIndex((o) => o.id === id);
+
   function majBoutons() {
     const outils = OUTILS.map((o) => ({
       icone: o.icone,
@@ -87,7 +89,10 @@ export function brancherPointeur(canvas, vue, monde) {
         if (o.id === 'construction') {
           // Le convoyeur est ce qu'on pose le plus souvent : il est prêt.
           etat.constructible = 'convoyeur';
-          ouvrirMenu(bullesConstructibles(), rectBouton(0));
+          // Les bulles sortent du bouton qu'on vient de toucher, pas du
+          // premier de la barre : depuis que la main s'est ajoutée devant,
+          // « construction » n'est plus à la place zéro.
+          ouvrirMenu(bullesConstructibles(), rectBouton(indexOutil(o.id)));
         } else fermerMenu();
         majBoutons();
       },
