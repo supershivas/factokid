@@ -51,63 +51,104 @@ function decale(rect, ox, oy) {
   return (x, y, w, h, couleur) => rect(x + ox, y + oy, w, h, couleur);
 }
 
-const formes = {
-  carre: (rect, couleur) => {
-    rect(0, 0, 9, 9, PALETTE.noir);
-    rect(2, 2, 6, 6, couleur);
-    rect(2, 2, 1, 1, PALETTE.creme);
-  },
-  triangle: (rect, couleur) => {
-    const n = PALETTE.noir;
-    rect(3, 0, 3, 2, n);
-    rect(2, 2, 1, 1, n); rect(3, 2, 3, 1, couleur); rect(6, 2, 2, 1, n);
-    rect(2, 3, 1, 2, n); rect(3, 3, 3, 2, couleur); rect(6, 3, 2, 2, n);
-    rect(0, 5, 2, 1, n); rect(2, 5, 6, 1, couleur); rect(8, 5, 1, 1, n);
-    rect(0, 6, 2, 2, n); rect(2, 6, 6, 2, couleur); rect(8, 6, 1, 2, n);
-    rect(0, 8, 9, 1, n);
-  },
+// Chaque item est une matrice de 9 × 9 pixels d'art : « n » le contour noir,
+// « c » la couleur de la matière, « b » l'éclat crème, « . » le vide. La
+// silhouette *colorée* est la forme elle-même — un rond est rond en couleur,
+// pas seulement en contour. C'est ce qui manquait : sur un sol sombre, le
+// contour noir disparaît, et la matière n'était plus lue que par sa couleur,
+// qui dessinait une croix là où on attendait une bille.
+const MOTIFS = {
+  // Le sucre : un cube plein, la seule silhouette parfaitement carrée.
+  carre: [
+    'nnnnnnnnn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'nnnnnnnnn',
+  ],
+  // La bille : un disque tracé au compas, éclat en haut à gauche.
+  rond: [
+    '..nnnnn..',
+    '.nncccnn.',
+    'nncccccnn',
+    'ncbcccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'nncccccnn',
+    '.nncccnn.',
+    '..nnnnn..',
+  ],
+  // La menthe : un triangle posé sur sa base, pointe en haut.
+  triangle: [
+    '....n....',
+    '...ncn...',
+    '...ncn...',
+    '..ncccn..',
+    '..ncccn..',
+    '.ncccccn.',
+    '.ncccccn.',
+    'ncccccccn',
+    'nnnnnnnnn',
+  ],
   // Le caramel : une barre plate, silhouette qu'aucune autre matière n'a.
-  barre: (rect, couleur) => {
-    const n = PALETTE.noir;
-    rect(0, 2, 9, 1, n);
-    rect(0, 3, 9, 3, couleur);
-    rect(2, 3, 1, 2, PALETTE.creme);
-    rect(0, 6, 9, 2, n);
-  },
-  bonbon: (rect, couleur) => {
-    const n = PALETTE.noir;
-    rect(3, 0, 3, 2, n);
-    rect(2, 2, 1, 1, n); rect(3, 2, 3, 1, couleur); rect(6, 2, 2, 1, n);
-    rect(0, 3, 9, 3, couleur);
-    rect(2, 6, 1, 2, n); rect(3, 6, 3, 2, couleur); rect(6, 6, 2, 2, n);
-    rect(3, 8, 3, 1, n);
-  },
-  // Le papier : une feuille dont tout le coin est corné. Le pli traverse la
-  // silhouette en biais : même en gris, on ne la confond pas avec le sucre.
-  feuille: (rect, couleur) => {
-    const n = PALETTE.noir;
-    rect(0, 0, 5, 2, n);
-    rect(5, 2, 1, 1, n);
-    rect(6, 3, 2, 2, n);
-    rect(0, 2, 2, 6, n);
-    rect(8, 5, 1, 3, n);
-    rect(0, 8, 9, 1, n);
-    rect(2, 2, 3, 1, couleur);
-    rect(2, 3, 4, 2, couleur);
-    rect(2, 5, 6, 1, couleur);
-    rect(2, 6, 6, 2, couleur);
-    rect(2, 2, 1, 1, PALETTE.creme);
-  },
-  rond: (rect, couleur) => {
-    const n = PALETTE.noir;
-    rect(3, 0, 3, 2, n);
-    rect(2, 2, 1, 1, n); rect(3, 2, 3, 1, couleur); rect(6, 2, 2, 1, n);
-    rect(0, 3, 2, 3, n); rect(2, 3, 6, 3, couleur); rect(8, 3, 1, 3, n);
-    rect(2, 6, 1, 2, n); rect(3, 6, 3, 2, couleur); rect(6, 6, 2, 2, n);
-    rect(3, 8, 3, 1, n);
-    rect(3, 2, 2, 1, PALETTE.creme);
-  },
+  barre: [
+    '.........',
+    '.........',
+    'nnnnnnnnn',
+    'ncbcccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'nnnnnnnnn',
+    '.........',
+    '.........',
+  ],
+  // Le papier : une feuille dont le coin est corné. Même en gris, on ne la
+  // confond pas avec le sucre.
+  feuille: [
+    'nnnnnnn..',
+    'ncccccnn.',
+    'ncbcccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'ncccccccn',
+    'nnnnnnnnn',
+  ],
+  // Le bonbon : un cœur et ses deux papillotes, pincées de part et d'autre.
+  bonbon: [
+    '.........',
+    '..nnnnn..',
+    'nnncccnnn',
+    'ncncccncn',
+    'ncccccccn',
+    'ncncccncn',
+    'nnncccnnn',
+    '..nnnnn..',
+    '.........',
+  ],
 };
+
+// Un motif devient un peintre : la couleur de la matière est le seul réglage.
+function peindreMotif(motif) {
+  return (rect, couleur) => {
+    for (let y = 0; y < motif.length; y++) {
+      for (let x = 0; x < motif[y].length; x++) {
+        const signe = motif[y][x];
+        if (signe === 'n') rect(x, y, 1, 1, PALETTE.noir);
+        else if (signe === 'c') rect(x, y, 1, 1, couleur);
+        else if (signe === 'b') rect(x, y, 1, 1, PALETTE.creme);
+      }
+    }
+  };
+}
+
+const formes = {};
+for (const nom of Object.keys(MOTIFS)) formes[nom] = peindreMotif(MOTIFS[nom]);
 
 
 // --- tuiles ---------------------------------------------------------------

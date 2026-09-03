@@ -165,6 +165,12 @@ Ajouter une couleur demande mon accord.
 Chaque type d'item doit être identifiable **par sa forme seule**, en niveaux de
 gris. La couleur est une confirmation, jamais l'unique porteuse d'information.
 
+C'est la **silhouette colorée** qui porte la forme, pas le contour : sur un sol
+sombre, le noir du contour disparaît, et il ne reste que la couleur. Un rond
+dont seul le contour est rond se lit comme une croix. Les items sont donc des
+matrices de 9 × 9 pixels d'art (`MOTIFS` dans `render/sprites.js`), où la
+couleur remplit la forme et le noir la cerne.
+
 **Dérogation validée : les sols des biomes.** Composer une couleur de la
 palette sur le noir crée des teintes qui n'y figurent pas. Elles restent très
 basses — de 8 % à 14 % — et ne servent qu'au sol, jamais à un élément. Les huit
