@@ -94,11 +94,13 @@ export function couperConvoyeur(scene, convoyeur, cx, cy) {
 // Reprendre un tracé interrompu : on ajoute des cellules au bout, sans perdre
 // ce qui circule déjà dessus.
 export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
+  if (!cheminValide(convoyeur.chemin.concat(cellules))) return;
+  if (cible && maxEntrees(cible) === 0) cible = null;
   for (const c of cellules) poser(scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur });
   if (cible) {
     const dejaLa = cible.entrees.find((c) => c.source === convoyeur.source && c.role === convoyeur.role);
     if (dejaLa && dejaLa !== convoyeur) retirerConvoyeur(scene, dejaLa);
-    while (cible.entrees.length >= maxEntrees(cible)) retirerConvoyeur(scene, cible.entrees[0]);
+    liberer(scene, cible.entrees, maxEntrees(cible));
     cible.entrees.push(convoyeur);
   }
   reconstruire(convoyeur, convoyeur.chemin.concat(cellules), cible);
@@ -106,6 +108,22 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
 }
 
 function estMachine(x) { return Boolean(x && x.def); }
+
+// Un chemin recevable : au moins une cellule, continu, et sans jamais repasser
+// au même endroit. Le tracé au doigt s'en assure déjà ; le vérifier ici garde
+// la grille cohérente quoi qu'il arrive en amont — une cellule occupée deux
+// fois par le même tapis n'aurait plus de propriétaire à la destruction.
+function cheminValide(chemin) {
+  if (!chemin || chemin.length === 0) return false;
+  const vues = new Set();
+  for (let i = 0; i < chemin.length; i++) {
+    const cle = chemin[i].cx + ',' + chemin[i].cy;
+    if (vues.has(cle)) return false;
+    vues.add(cle);
+    if (i > 0 && !adjacentes(chemin[i - 1], chemin[i])) return false;
+  }
+  return true;
+}
 
 // Un convoyeur que plus rien n'alimente reste posé : il ne sert plus, mais il
 // est à l'enfant de le retirer, une tuile à la fois. Rien ne disparaît tout
@@ -164,6 +182,12 @@ export function retirerMachine(scene, machine) {
 // autant d'entrées que sa recette a d'ingrédients. Poser un convoyeur remplace
 // ce qui occupait la place, il n'y a jamais de jonction sur un convoyeur.
 export function poserConvoyeur(scene, chemin, source, cible) {
+  if (!source || !cheminValide(chemin)) return null;
+  // Une machine qui ne produit rien ne fait pas partir de tapis, et une machine
+  // qui n'attend rien n'en reçoit pas. Le tracé au doigt le sait déjà ; on ne
+  // compte pas dessus.
+  if (estMachine(source) && !aUneSortie(source)) return null;
+  if (cible && maxEntrees(cible) === 0) cible = null;
   // Un trieur a deux branches : la matière choisie, et le reste. Le rôle du
   // tapis dépend de la place encore libre, pas d'un réglage.
   const role = estMachine(source) && source.def.tri
@@ -261,6 +285,9 @@ function couperEn(scene, tronc, i) {
 // coupé là, et la nouvelle branche s'ajoute à côté de la suite. Le bout
 // distribue alors à tour de rôle entre ses branches.
 export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
+  // Vérifié avant de couper : une branche impossible ne doit pas laisser le
+  // tronc scindé pour rien.
+  if (!cheminValide(chemin)) return null;
   const i = tronc.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
   if (i < 0) return null;
   couperEn(scene, tronc, i);
@@ -341,7 +368,10 @@ export function raccorderAuVoisinage(scene, machine) {
 // sinon pour toujours, et la boucle ne se terminerait jamais. C'est le genre
 // de blocage qui fige la page et oblige à recharger.
 function liberer(scene, liste, limite) {
-  while (liste.length >= limite) {
+  // Une limite nulle — une machine qui n'accepte rien — ne doit pas faire
+  // tourner la boucle à vide : sans la première condition, elle ne s'arrête
+  // jamais et la page se fige.
+  while (liste.length > 0 && liste.length >= limite) {
     const premier = liste[0];
     retirerConvoyeur(scene, premier);
     if (liste[0] === premier) liste.shift();
