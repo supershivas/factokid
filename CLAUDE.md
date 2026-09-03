@@ -192,8 +192,15 @@ couleurs deviennent donc huit familles, et rien d'autre n'y a droit.
 Le jeu doit être compréhensible sans savoir lire. Le texte est un confort pour
 l'adulte, jamais un passage obligé pour l'enfant.
 
-- Une seule famille, bitmap ou pixel, taille fixe.
-- Deux tailles seulement : nombre (grand) et étiquette (petit).
+- Une seule famille : la fonte bitmap **5 × 7** de `render/texte.js`. Elle
+  était en 3 × 5 grossie ×2 — trois pixels de large ne suffisent ni à une
+  panse ni à une jambe, et les lettres se ressemblaient toutes une fois
+  épaissies. À la même place à l'écran, 5 × 7 à l'échelle 1 porte deux fois
+  plus de forme : c'est la finesse qui manquait, pas la taille.
+- Deux tailles seulement : nombre (`TEXTE_GRAND`, ×3) et étiquette
+  (`TEXTE_PETIT`, ×1).
+- Les hampes et les accents tiennent sur les deux rangées du haut, les
+  jambages descendent sur deux rangées de plus.
 - Pas de capitales tracées, pas de texte dans les boutons d'action — icônes.
 
 ### Retour visuel

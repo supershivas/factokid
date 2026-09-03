@@ -386,24 +386,40 @@ const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
 const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 3, 2));
 
-// Deux barres noires : le menu pause, en haut de l'écran.
-const outilPause = toile(TUILE_PX, (rect) => {
-  rect(6, 5, 5, 15, PALETTE.noir);
-  rect(14, 5, 4, 15, PALETTE.noir);
-});
+// Pause, reprise, essais : les trois signes du menu. Ils sont décrits une
+// seule fois et déclinés en couleur — le même dessin sur la plaque claire du
+// menu et sur le fond sombre d'un panneau, jamais deux tracés qui divergent.
+//
+// Depuis le passage à 24 pixels par tuile, ces signes avaient gardé leur
+// grossièreté de 16 : des barres de largeur inégale, un triangle bâti à coups
+// de rectangles. Ils sont redessinés ici sur la grille de 24, par condition
+// géométrique — ce qui les rend exactement symétriques.
 
-// La flèche de reprise du menu : noire, comme les autres signes posés sur les
-// plaques claires.
-const menuReprise = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 7; i++) rect(8 + i, 5 + i, 1, 15 - 2 * i, PALETTE.noir);
-  rect(15, 11, 2, 3, PALETTE.noir);
-});
+// Deux barres égales, séparées par un vide de même facture : la pause.
+function signePause(rect, couleur) {
+  rect(6, 4, 4, 16, couleur);
+  rect(14, 4, 4, 16, couleur);
+}
 
-// Les trois essais de la bêta : trois plaques empilées, comme l'écran de
-// choix. Noire sur la plaque claire du menu, comme les autres signes.
-const menuEssais = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 3; i++) rect(4, 4 + i * 7, 16, 5, PALETTE.noir);
-});
+// Le triangle de lecture, pointe à droite. La condition est symétrique en y :
+// il est centré par construction, et sa pente est douce plutôt qu'en marches
+// de deux pixels.
+function signeReprise(rect, couleur, x0 = 6, x1 = 19, demi = 8) {
+  for (let x = x0; x <= x1; x++) {
+    const h = Math.round(demi * (x1 - x) / (x1 - x0));
+    if (h <= 0) continue;
+    rect(x, 12 - h, 1, h * 2, couleur);
+  }
+}
+
+// Trois plaques empilées : les essais de la bêta, comme leur écran de choix.
+function signeEssais(rect, couleur) {
+  for (let i = 0; i < 3; i++) rect(5, 5 + i * 5, 14, 3, couleur);
+}
+
+const outilPause = toile(TUILE_PX, (rect) => signePause(rect, PALETTE.noir));
+const menuReprise = toile(TUILE_PX, (rect) => signeReprise(rect, PALETTE.noir));
+const menuEssais = toile(TUILE_PX, (rect) => signeEssais(rect, PALETTE.noir));
 
 // La main qui tire le monde, écrite en silhouette : un caractère par pixel,
 // peinte pleine. C'est le dessin des mains d'interface — une masse noire, des
@@ -445,18 +461,15 @@ const outilMain = toile(TUILE_PX, (rect) => {
   }
 });
 
-// Pause et reprise, pour le panneau d'une machine.
-const bullePause = toile(TUILE_PX, (rect) => {
-  rect(6, 5, 5, 15, PALETTE.creme);
-  rect(14, 5, 4, 15, PALETTE.creme);
-});
+// Pause et reprise, pour le panneau d'une machine : le même signe que dans le
+// menu, en clair sur le fond sombre du panneau.
+const bullePause = toile(TUILE_PX, (rect) => signePause(rect, PALETTE.creme));
 
 // Le vert seul ne tranche pas sur l'ardoise du bouton (2,1 : 1) : la flèche
 // est donc cernée de crème, qui tranche (4,9 : 1), et garde son cœur vert.
 const bulleReprise = toile(TUILE_PX, (rect) => {
-  for (let i = 0; i < 7; i++) rect(8 + i, 5 + i, 1, 15 - 2 * i, PALETTE.creme);
-  rect(15, 11, 2, 3, PALETTE.creme);
-  for (let i = 0; i < 5; i++) rect(9 + i, 8 + i, 1, 9 - 2 * i, PALETTE.vert);
+  signeReprise(rect, PALETTE.creme);
+  signeReprise(rect, PALETTE.vert, 8, 16, 5);
 });
 
 const bulleExtracteur = toile(TUILE_PX, (rect) => {

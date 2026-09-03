@@ -174,6 +174,8 @@ export function dansRect(r, x, y) {
   return x >= r.x && y >= r.y && x < r.x + r.l && y < r.y + r.h;
 }
 
-// Deux tailles de texte seulement.
-export const TEXTE_GRAND = 3; // facteur sur la fonte 3×5
-export const TEXTE_PETIT = 2;
+// Deux tailles de texte seulement, facteur sur la fonte 5 × 7.
+// L'étiquette est à l'échelle 1 : la fonte porte assez de forme pour être lue
+// sans être grossie, et c'est ce qui la rend fine.
+export const TEXTE_GRAND = 3;
+export const TEXTE_PETIT = 1;

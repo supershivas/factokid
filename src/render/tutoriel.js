@@ -11,7 +11,7 @@ import {
 } from '../design.js';
 import { decalage, celluleVisible, fenetre } from '../camera.js';
 import { coinCellule } from '../sim/grid.js';
-import { dessinerMot } from './texte.js';
+import { dessinerMotCentre } from './texte.js';
 import { dessinerPastille } from './sprites.js';
 
 // Le halo bat lentement : il attire l'œil sans clignoter.
@@ -60,5 +60,5 @@ export function dessinerBandeau(ctx, etape) {
 
   const taille = b.h - 12;
   dessinerPastille(ctx, etape.icone, b.x + 6, b.y + 6, taille);
-  dessinerMot(ctx, etape.nom, b.x + 6 + taille + 10, b.y + b.h / 2 - 5, TEXTE_PETIT, PALETTE.creme);
+  dessinerMotCentre(ctx, etape.nom, b.x + 6 + taille + 10, b.y + b.h / 2, TEXTE_PETIT, PALETTE.creme);
 }

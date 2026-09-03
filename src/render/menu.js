@@ -11,7 +11,7 @@ import { RECETTES } from '../data/recipes.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
 import { ICONES, INTERFACE, spriteItem } from './sprites.js';
-import { dessinerMot } from './texte.js';
+import { dessinerMot, dessinerMotCentre } from './texte.js';
 
 // L'item est dessiné sur 9 pixels d'art : ×3 le porte à 27, échelle entière.
 const ITEM_RECETTE = 27;
@@ -33,7 +33,7 @@ function bouton(ctx, r, icone, nom) {
   ctx.fillRect(r.x, r.y, r.l, r.h);
   const sprite = INTERFACE[icone] || ICONES[icone] || spriteItem(icone);
   if (sprite) ctx.drawImage(sprite, r.x + 8, r.y + 4, r.h - 8, r.h - 8);
-  dessinerMot(ctx, nom, r.x + r.h + 8, r.y + r.h / 2 - 5, TEXTE_PETIT, PALETTE.noir);
+  dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + r.h / 2, TEXTE_PETIT, PALETTE.noir);
 }
 
 export function dessinerMenu(ctx, interfaceJeu) {

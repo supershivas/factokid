@@ -9,7 +9,7 @@ import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
 import { ecrasement } from './bouton.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
-import { dessinerMot, dessinerNombre, decouperTexte } from './texte.js';
+import { dessinerMotCentre, dessinerNombre, decouperTexte, hauteurTexte } from './texte.js';
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   const livraison = monde.scene.machines.find((m) => m.def.entree);
@@ -91,8 +91,8 @@ function dessinerOutils(ctx, interfaceJeu) {
     ctx.drawImage(INTERFACE[bulle.icone], x, y, BULLE, BULLE);
     // Le nom à côté de l'image : l'enfant reconnaît la forme, l'adulte lit.
     if (bulle.nom) {
-      dessinerMot(
-        ctx, bulle.nom, x + BULLE + 10, y + BULLE / 2 - 5, TEXTE_PETIT,
+      dessinerMotCentre(
+        ctx, bulle.nom, x + BULLE + 10, y + BULLE / 2, TEXTE_PETIT,
         bulle.choisie ? PALETTE.creme : PALETTE.ardoise,
       );
     }
@@ -120,13 +120,17 @@ function dessinerPanneau(ctx, interfaceJeu) {
   ctx.strokeRect(PANNEAU.x + 1, PANNEAU.y + 1, PANNEAU.l - 2, PANNEAU.h - 2);
 
   ctx.drawImage(INTERFACE[p.icone] || ICONES[p.icone], PANNEAU.x + 12, PANNEAU.y + 12, CELLULE, CELLULE);
-  dessinerMot(ctx, p.nom, PANNEAU.x + 12 + CELLULE + 12, PANNEAU.y + 26, TEXTE_PETIT, PALETTE.creme);
+  dessinerMotCentre(
+    ctx, p.nom, PANNEAU.x + 12 + CELLULE + 12, PANNEAU.y + 12 + CELLULE / 2,
+    TEXTE_PETIT, PALETTE.creme,
+  );
 
   // Une ligne qui dit à quoi sert l'élément : le nom seul ne suffit pas.
   const lignes = decouperTexte(p.description || '', PANNEAU.l - 24, TEXTE_PETIT);
+  const interligne = hauteurTexte(TEXTE_PETIT) + 4;
   for (let i = 0; i < lignes.length; i++) {
-    dessinerMot(
-      ctx, lignes[i], PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y + i * 14,
+    dessinerMotCentre(
+      ctx, lignes[i], PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y + i * interligne,
       TEXTE_PETIT, PALETTE.ardoise,
     );
   }
