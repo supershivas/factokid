@@ -227,6 +227,12 @@ d'un seul canvas** :
 La seule différence entre les deux est le conteneur et le facteur d'échelle.
 Jamais deux mises en page distinctes, jamais deux chemins de code.
 
+Le cadre de l'aperçu **épouse le jeu** : une fois l'échelle entière choisie, il
+prend exactement la taille du canvas (`data-epouse` sur le conteneur). Sans
+ça, le téléphone dessiné restait grand ouvert autour d'un jeu qui n'en
+remplissait qu'un tiers. L'échelle, elle, reste entière : sur un écran qui ne
+tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640.
+
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 

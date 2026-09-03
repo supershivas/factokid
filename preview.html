@@ -10,7 +10,10 @@
   body { display: flex; align-items: center; justify-content: center;
          touch-action: none; -webkit-user-select: none; user-select: none; }
   /* Même jeu, même canvas : seuls le conteneur et le facteur d'échelle changent. */
-  #scene { width: min(92vw, 92vh * 0.5625); height: 92vh;
+  /* La coque se ferme sur l'écran : `data-epouse` demande au rendu de rendre
+     au cadre la taille exacte du jeu, une fois l'échelle entière choisie.
+     Sans ça, le jeu flottait au milieu d'un téléphone trois fois trop grand. */
+  #scene {
            display: flex; align-items: center; justify-content: center;
            background: var(--noir); border: 6px solid var(--ardoise);
            border-radius: 18px; box-shadow: 0 12px 40px #0008; }
@@ -21,7 +24,7 @@
 </style>
 </head>
 <body>
-  <div id="scene"><canvas id="jeu"></canvas></div>
+  <div id="scene" data-epouse><canvas id="jeu"></canvas></div>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
