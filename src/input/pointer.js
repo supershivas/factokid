@@ -7,7 +7,7 @@
 
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
-  BOUTON_PAUSE, rectBouton, rectBulle, rectOption, rectMenu, dansRect,
+  BOUTON_PAUSE, rectBouton, rectRangee, rectOption, rectMenu, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
@@ -261,8 +261,12 @@ export function brancherPointeur(canvas, vue, monde) {
       return true;
     }
     if (etat.menu > 0 && etat.ancre) {
+      // C'est la rangée entière qui se touche, plaque et nom compris : viser le
+      // mot, c'est viser l'élément. Une rangée qui n'est pas encore sortie ne
+      // se touche pas.
       for (let j = 0; j < etat.bulles.length; j++) {
-        if (dansRect(rectBulle(etat.ancre, j, etat.menu), p.x, p.y)) { actionsBulles[j](); return true; }
+        const r = rectRangee(etat.ancre, j, etat.menu);
+        if (r.p > 0 && dansRect(r, p.x, p.y)) { actionsBulles[j](); return true; }
       }
     }
     for (let i = 0; i < etat.boutons.length; i++) {

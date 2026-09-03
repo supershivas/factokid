@@ -111,20 +111,44 @@ export function rectBouton(i) {
   return { x: BOUTON_X + i * (BOUTON + BOUTON_ECART), y: BOUTON_Y, l: BOUTON, h: BOUTON };
 }
 
-// Les bulles sortent de l'objet touché : le bouton construction, ou le
-// téléporteur posé sur la grille.
-export function rectBulle(ancre, j, progression) {
-  // Les bulles s'éloignent du bord le plus proche : vers le bas depuis un objet
+// Une rangée du menu de construction : la bulle et le nom sur une même plaque.
+// C'est la rangée entière qui se touche — un doigt qui vise le mot visait bien
+// l'élément, et refermer le menu à sa place était le pire des malentendus.
+export const RANGEE_L = 168;
+
+// Les rangées ne sortent pas toutes ensemble : chacune part un peu après la
+// précédente. `retard` est la part de progression que la rangée j attend.
+export const RANGEE_RETARD = 0.09;
+
+// La progression propre à une rangée. Elle vaut exactement 1 quand le menu est
+// posé — sinon la mise en page finale dépendrait du nombre d'éléments — et
+// suit le dépassement du ressort au-delà.
+export function progressionRangee(progression, j) {
+  const retard = RANGEE_RETARD * j;
+  return progression * (1 + retard) - retard;
+}
+
+// Les rangées sortent de l'objet touché : le bouton construction.
+export function rectRangee(ancre, j, progression) {
+  // Elles s'éloignent du bord le plus proche : vers le bas depuis un objet
   // haut, vers le haut depuis la barre d'outils. Elles ne sortent jamais de
   // l'écran.
+  const p = progressionRangee(progression, j);
   const sens = ancre.y < HAUTEUR_LOGIQUE / 2 ? 1 : -1;
-  const distance = (j + 1) * (BULLE + BULLE_ECART) * progression * sens;
+  const distance = (j + 1) * (BULLE + BULLE_ECART) * p * sens;
   return {
     x: ancre.x + (ancre.l - BULLE) / 2,
     y: ancre.y + (ancre.h - BULLE) / 2 + distance,
-    l: BULLE,
+    l: RANGEE_L,
     h: BULLE,
+    p,
   };
+}
+
+// La bulle elle-même : le carré de gauche de la rangée.
+export function rectBulle(ancre, j, progression) {
+  const r = rectRangee(ancre, j, progression);
+  return { x: r.x, y: r.y, l: BULLE, h: BULLE };
 }
 
 export function dansRect(r, x, y) {

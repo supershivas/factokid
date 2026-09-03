@@ -3,7 +3,7 @@
 
 import {
   PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
-  BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, BOUTON_PAUSE, rectBouton, rectBulle, rectOption,
+  BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, BOUTON_PAUSE, rectBouton, rectRangee, rectOption,
 } from '../design.js';
 import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
 import { ecrasement } from './bouton.js';
@@ -72,25 +72,32 @@ function dessinerOutils(ctx, interfaceJeu) {
   ctx.globalAlpha = 1;
 
   // La progression vient d'un ressort : elle dépasse un peu, puis se pose.
+  // Chaque rangée part un peu après la précédente : la liste se déplie, elle
+  // n'apparaît pas d'un bloc.
   const p = interfaceJeu.menu;
   for (let j = 0; j < interfaceJeu.bulles.length; j++) {
-    const r = rectBulle(interfaceJeu.ancre, j, p);
-    const taille = Math.round(BULLE * p);
-    const dx = Math.round(r.x + (BULLE - taille) / 2);
-    const dy = Math.round(r.y + (BULLE - taille) / 2);
+    const r = rectRangee(interfaceJeu.ancre, j, p);
+    if (r.p <= 0) continue;
     const bulle = interfaceJeu.bulles[j];
-    ctx.globalAlpha = bulle.grise ? 0.35 : 1;
-    ctx.drawImage(INTERFACE.bulleFond, dx, dy, taille, taille);
-    ctx.drawImage(INTERFACE[bulle.icone], dx, dy, taille, taille);
+    const x = Math.round(r.x);
+    const y = Math.round(r.y);
+
+    ctx.globalAlpha = Math.min(1, r.p) * (bulle.grise ? 0.35 : 1);
+    // La plaque de la rangée : le nom s'écrit dessus, jamais sur le jeu.
+    // C'est elle qui tient la rangée ensemble, et c'est elle qu'on touche.
+    ctx.fillStyle = PALETTE.noir;
+    ctx.fillRect(x, y, r.l, r.h);
+    ctx.drawImage(INTERFACE.bulleFond, x, y, BULLE, BULLE);
+    ctx.drawImage(INTERFACE[bulle.icone], x, y, BULLE, BULLE);
     // Le nom à côté de l'image : l'enfant reconnaît la forme, l'adulte lit.
     if (bulle.nom) {
       dessinerMot(
-        ctx, bulle.nom, dx + BULLE + 10, dy + BULLE / 2 - 5, TEXTE_PETIT,
+        ctx, bulle.nom, x + BULLE + 10, y + BULLE / 2 - 5, TEXTE_PETIT,
         bulle.choisie ? PALETTE.creme : PALETTE.ardoise,
       );
     }
     ctx.globalAlpha = 1;
-    if (bulle.choisie) encadrer(ctx, dx, dy, taille);
+    if (bulle.choisie) encadrer(ctx, x, y, r.l, r.h);
   }
 }
 
@@ -139,8 +146,8 @@ function dessinerPanneau(ctx, interfaceJeu) {
 }
 
 // Le cadre qui dit « c'est celui-ci ».
-function encadrer(ctx, x, y, taille) {
+function encadrer(ctx, x, y, l, h = l) {
   ctx.strokeStyle = PALETTE.creme;
   ctx.lineWidth = 2;
-  ctx.strokeRect(x + 1, y + 1, taille - 2, taille - 2);
+  ctx.strokeRect(x + 1, y + 1, l - 2, h - 2);
 }
