@@ -74,7 +74,13 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   grille, dans les jauges des machines et dans ce qui circule.
 - **Appui court, appui long.** Un appui court fait la fonction principale de
   l'élément touché — un gisement propose son extracteur, un trieur ouvre son
-  filtre. Un appui long ouvre les informations et les réglages.
+  filtre. Un appui long ouvre les informations et les réglages. Le panneau
+  montre en grand **ce dont il parle** : sur un gisement, c'est la matière,
+  pas la machine qu'on propose d'y bâtir.
+- **L'élément choisi le reste.** Poser une machine ne rend pas la main au
+  convoyeur : on en pose dix d'affilée sans rouvrir le menu. C'est l'outil
+  main, ou un autre élément, qui met fin au mode. Tant qu'une machine est
+  choisie, le doigt ne trace rien — le tracé reste le geste du convoyeur.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**

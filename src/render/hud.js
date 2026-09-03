@@ -5,7 +5,7 @@ import {
   PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
   BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, BOUTON_PAUSE, rectBouton, rectRangee, rectOption,
 } from '../design.js';
-import { ICONES, INTERFACE, spriteItem, TAILLE_ITEM } from './sprites.js';
+import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { ecrasement } from './bouton.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
@@ -119,7 +119,8 @@ function dessinerPanneau(ctx, interfaceJeu) {
   ctx.lineWidth = 2;
   ctx.strokeRect(PANNEAU.x + 1, PANNEAU.y + 1, PANNEAU.l - 2, PANNEAU.h - 2);
 
-  ctx.drawImage(INTERFACE[p.icone] || ICONES[p.icone], PANNEAU.x + 12, PANNEAU.y + 12, CELLULE, CELLULE);
+  const image = spriteNomme(p.icone);
+  if (image) ctx.drawImage(image, PANNEAU.x + 12, PANNEAU.y + 12, CELLULE, CELLULE);
   dessinerMotCentre(
     ctx, p.nom, PANNEAU.x + 12 + CELLULE + 12, PANNEAU.y + 12 + CELLULE / 2,
     TEXTE_PETIT, PALETTE.creme,

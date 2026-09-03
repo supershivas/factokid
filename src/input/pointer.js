@@ -174,11 +174,13 @@ export function brancherPointeur(canvas, vue, jeu) {
   }
 
   // Toucher un gisement propose d'y bâtir : c'est la seule chose à y faire.
+  // L'image du panneau est la matière elle-même — c'est d'elle qu'on parle ;
+  // l'extracteur n'est que le bouton qui la récolte.
   function proposerExtracteur(c, g) {
     etat.panneau = {
       nom: ITEMS[g.item].nom,
       description: 'pose un extracteur pour le récolter',
-      icone: 'bulleExtracteur',
+      icone: g.item,
       options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }],
     };
     surgirPanneau();
@@ -396,24 +398,23 @@ export function brancherPointeur(canvas, vue, jeu) {
     for (const c of cellules) etat.debris.push({ cx: c.cx, cy: c.cy });
   }
 
-  // Pose un extracteur sur le gisement, et rend la main au convoyeur : on ne
-  // reste jamais coincé dans un mode.
+  // Pose un extracteur sur le gisement. L'élément choisi le reste : on en pose
+  // dix d'affilée sans rouvrir le menu, et c'est l'outil main — ou un autre
+  // élément — qui met fin au mode.
   function batirExtracteur(c) {
     const g = gisementEn(monde(), c.cx, c.cy);
     if (!g || g.extracteur || !poserExtracteur(monde(), c.cx, c.cy)) return false;
     marquerConstruit([c]);
-    etat.constructible = 'convoyeur';
     etat.panneau = null;
     return true;
   }
 
-  // Pose une machine sur une cellule libre de l'usine, puis rend la main au
-  // convoyeur : on ne reste jamais coincé dans un mode.
+  // Pose une machine sur une cellule libre. Comme l'extracteur, elle reste
+  // choisie : dix confiseries se posent en dix appuis.
   function batirMachine(c, type) {
     if (!celluleLibre(scene(), c.cx, c.cy)) return false;
     ajouterMachine(scene(), type, c.cx, c.cy, {});
     marquerConstruit([c]);
-    etat.constructible = 'convoyeur';
     etat.panneau = null;
     return true;
   }
@@ -483,15 +484,18 @@ export function brancherPointeur(canvas, vue, jeu) {
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 
-    // Poser un extracteur, sur un gisement.
+    // Poser un extracteur, sur un gisement. Tant qu'il est choisi, le doigt ne
+    // trace pas : une case qui ne convient pas ne répond simplement pas.
     if (etat.outil === 'construction' && etat.constructible === 'extracteur') {
-      if (batirExtracteur(c)) return;
+      batirExtracteur(c);
+      return;
     }
 
-    // Poser une machine, sur une cellule libre.
+    // Poser une machine, sur une cellule libre. Même règle : le tracé reste le
+    // geste du convoyeur seul.
     if (etat.outil === 'construction') {
       const choisi = CONSTRUCTIBLES.find((x) => x.id === etat.constructible);
-      if (choisi && choisi.machine && batirMachine(c, choisi.machine)) return;
+      if (choisi && choisi.machine) { batirMachine(c, choisi.machine); return; }
     }
 
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
