@@ -56,6 +56,16 @@
   </p>
   <div class="grille" id="chevrons"></div>
 
+  <h2>Vapeur de la confiserie — six souffles</h2>
+  <p class="note">
+    Ce qui sort de la machine à l'instant où les trois matières sont arrivées
+    et où la pastille se fait. C'est de la vapeur sous pression, pas de la
+    fumée : elle part vite, ralentit, enfle en s'effaçant — toute la différence
+    tient dans la décélération. Elle est blanche là où la fumée des extracteurs
+    est ardoise : l'une dit « ça travaille », l'autre « ça vient de réussir ».
+  </p>
+  <div class="grille" id="vapeurs"></div>
+
   <h2>La main — combien de pixels ?</h2>
   <p class="note">
     Le bouton fait 48 unités logiques : c'est la cible tactile, elle ne bouge
@@ -108,6 +118,10 @@
 
     const poses = document.getElementById('poses');
     for (const v of POSES) poserVignette(poses, v.titre, v.note, v.dessiner, v.duree);
+
+    const { VAPEURS } = await import('./vapeur.js');
+    const vapeurs = document.getElementById('vapeurs');
+    for (const v of VAPEURS) poserVignette(vapeurs, v.titre, v.note, v.dessiner, v.duree, v.format);
 
     const { RESOLUTIONS } = await import('./resolution.js');
     const resolution = document.getElementById('resolution');
