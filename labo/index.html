@@ -21,6 +21,14 @@
   figcaption { margin-top: 8px; text-align: center; }
   figcaption b { display: block; font-weight: 600; }
   figcaption span { display: block; color: var(--ardoise); font-size: 12px; }
+  .sommaire { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 8px;
+              position: sticky; top: 0; background: #0e0f1a; padding: 10px 0;
+              border-bottom: 1px solid #2a2d44; z-index: 2; }
+  .sommaire a { color: var(--creme); text-decoration: none; font-size: 12px;
+                background: var(--noir); border: 1px solid #2a2d44; border-radius: 999px;
+                padding: 4px 10px; }
+  .sommaire a:hover { border-color: var(--bleu); color: var(--bleu); }
+  h2 { scroll-margin-top: 64px; }
 </style>
 </head>
 <body>
@@ -35,7 +43,21 @@
     générale et les passages de l'un à l'autre, sur leur propre page.
   </p>
 
-  <h2>Retenues — intégrées au jeu</h2>
+  <nav class="sommaire">
+    <a href="#retenues">Retenues</a>
+    <a href="#alerte">Bulle d’alerte</a>
+    <a href="#chevrons">Chevrons</a>
+    <a href="#vapeur">Vapeur</a>
+    <a href="#pixels">Combien de pixels</a>
+    <a href="#main">La main</a>
+    <a href="#boutons">Plus et croix</a>
+    <a href="#icones">Icônes d’outils</a>
+    <a href="#destructions">Destruction</a>
+    <a href="#poses">Pose</a>
+    <a href="./biomes.html">Biomes ↗</a>
+  </nav>
+
+  <h2 id="retenues">Retenues — intégrées au jeu</h2>
   <p class="note">
     Le jaillissement suivi d'une secousse pour la bulle, la poussière mêlée aux
     rayons pour la pose. Ces deux vignettes appellent le code du jeu, pas une
@@ -43,11 +65,11 @@
   </p>
   <div class="grille" id="retenus"></div>
 
-  <h2>Bulle d'alerte — dix apparitions</h2>
+  <h2 id="alerte">Bulle d'alerte — dix apparitions</h2>
   <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
   <div class="grille" id="bulles"></div>
 
-  <h2>Chevrons des convoyeurs — six animations</h2>
+  <h2 id="chevrons">Chevrons des convoyeurs — six animations</h2>
   <p class="note">
     Trois cases de tapis, sans pointillés : ce sont les chevrons qui disent le
     mouvement. Chaque vignette avance, puis s'arrête à mi-boucle — un liseré
@@ -56,7 +78,7 @@
   </p>
   <div class="grille" id="chevrons"></div>
 
-  <h2>Vapeur de la confiserie — six souffles</h2>
+  <h2 id="vapeur">Vapeur de la confiserie — six souffles</h2>
   <p class="note">
     Ce qui sort de la machine à l'instant où les trois matières sont arrivées
     et où la pastille se fait. C'est de la vapeur sous pression, pas de la
@@ -66,7 +88,7 @@
   </p>
   <div class="grille" id="vapeurs"></div>
 
-  <h2>La main — combien de pixels ?</h2>
+  <h2 id="pixels">La main — combien de pixels ?</h2>
   <p class="note">
     Le bouton fait 48 unités logiques : c'est la cible tactile, elle ne bouge
     pas. Pour que la mise à l'échelle reste entière, la grille de dessin doit
@@ -75,7 +97,7 @@
   </p>
   <div class="grille" id="resolution"></div>
 
-  <h2>La main — dix versions</h2>
+  <h2 id="main">La main — dix versions</h2>
   <p class="note">
     L'outil qui déplace le monde, à sa taille réelle sur la plaque de la barre
     d'outils. Seize pixels de côté et un seul ton d'encre : ce qui se lit n'est
@@ -84,7 +106,7 @@
   </p>
   <div class="grille" id="mains"></div>
 
-  <h2>Plus et croix — six styles et leur animation au clic</h2>
+  <h2 id="boutons">Plus et croix — six styles et leur animation au clic</h2>
   <p class="note">
     Le plus s'enfonce d'abord, la croix ensuite ; la vignette rejoue la
     séquence au clic. Au repos, l'icône est à l'échelle ×2 comme dans le jeu :
@@ -92,15 +114,15 @@
   </p>
   <div class="grille" id="boutons"></div>
 
-  <h2>Icônes des outils — dix couples</h2>
+  <h2 id="icones">Icônes des outils — dix couples</h2>
   <p class="note">Construire à gauche, détruire à droite. Chaque couple doit se lire en niveaux de gris, sans un mot.</p>
   <div class="grille" id="icones"></div>
 
-  <h2>Destruction d'un élément — dix effets</h2>
+  <h2 id="destructions">Destruction d'un élément — dix effets</h2>
   <p class="note">La même tuile retirée entre deux voisines, à chaque fois.</p>
   <div class="grille" id="destructions"></div>
 
-  <h2>Pose d'un élément — dix effets</h2>
+  <h2 id="poses">Pose d'un élément — dix effets</h2>
   <p class="note">La même tuile de convoyeur posée entre deux voisines, à chaque fois.</p>
   <div class="grille" id="poses"></div>
 

@@ -17,6 +17,7 @@ export const MACHINES = {
     description: 'assemble la pastille',
     nom: 'confiserie',
     recette: 'pastille',
+    vapeur: true,       // souffle en sortant sa pastille
     capacite: 4,
   },
   plieuse: {
@@ -24,6 +25,7 @@ export const MACHINES = {
     description: 'plie le papier autour de la pastille',
     nom: 'plieuse',
     recette: 'bonbon',
+    vapeur: true,       // souffle en sortant son bonbon
     capacite: 4,
   },
   livraison: {

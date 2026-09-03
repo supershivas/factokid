@@ -107,11 +107,54 @@ export function destruction(x, y) {
   }
 }
 
+// La vapeur d'une machine qui vient de réussir : deux jets par les flancs, et
+// un champignon au-dessus. Elle est blanche là où la fumée d'un extracteur est
+// ardoise — l'une dit « ça travaille », l'autre « ça vient de sortir ».
+//
+// C'est de la vapeur sous pression : elle part vite et se freine, au lieu de
+// monter doucement comme une fumée. Ce freinage est tout ce qui les distingue.
+export function vapeur(x, y) {
+  // Les deux flancs, à mi-hauteur de la machine.
+  for (const cote of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      ajouter({
+        x: x + cote * 14,
+        y: y + 4 - i,
+        vx: cote * (150 - i * 18),
+        vy: -30 - i * 6,
+        vie: -i * 0.045,
+        duree: 0.5 + i * 0.04,
+        genre: 'vapeur',
+        taille: 6 + i * 1.5,
+        couleur: PALETTE.creme,
+      });
+    }
+  }
+  // Le pied du champignon : un trait fin qui monte vite.
+  for (let i = 0; i < 3; i++) {
+    ajouter({
+      x, y: y - 6, vx: (Math.random() - 0.5) * 12, vy: -170 + i * 14,
+      vie: -i * 0.03, duree: 0.42, genre: 'vapeur', taille: 5, couleur: PALETTE.creme,
+    });
+  }
+  // Sa tête : elle s'ouvre plus haut, et plus tard.
+  for (let i = 0; i < 5; i++) {
+    const cote = i % 2 ? 1 : -1;
+    ajouter({
+      x, y: y - 24,
+      vx: cote * (40 + i * 16), vy: -34,
+      vie: -0.16 - i * 0.02, duree: 0.6, genre: 'vapeur', taille: 7 + i * 1.5,
+      couleur: PALETTE.creme,
+    });
+  }
+}
+
 export function majParticules(dt) {
   for (let i = particules.length - 1; i >= 0; i--) {
     const p = particules[i];
     p.vie += dt;
     if (p.vie >= p.duree) { particules.splice(i, 1); continue; }
+    if (p.vie < 0) continue; // pas encore née : c'est ainsi qu'un souffle s'étale
     if (p.genre === 'rayon') continue; // un rayon ne se déplace pas, il s'étire
     p.x += p.vx * dt;
     p.y += p.vy * dt;
@@ -121,12 +164,38 @@ export function majParticules(dt) {
       p.vy += 150 * dt;                          // l'écaille tombe plus mollement
       p.vx *= 1 - 1.6 * dt;                      // et se freine dans l'air
     }
+    if (p.genre === 'vapeur') {
+      // Sous pression : le souffle part vite et se freine fort. Sans ce
+      // freinage, ce serait de la fumée.
+      const frein = 1 - 6 * dt;
+      p.vx *= frein;
+      p.vy *= frein;
+    }
   }
 }
 
+// Trois carrés décalés font un nuage ; un seul resterait un carré.
+const GRAINS = [[0, 0, 1], [-0.45, -0.3, 0.62], [0.42, 0.28, 0.55]];
+
 export function dessinerParticules(ctx) {
   for (const p of particules) {
+    if (p.vie < 0) continue;
     const reste = 1 - p.vie / p.duree;
+    if (p.genre === 'vapeur') {
+      const part = p.vie / p.duree;
+      const enfle = p.taille * (0.5 + part * 1.2);
+      ctx.globalAlpha = part < 0.12 ? part / 0.12 : reste;
+      ctx.fillStyle = p.couleur;
+      for (const [dx, dy, k] of GRAINS) {
+        const cote = Math.max(PIXEL, Math.round((enfle * k) / PIXEL) * PIXEL);
+        ctx.fillRect(
+          Math.round((p.x + dx * enfle - cote / 2) / PIXEL) * PIXEL,
+          Math.round((p.y + dy * enfle - cote / 2) / PIXEL) * PIXEL,
+          cote, cote,
+        );
+      }
+      continue;
+    }
     if (p.genre === 'rayon') {
       // Le rayon s'éloigne du centre en raccourcissant : un claquement bref.
       const avance = (1 - reste ** 2) * 26;

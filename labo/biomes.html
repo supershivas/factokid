@@ -22,14 +22,25 @@
   figcaption { margin-top: 8px; text-align: center; }
   figcaption b { display: block; font-weight: 600; }
   figcaption span { display: block; color: var(--ardoise); font-size: 12px; }
+  .sommaire { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 8px;
+              position: sticky; top: 0; background: #0e0f1a; padding: 10px 0;
+              border-bottom: 1px solid #2a2d44; z-index: 2; }
+  .sommaire a { color: var(--creme); text-decoration: none; font-size: 12px;
+                background: var(--noir); border: 1px solid #2a2d44; border-radius: 999px;
+                padding: 4px 10px; }
+  .sommaire a:hover { border-color: var(--bleu); color: var(--bleu); }
+  h2 { scroll-margin-top: 64px; }
 </style>
 </head>
 <body>
   <h1>Chantier des biomes</h1>
-  <p class="note">
-    Une page à part : l'atelier des animations est déjà chargé.
-    <a href="./index.html">Aller à l'atelier des animations</a>.
-  </p>
+  <nav class="sommaire">
+    <a href="./index.html">← Atelier des animations</a>
+    <a href="#sols">Les quatre sols</a>
+    <a href="#nuances">Nuances</a>
+    <a href="#passages">Passages</a>
+    <a href="#reunis">Les quatre réunis</a>
+  </nav>
   <p class="note">
     Trois règles, posées d'emblée. <b>Le fond reste sombre mais il est
     teinté</b> : chaque biome est sa couleur posée sur le noir à trois
@@ -41,11 +52,11 @@
     trois de long.
   </p>
 
-  <h2>Les quatre sols</h2>
+  <h2 id="sols">Les quatre sols</h2>
   <p class="note">Chacun à trois cases sur quatre, tel qu'il couvrirait la carte.</p>
   <div class="grille" id="sols"></div>
 
-  <h2>Les trois nuances de chaque biome</h2>
+  <h2 id="nuances">Les trois nuances de chaque biome</h2>
   <p class="note">
     De la plus sombre à la plus claire. Elles se posent par plaques de deux
     cases sur deux et sans hasard : les nuances font des zones plutôt qu'un
@@ -53,14 +64,14 @@
   </p>
   <div class="grille" id="nuancier"></div>
 
-  <h2>Passages d'un biome à l'autre — quatre largeurs de fondu</h2>
+  <h2 id="passages">Passages d'un biome à l'autre — quatre largeurs de fondu</h2>
   <p class="note">
     Les plaines de sucre rencontrent les champs de fraises, à chaque fois au
     même endroit. Seule la largeur du fondu change.
   </p>
   <div class="grille" id="passages"></div>
 
-  <h2>Les quatre biomes réunis</h2>
+  <h2 id="reunis">Les quatre biomes réunis</h2>
   <p class="note">
     Ce que ça donne sur la carte : quatre biomes qui se rejoignent, sans une
     seule tuile de raccord.

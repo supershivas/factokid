@@ -6,8 +6,13 @@ import { INTERFACE } from '../src/render/sprites.js';
 import { marquerAppui, majAppuis, ecrasement } from '../src/render/bouton.js';
 import { dessinerAlerte } from '../src/render/alerte.js';
 import {
-  pose, destruction, majParticules, dessinerParticules,
+  pose, destruction, vapeur, majParticules, dessinerParticules,
 } from '../src/render/particules.js';
+import { ICONES } from '../src/render/sprites.js';
+
+// La machine à sa taille dans le jeu. Le CELLULE local, plus bas, est celui
+// des vignettes d'époque : les deux ne parlent pas de la même chose.
+const MACHINE = 48;
 
 // Dessinées sur la grille de seize, elles la gardent : ces pages disent ce
 // qu'on a comparé ce jour-là, pas ce que le jeu fait aujourd'hui.
@@ -55,6 +60,20 @@ function boutonJeu(ctx, x, y, icone, indice) {
 }
 
 export const RETENUS = [
+  {
+    titre: 'Vapeur retenue',
+    note: 'deux jets de côté et un champignon : ce que souffle la confiserie',
+    duree: 1.8,
+    dessiner(ctx, t, taille) {
+      const x = Math.round((taille - MACHINE) / 2);
+      const y = taille - MACHINE - 4;
+      if (t < 0.02 && !this.lance) { this.lance = true; vapeur(x + MACHINE / 2, y); }
+      if (t > 0.5) this.lance = false;
+      ctx.drawImage(ICONES.confiserie, x, y, MACHINE, MACHINE);
+      majParticules(1 / 60);
+      dessinerParticules(ctx);
+    },
+  },
   {
     titre: 'Boutons retenus',
     note: 'trait fin centré au pixel près, croix crème à cœur rouge, écrasement élastique',

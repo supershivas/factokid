@@ -5,7 +5,7 @@ import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
 import { creerVue } from './render/canvas.js';
 import { dessinerScene, bordureGrille } from './render/sprites.js';
 import {
-  majParticules, dessinerParticules, fumee, pose, destruction,
+  majParticules, dessinerParticules, fumee, pose, destruction, vapeur,
 } from './render/particules.js';
 import { marquerPose, majPoses } from './render/pose.js';
 import { marquerAppui, majAppuis } from './render/bouton.js';
@@ -51,6 +51,25 @@ function effetsDeConstruction() {
   interfaceJeu.appuis.length = 0;
 }
 
+// Une machine qui vient de sortir sa pièce souffle un coup de vapeur. Le
+// rendu compte les pièces produites d'une image à l'autre : la simulation n'a
+// pas à savoir qu'un effet existe.
+const produitesAvant = new Map();
+function vapeurDesMachines() {
+  for (const machine of monde.scene.machines) {
+    if (!machine.def.vapeur) continue;
+    const avant = produitesAvant.get(machine);
+    produitesAvant.set(machine, machine.produits);
+    if (avant === undefined || machine.produits <= avant) continue;
+    // Le souffle sort du haut de la machine, pas de son milieu : sinon il naît
+    // sous elle et on ne voit que la fin.
+    vapeur(
+      GRILLE_X + machine.cx * CELLULE + CELLULE / 2,
+      GRILLE_Y + machine.cy * CELLULE,
+    );
+  }
+}
+
 // Un extracteur qui creuse fume. La fumée est posée en coordonnées du monde :
 // c'est le rendu qui la décale avec le reste.
 let horlogeFumee = 0;
@@ -77,6 +96,7 @@ demarrerBoucle(
       return;
     }
     effetsDeConstruction();
+    vapeurDesMachines();
     fumeeDesMines(dt);
     majParticules(dt);
     majPoses(dt);
