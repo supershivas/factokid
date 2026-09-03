@@ -337,6 +337,9 @@ function livrerDepuis(convoyeur, type) {
     if (!peutAccepter(suivant)) continue;
     pousser(suivant, type);
     convoyeur.tour = (convoyeur.tour + k + 1) % n;
+    // Le bout vise maintenant la branche du prochain item : l'item suivant part
+    // dans la bonne direction dès le premier pixel.
+    majSortie(convoyeur);
     return true;
   }
   return false;

@@ -123,7 +123,11 @@ export function reconstruire(convoyeur, chemin, cible, itemsImposes) {
 // Recalcule la géométrie : la sortie vise la cible, sinon la première branche
 // alimentée, sinon la cellule d'après.
 export function majSortie(convoyeur) {
-  const branche = convoyeur.sorties[0] && convoyeur.sorties[0].chemin[0];
+  // Quand le bout distribue entre plusieurs branches, il vise celle à qui le
+  // prochain item revient — pas la première de la liste. Sinon l'item file vers
+  // une branche puis saute dans une autre au moment d'être livré.
+  const n = convoyeur.sorties.length;
+  const branche = n > 0 && convoyeur.sorties[convoyeur.tour % n].chemin[0];
   // Un raccord impose son point de sortie : la cellule de jonction, qui touche
   // le bout du tapis. Sans elle, la sortie viserait la cellule d'après, non
   // adjacente, et les items fileraient en diagonale hors du tapis.
