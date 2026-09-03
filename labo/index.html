@@ -46,6 +46,7 @@
   <nav class="sommaire">
     <a href="#retenues">Retenues</a>
     <a href="#alerte">Bulle d’alerte</a>
+    <a href="#menu">Ouverture du menu</a>
     <a href="#chevrons">Chevrons</a>
     <a href="#vapeur">Vapeur</a>
     <a href="#pixels">Combien de pixels</a>
@@ -68,6 +69,15 @@
   <h2 id="alerte">Bulle d'alerte — dix apparitions</h2>
   <p class="note">Bulle blanche, points rouges qui vibrent. Ce qui change, c'est l'arrivée.</p>
   <div class="grille" id="bulles"></div>
+
+  <h2 id="menu">Ouverture du menu de construction — six déplis</h2>
+  <p class="note">
+    Le doigt touche « construire », la liste des éléments posables sort du
+    bouton. Les plaques et les bulles sont celles du jeu : seule la façon dont
+    elles arrivent change d'une vignette à l'autre. Quatre rangées suffisent à
+    juger le décalage ; le jeu en montre six.
+  </p>
+  <div class="grille" id="menus"></div>
 
   <h2 id="chevrons">Chevrons des convoyeurs — six animations</h2>
   <p class="note">
@@ -152,6 +162,11 @@
     const { VIGNETTES: MAINS } = await import('./mains.js');
     const mains = document.getElementById('mains');
     for (const v of MAINS) poserVignette(mains, v.titre, v.note, v.dessiner, v.duree, v.format);
+
+    const { OUVERTURES } = await import('./menus.js');
+    const menus = document.getElementById('menus');
+    const formatMenu = { largeur: 192, hauteur: 296, echelle: 1 };
+    for (const v of OUVERTURES) poserVignette(menus, v.titre, v.note, v.dessiner, v.duree, formatMenu);
 
     const { CHEVRONS } = await import('./chevrons.js');
     const chevrons = document.getElementById('chevrons');
