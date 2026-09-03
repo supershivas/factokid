@@ -32,6 +32,14 @@ function avant(chemin) {
   };
 }
 
+// Deux cellules se touchent-elles par un côté ? Toute la géométrie du tapis
+// en dépend : une entrée ou une sortie qui ne touche pas le bout du chemin
+// enverrait la polyligne — donc les items et les chevrons — hors du tapis.
+export function adjacentes(a, b) {
+  if (!a || !b) return false;
+  return Math.abs(a.cx - b.cx) + Math.abs(a.cy - b.cy) === 1;
+}
+
 // La cellule d'où vient l'alimentation : celle de la machine, ou le bout du
 // convoyeur qui déverse ici.
 export function celluleDe(source) {
@@ -58,15 +66,11 @@ function polyligne(chemin, celluleEntree, celluleSortie) {
 // `cible` peut être nul : un convoyeur lâché en cours de tracé reste construit,
 // mais ne débouche sur rien et les items s'y accumulent.
 export function creerConvoyeur(chemin, source, cible) {
-  // Sans machine à l'arrivée, la sortie vise la cellule suivante : le rendu et
-  // la géométrie n'ont ainsi jamais à se demander si la cible existe.
-  const celluleSortie = cible || apres(chemin);
-  const celluleEntree = celluleDe(source) || avant(chemin);
-  return {
+  const convoyeur = {
     chemin,
-    celluleEntree,
-    celluleSortie,
-    points: polyligne(chemin, celluleEntree, celluleSortie),
+    celluleEntree: null,
+    celluleSortie: null,
+    points: null,
     longueur: chemin.length * CELLULE,
     items: [],
     queue: 0, // distance sortie -> dernier item (= somme des écarts)
@@ -74,10 +78,11 @@ export function creerConvoyeur(chemin, source, cible) {
     sources: source ? [source] : [], // ce qui déverse ici : plusieurs, si fusion
     cible,
     sorties: [],  // convoyeurs alimentés par ce bout : un embranchement
-    sortieImposee: null, // point de sortie forcé, quand ce tapis en rejoint un
     tour: 0,      // à qui le prochain item revient
     bloque: 0,    // depuis combien de temps la tête n'avance plus
   };
+  majGeometrie(convoyeur);
+  return convoyeur;
 }
 
 // Où en est chaque item, mesuré depuis l'entrée. La tête d'abord.
@@ -115,24 +120,58 @@ export function reconstruire(convoyeur, chemin, cible, itemsImposes) {
   convoyeur.chemin = chemin;
   convoyeur.cible = cible;
   convoyeur.longueur = chemin.length * CELLULE;
-  majSortie(convoyeur);
+  majGeometrie(convoyeur);
 
   reposerItems(convoyeur, liste);
 }
 
-// Recalcule la géométrie : la sortie vise la cible, sinon la première branche
-// alimentée, sinon la cellule d'après.
-export function majSortie(convoyeur) {
-  // Quand le bout distribue entre plusieurs branches, il vise celle à qui le
-  // prochain item revient — pas la première de la liste. Sinon l'item file vers
-  // une branche puis saute dans une autre au moment d'être livré.
-  const n = convoyeur.sorties.length;
-  const branche = n > 0 && convoyeur.sorties[convoyeur.tour % n].chemin[0];
-  // Un raccord impose son point de sortie : la cellule de jonction, qui touche
-  // le bout du tapis. Sans elle, la sortie viserait la cellule d'après, non
-  // adjacente, et les items fileraient en diagonale hors du tapis.
-  convoyeur.celluleSortie = convoyeur.sortieImposee
-    || convoyeur.cible || branche || apres(convoyeur.chemin);
+// Où va ce tapis : sa machine, puis ses branches. Le tout dans l'ordre du tour
+// de rôle, pour que la géométrie et la livraison désignent toujours la même.
+export function destinations(convoyeur) {
+  const liste = convoyeur.cible ? [convoyeur.cible] : [];
+  return liste.concat(convoyeur.sorties);
+}
+
+// La cellule par laquelle on entre dans une destination : la case de la
+// machine, ou la première du tapis.
+function celluleVisee(destination) {
+  if (!destination) return null;
+  if (destination.chemin) return destination.chemin[0];
+  return { cx: destination.cx, cy: destination.cy };
+}
+
+// La première cellule d'une liste qui touche `bout`. Une destination ou une
+// source qui ne le touche pas est une géométrie périmée — un raccord dont le
+// tapis a été raccourci depuis — et on l'ignore plutôt que de dessiner à côté.
+function premiereAdjacente(cellules, bout) {
+  for (const c of cellules) if (adjacentes(c, bout)) return c;
+  return null;
+}
+
+// Recalcule la géométrie : entrée, sortie, polyligne. Un seul endroit, appelé
+// dès que le chemin, la cible, les sources ou les branches changent.
+export function majGeometrie(convoyeur) {
+  const chemin = convoyeur.chemin;
+  const premiere = chemin[0];
+  const derniere = chemin[chemin.length - 1];
+
+  // Entrée : ce qui alimente, si ça touche encore le début du chemin.
+  const amonts = convoyeur.sources.map(celluleDe).filter(Boolean);
+  convoyeur.celluleEntree = premiereAdjacente(
+    [celluleDe(convoyeur.source), ...amonts].filter(Boolean), premiere,
+  ) || avant(chemin);
+
+  // Sortie : quand le bout distribue entre plusieurs destinations, il vise
+  // celle à qui le prochain item revient — pas la première de la liste. Sinon
+  // l'item file dans une direction puis saute dans une autre à la livraison.
+  const dests = destinations(convoyeur);
+  const visees = dests.map(celluleVisee).filter(Boolean);
+  const tour = dests.length > 0 ? convoyeur.tour % dests.length : 0;
+  const prochaine = visees[tour];
+  convoyeur.celluleSortie = (adjacentes(prochaine, derniere) && prochaine)
+    || premiereAdjacente(visees, derniere)
+    || apres(chemin);
+
   convoyeur.points = polyligne(convoyeur.chemin, convoyeur.celluleEntree, convoyeur.celluleSortie);
 }
 

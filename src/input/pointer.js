@@ -309,7 +309,13 @@ export function brancherPointeur(canvas, vue, monde) {
     if (!avant) return;
     if (c.cx === avant.cx && c.cy === avant.cy) return;
     const avantAvant = trace.chemin.length >= 2 ? trace.chemin[trace.chemin.length - 2] : trace.source;
-    if (avantAvant && c.cx === avantAvant.cx && c.cy === avantAvant.cy) { trace.chemin.pop(); return; }
+    if (avantAvant && c.cx === avantAvant.cx && c.cy === avantAvant.cy) {
+      // Revenir sur ses pas défait aussi le raccord retenu : le bout du tracé
+      // ne touche plus la cellule où l'on avait buté.
+      trace.chemin.pop();
+      trace.contact = null;
+      return;
+    }
     if (!adjacentes(avant, c) || dejaTracee(c)) return;
     if (!celluleLibre(scene(), c.cx, c.cy)) {
       // Buter sur un convoyeur, c'est vouloir s'y raccorder : on retient le

@@ -7,8 +7,8 @@ import {
   creerMachine, majMachine, deposer, maxSorties, maxEntrees, aUneSortie,
 } from './machine.js';
 import {
-  creerConvoyeur, avancer, reconstruire, majSortie, distances, peutAccepter,
-  pousser
+  creerConvoyeur, avancer, reconstruire, majGeometrie, distances, peutAccepter,
+  pousser, destinations, adjacentes,
 } from './belt.js';
 import { CELLULE } from '../design.js';
 
@@ -44,6 +44,25 @@ function detacherCible(convoyeur) {
   convoyeur.cible = null;
 }
 
+// Rompt les liens devenus impossibles : une destination que le bout du tapis
+// ne touche plus. Prolonger un tapis, ou lui retirer sa dernière tuile,
+// éloigne ses branches ; mieux vaut les détacher proprement que de livrer à
+// distance, ce qui ferait sauter les items par-dessus le vide.
+function elaguerSorties(convoyeur) {
+  const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
+  for (const branche of [...convoyeur.sorties]) {
+    if (adjacentes(branche.chemin[0], bout)) continue;
+    const k = convoyeur.sorties.indexOf(branche);
+    if (k >= 0) convoyeur.sorties.splice(k, 1);
+    const s = branche.sources.indexOf(convoyeur);
+    if (s >= 0) branche.sources.splice(s, 1);
+    if (branche.source === convoyeur) branche.source = branche.sources[0] || null;
+    majGeometrie(branche);
+  }
+  if (convoyeur.cible && !adjacentes(convoyeur.cible, bout)) detacherCible(convoyeur);
+  majGeometrie(convoyeur);
+}
+
 // Détruire une tuile n'enlève que celle-là. Ce qui précède reste posé et ne
 // débouche plus sur rien ; ce qui suit reste posé aussi, et n'est plus
 // alimenté. L'outil destruction retire un convoyeur à la fois — jamais toute
@@ -69,7 +88,7 @@ export function couperConvoyeur(scene, convoyeur, cx, cy) {
   poser(scene.grille, cx, cy, null);
   detacherCible(convoyeur);
   reconstruire(convoyeur, convoyeur.chemin.slice(0, -1), null);
-  majSortie(convoyeur);
+  elaguerSorties(convoyeur);
 }
 
 // Reprendre un tracé interrompu : on ajoute des cellules au bout, sans perdre
@@ -83,6 +102,7 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
     cible.entrees.push(convoyeur);
   }
   reconstruire(convoyeur, convoyeur.chemin.concat(cellules), cible);
+  elaguerSorties(convoyeur);
 }
 
 function estMachine(x) { return Boolean(x && x.def); }
@@ -101,6 +121,7 @@ export function retirerConvoyeur(scene, convoyeur) {
     const k = branche.sources.indexOf(convoyeur);
     if (k >= 0) branche.sources.splice(k, 1);
     if (branche.source === convoyeur) branche.source = branche.sources[0] || null;
+    majGeometrie(branche);
   }
   convoyeur.sorties.length = 0;
   for (const c of convoyeur.chemin) poser(scene.grille, c.cx, c.cy, null);
@@ -108,7 +129,7 @@ export function retirerConvoyeur(scene, convoyeur) {
     const s = amont.sorties.indexOf(convoyeur);
     if (s >= 0) {
       amont.sorties.splice(s, 1);
-      if (!estMachine(amont)) majSortie(amont);
+      if (!estMachine(amont)) majGeometrie(amont);
     }
   }
   if (convoyeur.cible) {
@@ -127,13 +148,14 @@ export function retirerMachine(scene, machine) {
   poser(scene.grille, machine.cx, machine.cy, null);
   for (const amont of [...machine.entrees]) {
     amont.cible = null;
-    majSortie(amont);
+    majGeometrie(amont);
   }
   machine.entrees.length = 0;
   for (const aval of [...machine.sorties]) {
     const k = aval.sources.indexOf(machine);
     if (k >= 0) aval.sources.splice(k, 1);
     if (aval.source === machine) aval.source = aval.sources[0] || null;
+    majGeometrie(aval);
   }
   machine.sorties.length = 0;
 }
@@ -165,7 +187,7 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   for (const c of chemin) poser(scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur });
   convoyeur.role = role;
   source.sorties.push(convoyeur);
-  if (!estMachine(source)) majSortie(source);
+  if (!estMachine(source)) majGeometrie(source);
   if (cible) cible.entrees.push(convoyeur);
   // Un tapis qui passe devant un extracteur au repos le prend au passage : la
   // règle vaut dans les deux sens, qu'on pose la machine ou le tapis en dernier.
@@ -228,9 +250,10 @@ function couperEn(scene, tronc, i) {
     const k = branche.sources.indexOf(tronc);
     if (k >= 0) branche.sources[k] = prolongement;
     if (branche.source === tronc) branche.source = prolongement;
+    majGeometrie(branche);
   }
   reconstruire(prolongement, suite, cibleInitiale, aval);
-  majSortie(tronc);
+  majGeometrie(tronc);
   return prolongement;
 }
 
@@ -242,13 +265,13 @@ export function brancherConvoyeur(scene, tronc, cellule, chemin, cible) {
   if (i < 0) return null;
   couperEn(scene, tronc, i);
   const branche = poserConvoyeur(scene, chemin, tronc, cible);
-  majSortie(tronc);
+  majGeometrie(tronc);
   return branche;
 }
 
 // Une fusion : un convoyeur vient se raccorder à n'importe quel niveau d'un
-// autre. L'hôte est coupé au point de raccord, et les deux amonts déversent
-// dans la suite — sans jamais mêler deux files compressées.
+// autre. L'hôte est coupé à la jonction, et les deux amonts déversent dans la
+// suite — sans jamais mêler deux files compressées.
 export function raccorderConvoyeur(scene, chemin, source, hote, cellule) {
   const nouveau = poserConvoyeur(scene, chemin, source, null);
   raccorderA(scene, nouveau, hote, cellule);
@@ -256,27 +279,26 @@ export function raccorderConvoyeur(scene, chemin, source, hote, cellule) {
 }
 
 // Branche un convoyeur déjà posé sur n'importe quel niveau d'un autre.
+//
+// L'hôte est coupé *juste avant* la cellule de jonction : celle-ci ouvre donc
+// la suite, que les deux amonts alimentent côte à côte. C'est la même coupure
+// que pour une machine posée le long d'un tapis, et elle a la même vertu : le
+// nouveau venu déverse dans une cellule qu'il touche, si bien que ses items
+// n'ont aucune case à sauter au passage de la jonction.
 export function raccorderA(scene, nouveau, hote, cellule) {
   if (!nouveau || nouveau === hote) return;
+  // Le bout du nouveau venu doit toucher la jonction : sans cela il déverserait
+  // à distance, et ses items traverseraient le vide pour y arriver.
+  const bout = nouveau.chemin[nouveau.chemin.length - 1];
+  if (!adjacentes(bout, cellule)) return;
   const i = hote.chemin.findIndex((c) => c.cx === cellule.cx && c.cy === cellule.cy);
   if (i < 0) return;
-  const suite = couperEn(scene, hote, i);
-  // Les items sortent par la cellule de jonction, qui touche le bout du tapis.
-  nouveau.sortieImposee = { cx: cellule.cx, cy: cellule.cy };
-  if (suite) {
-    nouveau.sorties.push(suite);
-    suite.sources.push(nouveau);
-  } else {
-    // Raccord sur le bout de l'hôte : le nouveau venu vise ce qu'il visait.
-    nouveau.cible = hote.cible;
-    if (hote.cible) hote.cible.entrees.push(nouveau);
-    for (const branche of hote.sorties) {
-      if (nouveau.sorties.includes(branche)) continue;
-      nouveau.sorties.push(branche);
-      branche.sources.push(nouveau);
-    }
-  }
-  majSortie(nouveau);
+  const suite = i === 0 ? hote : couperEn(scene, hote, i - 1);
+  if (!suite || suite === nouveau || suite.sources.includes(nouveau)) return;
+  nouveau.sorties.push(suite);
+  suite.sources.push(nouveau);
+  majGeometrie(nouveau);
+  majGeometrie(suite);
 }
 
 // Une machine posée devant un tapis s'y raccorde toute seule. Le tapis est
@@ -305,6 +327,7 @@ export function raccorderAuVoisinage(scene, machine) {
     machine.sorties.push(suite);
     suite.sources.push(machine);
     if (!suite.source) suite.source = machine;
+    majGeometrie(suite);
     return suite;
   }
   return null;
@@ -327,19 +350,23 @@ function liberer(scene, liste, limite) {
 
 const BRANCHES_MAX = 3;
 
-// Ce que le bout d'un convoyeur fait de l'item qui arrive : le remettre à sa
-// machine, ou le répartir à tour de rôle entre ses branches.
+// Ce que le bout d'un convoyeur fait de l'item qui arrive. Machine et branches
+// sont une seule liste de destinations, prises à tour de rôle : un tapis qui
+// nourrit une machine peut donc aussi se diviser, sans que la branche reste
+// affamée.
 function livrerDepuis(convoyeur, type) {
-  if (convoyeur.cible) return deposer(convoyeur.cible, type);
-  const n = convoyeur.sorties.length;
+  const dests = destinations(convoyeur);
+  const n = dests.length;
   for (let k = 0; k < n; k++) {
-    const suivant = convoyeur.sorties[(convoyeur.tour + k) % n];
-    if (!peutAccepter(suivant)) continue;
-    pousser(suivant, type);
+    const suivante = dests[(convoyeur.tour + k) % n];
+    const pris = estMachine(suivante)
+      ? deposer(suivante, type)
+      : peutAccepter(suivante) && pousser(suivante, type);
+    if (!pris) continue;
     convoyeur.tour = (convoyeur.tour + k + 1) % n;
-    // Le bout vise maintenant la branche du prochain item : l'item suivant part
+    // Le bout vise maintenant la destination du prochain item : celui-ci part
     // dans la bonne direction dès le premier pixel.
-    majSortie(convoyeur);
+    majGeometrie(convoyeur);
     return true;
   }
   return false;

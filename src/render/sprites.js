@@ -642,12 +642,17 @@ export function dessinerConvoyeurs(ctx, scene, f) {
       const avant = i === 0 ? convoyeur.celluleEntree : chemin[i - 1];
       const apres = i === chemin.length - 1 ? convoyeur.celluleSortie : chemin[i + 1];
 
-      // Sur la dernière cellule, on compte tous les bords réellement occupés :
-      // d'où l'on vient, où l'on repart, et qui vient se déverser ici.
-      if (i === chemin.length - 1) {
+      // On compte tous les bords réellement occupés : d'où l'on vient, où l'on
+      // repart, et qui vient se déverser ici. Un tapis reçoit une fusion par sa
+      // première cellule comme un autre distribue par sa dernière : la jonction
+      // se dessine des deux côtés, sinon un tapis semblerait buter sur un mur.
+      const venants = arrivees.get(chemin[i].cx + ',' + chemin[i].cy) || [];
+      if (i === chemin.length - 1 || venants.length > 0) {
         const bords = [sens(chemin[i], avant), sens(chemin[i], apres)];
-        for (const branche of convoyeur.sorties) bords.push(sens(chemin[i], branche.chemin[0]));
-        for (const venant of arrivees.get(chemin[i].cx + ',' + chemin[i].cy) || []) {
+        if (i === chemin.length - 1) {
+          for (const branche of convoyeur.sorties) bords.push(sens(chemin[i], branche.chemin[0]));
+        }
+        for (const venant of venants) {
           if (venant === convoyeur) continue;
           bords.push(sens(chemin[i], venant.chemin[venant.chemin.length - 1]));
         }
