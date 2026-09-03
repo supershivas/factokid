@@ -1,13 +1,12 @@
 // Capture les deux cibles d'affichage, toujours ensemble.
-// Usage : node outils/captures.mjs <dossier> [secondes] [base] [depart]
+// Usage : node outils/captures.mjs <dossier> [secondes] [base]
 //
-// Avec « depart » en dernier argument, on ne trace rien : on capture la partie
-// telle que le joueur la trouve, avec son chemin pré-tracé.
+// On ne trace rien : la partie s'ouvre sur une chaîne complète, et c'est elle
+// qu'il faut voir. Pour éprouver un geste précis, on écrit un script à part —
+// celui-ci ne sert qu'à montrer le jeu tel qu'on le trouve, aux deux cibles.
 //
-// Trace un convoyeur au pointeur depuis le producteur jusqu'au consommateur,
-// puis capture mobile et aperçu desktop. Sans base, sert le dépôt localement ;
-// avec une base (ex. https://supershivas.github.io/factokid/), capture la
-// version publiée.
+// Sans base, sert le dépôt localement ; avec une base
+// (ex. https://supershivas.github.io/factokid/), capture la version publiée.
 
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -19,7 +18,6 @@ const SORTIE = process.argv[2] || '.';
 const ATTENTE = Number(process.argv[3] || 3) * 1000;
 const PORT = 8123;
 const BASE = process.argv[4] || `http://127.0.0.1:${PORT}/`;
-const DEPART = process.argv[5] === 'depart';
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
 
@@ -54,34 +52,9 @@ async function capturer(nom, page, url) {
     const r = c.getBoundingClientRect();
     return { left: r.left, top: r.top, echelle: c.width / 360 };
   });
-  const centre = (cx, cy) => ({
-    x: geo.left + (12 + cx * 48 + 24) * geo.echelle,
-    y: geo.top + (80 + cy * 48 + 24) * geo.echelle,
-  });
-
-  if (!DEPART) await tracerSerpentin(page, centre);
   await page.waitForTimeout(ATTENTE);
   await page.screenshot({ path: join(SORTIE, nom) });
   console.log(nom, '— échelle ×' + geo.echelle);
-}
-
-// Serpentin : toutes les cellules libres, du producteur au consommateur.
-async function tracerSerpentin(page, centre) {
-  const chemin = [];
-  for (let cx = 0; cx < 7; cx++) {
-    for (let i = 0; i < 10; i++) {
-      const cy = cx % 2 === 0 ? i : 9 - i;
-      if ((cx === 0 && cy === 0) || (cx === 6 && cy === 9)) continue;
-      chemin.push({ cx, cy });
-    }
-  }
-  const depart = centre(0, 0);
-  await page.mouse.move(depart.x, depart.y);
-  await page.mouse.down();
-  for (const c of chemin) { const p = centre(c.cx, c.cy); await page.mouse.move(p.x, p.y); }
-  const arrivee = centre(6, 9);
-  await page.mouse.move(arrivee.x, arrivee.y);
-  await page.mouse.up();
 }
 
 const options = BASE.startsWith('http://127.') ? {} : { ignoreHTTPSErrors: true };
