@@ -3,12 +3,13 @@
 
 import { PALETTE } from '../src/design.js';
 import { INTERFACE } from '../src/render/sprites.js';
-import { marquerAppui, majAppuis, ecrasement } from '../src/render/bouton.js';
+import { marquerAppui, majAppuis, enfoncement } from '../src/render/bouton.js';
 import { dessinerAlerte } from '../src/render/alerte.js';
 import {
   pose, destruction, vapeur, majParticules, dessinerParticules,
 } from '../src/render/particules.js';
 import { ICONES } from '../src/render/sprites.js';
+import { dessinerTouche } from '../src/render/plaque.js';
 
 // La machine à sa taille dans le jeu. Le CELLULE local, plus bas, est celui
 // des vignettes d'époque : les deux ne parlent pas de la même chose.
@@ -43,20 +44,14 @@ function machine(ctx, taille) {
   ctx.fillRect(c - 9, taille - 11, 18, 3);
 }
 
-// Les deux boutons d'outil, dessinés par le jeu lui-même, avec l'écrasement
+// Les deux touches d'outil, dessinées par le jeu lui-même, avec l'enfoncement
 // que joue la barre d'outils quand le doigt appuie.
-const BOUTON = 32; // le bouton du jeu fait 48 ; réduit ici pour tenir à deux
-function boutonJeu(ctx, x, y, icone, indice) {
-  const e = ecrasement(indice);
-  ctx.save();
-  if (e) {
-    ctx.translate(x + BOUTON / 2, y + BOUTON / 2);
-    ctx.scale(e.x, e.y);
-    ctx.translate(-x - BOUTON / 2, -y - BOUTON / 2);
-  }
-  ctx.drawImage(INTERFACE.bouton, x, y, BOUTON, BOUTON);
-  ctx.drawImage(INTERFACE[icone], x, y, BOUTON, BOUTON);
-  ctx.restore();
+const BOUTON = 28; // la touche du jeu fait 56 ; réduite ici pour tenir à deux
+function boutonJeu(ctx, x, y, icone, cle) {
+  dessinerTouche(
+    ctx, { x, y, l: BOUTON, h: BOUTON }, INTERFACE[icone],
+    { actif: true, enfonce: enfoncement(cle) },
+  );
 }
 
 export const RETENUS = [

@@ -10,7 +10,9 @@ import {
 import { RECETTES } from '../data/recipes.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
-import { ICONES, INTERFACE, spriteItem } from './sprites.js';
+import { ICONES, INTERFACE, spriteItem, spriteNomme } from './sprites.js';
+import { dessinerPilule } from './plaque.js';
+import { enfoncement } from './bouton.js';
 import { dessinerMot, dessinerMotCentre } from './texte.js';
 
 // L'item est dessiné sur 9 pixels d'art : ×3 le porte à 27, échelle entière.
@@ -28,12 +30,14 @@ function voile(ctx) {
   ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
 }
 
-function bouton(ctx, r, icone, nom) {
-  ctx.fillStyle = PALETTE.creme;
-  ctx.fillRect(r.x, r.y, r.l, r.h);
-  const sprite = INTERFACE[icone] || ICONES[icone] || spriteItem(icone);
-  if (sprite) ctx.drawImage(sprite, r.x + 8, r.y + 4, r.h - 8, r.h - 8);
-  dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + r.h / 2, TEXTE_PETIT, PALETTE.noir);
+// Un bouton large : la même touche que partout ailleurs, allongée pour porter
+// un mot. Elle s'enfonce sur sa doublure comme les rondes.
+function bouton(ctx, r, icone, nom, cle) {
+  const dy = dessinerPilule(ctx, r, { enfonce: enfoncement(cle) });
+  const sprite = spriteNomme(icone);
+  const taille = r.h - 16;
+  if (sprite) ctx.drawImage(sprite, r.x + 12, r.y + dy + 8, taille, taille);
+  dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + dy + r.h / 2, TEXTE_PETIT, PALETTE.noir);
 }
 
 export function dessinerMenu(ctx, interfaceJeu) {
@@ -42,7 +46,7 @@ export function dessinerMenu(ctx, interfaceJeu) {
   if (interfaceJeu.menuPause === 'recettes') { dessinerRecettes(ctx); return; }
   for (let j = 0; j < interfaceJeu.boutonsMenu.length; j++) {
     const b = interfaceJeu.boutonsMenu[j];
-    bouton(ctx, rectMenu(j), b.icone, b.nom);
+    bouton(ctx, rectMenu(j), b.icone, b.nom, 'menu:' + j);
   }
 }
 

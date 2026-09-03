@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chantier des boutons</title>
+<style>
+  :root {
+    --noir: #1a1c2c; --ardoise: #566c86; --creme: #f4f4f4;
+    --rouge: #b13e53; --jaune: #ffcd75; --bleu: #41a6f6;
+  }
+  html, body { margin: 0; background: #0e0f1a; color: var(--creme); }
+  body { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 40px 0 4px; color: var(--jaune); }
+  p.note { color: var(--ardoise); margin: 0 0 20px; max-width: 62ch; }
+  a { color: var(--bleu); }
+  .grille { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  #barres { grid-template-columns: repeat(auto-fill, minmax(430px, 1fr)); }
+  .vignette { margin: 0; background: var(--noir); border: 1px solid #2a2d44; border-radius: 8px;
+              padding: 10px; display: flex; flex-direction: column; align-items: center; }
+  .vignette canvas { image-rendering: pixelated; display: block; cursor: pointer; border-radius: 4px; }
+  figcaption { margin-top: 8px; text-align: center; }
+  figcaption b { display: block; font-weight: 600; }
+  figcaption span { display: block; color: var(--ardoise); font-size: 12px; }
+</style>
+</head>
+<body>
+  <h1>Chantier des boutons</h1>
+  <p class="note">
+    Huit façons de dire « ceci est un bouton ». À gauche la touche qu'on
+    appuie, à droite l'outil en cours — resté enfoncé sur sa doublure, car
+    c'est ainsi que le jeu dit la sélection. L'appui joue en boucle sur celle
+    de gauche et se rejoue au clic. Taille réelle du jeu : 56 unités logiques pour la touche, 24 pixels d'art pour l'icône qu'elle porte.
+    <a href="./index.html">← retour à l'atelier</a>
+  </p>
+
+  <h2>Les touches d'outil — huit propositions</h2>
+  <p class="note">
+    Ce qui est en jeu : qu'une touche ne se confonde avec rien d'autre à
+    l'écran, et qu'elle ait assez d'épaisseur pour qu'on la sente s'enfoncer.
+    Le cercle vient de ce que rien n'est rond dans une usine faite de cases ;
+    la doublure, de ce qu'un bouton sans dessous ne peut pas descendre.
+  </p>
+  <div class="grille" id="plaques"></div>
+
+  <h2>Les mêmes, en barre d'outils</h2>
+  <p class="note">
+    Trois touches côte à côte, comme en bas de l'écran : c'est là qu'on voit si
+    la forme tient l'alignement et si l'outil en cours se distingue des autres
+    sans cadre ni mot.
+  </p>
+  <div class="grille" id="barres"></div>
+
+  <script type="module">
+    import { poserVignette } from './atelier.js';
+    import { PLAQUES, BARRES } from './plaques.js';
+
+    const plaques = document.getElementById('plaques');
+    const format = { largeur: 148, hauteur: 92, echelle: 2 };
+    for (const v of PLAQUES) poserVignette(plaques, v.titre, v.note, v.dessiner, v.duree, format);
+
+    const barres = document.getElementById('barres');
+    const formatBarre = { largeur: 200, hauteur: 92, echelle: 2 };
+    for (const v of BARRES) poserVignette(barres, v.titre, v.note, v.dessiner, v.duree, formatBarre);
+  </script>
+</body>
+</html>

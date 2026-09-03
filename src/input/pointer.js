@@ -38,6 +38,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     menuOuvert: false,
     menu: 0,
     ancre: null,
+    ancreIndex: 0,             // le bouton d'outil d'où sortent les rangées
     bulles: [],
     boutons: [],
     panneau: null,
@@ -50,7 +51,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     boutonsMenu: [],
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
-    appuis: [],                  // boutons d'outil qui viennent d'être touchés
+    appuis: [],                  // touches qui viennent d'être appuyées, par clé
     // L'écran des essais de la bêta : tant qu'il est là, rien du jeu ne se
     // touche, et il n'y a d'ailleurs pas encore de monde.
     choix: SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone })),
@@ -99,7 +100,7 @@ export function brancherPointeur(canvas, vue, jeu) {
           // Les bulles sortent du bouton qu'on vient de toucher, pas du
           // premier de la barre : depuis que la main s'est ajoutée devant,
           // « construction » n'est plus à la place zéro.
-          ouvrirMenu(bullesConstructibles(), rectBouton(indexOutil(o.id)));
+          ouvrirMenu(bullesConstructibles(), indexOutil(o.id));
         } else fermerMenu();
         majBoutons();
       },
@@ -110,9 +111,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     actionsBoutons = outils.map((o) => o.action);
   }
 
-  function ouvrirMenu(contenu, ancre) {
+  function ouvrirMenu(contenu, indexAncre) {
     etat.menuOuvert = true;
-    etat.ancre = ancre;
+    etat.ancre = rectBouton(indexAncre);
+    etat.ancreIndex = indexAncre;
     etat.bulles = contenu.map((c) => ({
       icone: c.icone, nom: c.nom, grise: c.grise, choisie: c.choisie,
     }));
@@ -213,7 +215,10 @@ export function brancherPointeur(canvas, vue, jeu) {
   function panneauTouche(p) {
     if (!etat.panneau) return false;
     for (let j = 0; j < etat.panneau.options.length; j++) {
-      if (dansRect(rectOption(j), p.x, p.y)) { etat.panneau.options[j].action(); return true; }
+      if (!dansRect(rectOption(j), p.x, p.y)) continue;
+      etat.appuis.push('option:' + j);
+      etat.panneau.options[j].action();
+      return true;
     }
     if (dansRect(PANNEAU, p.x, p.y)) return true;
     etat.panneau = null;
@@ -273,6 +278,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (!etat.choix) return false;
     for (let j = 0; j < etat.choix.length; j++) {
       if (!dansRect(rectChoix(j), p.x, p.y)) continue;
+      etat.appuis.push('essai:' + j);
       jeu.choisir(etat.choix[j].id);
       etat.choix = null;
       majBoutons();
@@ -287,13 +293,16 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (!etat.menuPause) return false;
     if (etat.menuPause === 'recettes') { etat.menuPause = 'menu'; return true; }
     for (let j = 0; j < etat.boutonsMenu.length; j++) {
-      if (dansRect(rectMenu(j), p.x, p.y)) { actionsMenu[j](); return true; }
+      if (!dansRect(rectMenu(j), p.x, p.y)) continue;
+      etat.appuis.push('menu:' + j);
+      actionsMenu[j]();
+      return true;
     }
     return true;
   }
 
   function interfaceTouchee(p) {
-    if (dansRect(BOUTON_PAUSE, p.x, p.y)) { ouvrirMenuPause(); return true; }
+    if (dansRect(BOUTON_PAUSE, p.x, p.y)) { etat.appuis.push('pause'); ouvrirMenuPause(); return true; }
     // Un doigt sur la mini-carte y emmène la fenêtre : un geste, pas deux.
     if (dansRect(MINICARTE, p.x, p.y)) {
       const c = celluleMiniCarte(p);
@@ -306,12 +315,15 @@ export function brancherPointeur(canvas, vue, jeu) {
       // se touche pas.
       for (let j = 0; j < etat.bulles.length; j++) {
         const r = rectRangee(etat.ancre, j, etat.menu);
-        if (r.p > 0 && dansRect(r, p.x, p.y)) { actionsBulles[j](); return true; }
+        if (r.p <= 0 || !dansRect(r, p.x, p.y)) continue;
+        etat.appuis.push('rangee:' + j);
+        actionsBulles[j]();
+        return true;
       }
     }
     for (let i = 0; i < etat.boutons.length; i++) {
       if (!dansRect(rectBouton(i), p.x, p.y)) continue;
-      etat.appuis.push(i);
+      etat.appuis.push('outil:' + i);
       actionsBoutons[i]();
       return true;
     }
@@ -484,15 +496,16 @@ export function brancherPointeur(canvas, vue, jeu) {
 
     if (etat.outil === 'destruction') { detruire(c); return; }
 
-    // Poser un extracteur, sur un gisement. Tant qu'il est choisi, le doigt ne
-    // trace pas : une case qui ne convient pas ne répond simplement pas.
+    // Poser un extracteur, sur un gisement. Même règle : tant qu'il est
+    // choisi, le doigt ne trace pas.
     if (etat.outil === 'construction' && etat.constructible === 'extracteur') {
       batirExtracteur(c);
       return;
     }
 
-    // Poser une machine, sur une cellule libre. Même règle : le tracé reste le
-    // geste du convoyeur seul.
+    // Poser une machine, sur une cellule libre. Tant qu'une machine est
+    // choisie, le doigt ne trace rien : une case occupée ne répond pas, et le
+    // tracé reste le geste du convoyeur seul.
     if (etat.outil === 'construction') {
       const choisi = CONSTRUCTIBLES.find((x) => x.id === etat.constructible);
       if (choisi && choisi.machine) { batirMachine(c, choisi.machine); return; }

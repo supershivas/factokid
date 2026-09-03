@@ -68,7 +68,7 @@ function effetsDeConstruction() {
     destruction(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
   }
   interfaceJeu.debris.length = 0;
-  for (const i of interfaceJeu.appuis) marquerAppui(i);
+  for (const cle of interfaceJeu.appuis) marquerAppui(cle);
   interfaceJeu.appuis.length = 0;
 }
 

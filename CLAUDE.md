@@ -209,6 +209,35 @@ l'adulte, jamais un passage obligé pour l'enfant.
   jambages descendent sur deux rangées de plus.
 - Pas de capitales tracées, pas de texte dans les boutons d'action — icônes.
 
+### Boutons
+
+Une plaque claire posée sur un fond sombre se lit comme une étiquette autant
+que comme une touche. Deux choses disent mieux le bouton, et elles sont dans
+`render/plaque.js` — aucun autre module ne dessine de touche :
+
+- **La forme.** Rien n'est rond dans une usine faite de cases : un rond n'est
+  donc jamais qu'un bouton. La touche fait **56 unités** et porte une icône de
+  48 — le rond s'est élargi pour l'accueillir, sinon la croix et la main
+  sortaient par les coins. Les boutons larges, qui portent un mot, sont des
+  **pilules** de même facture.
+- **L'épaisseur.** Un second cercle, en trait seul, décalé de trois pixels
+  d'art sous le premier. Le bouton a un dessous, donc il peut descendre
+  dessus : c'est ce que fait l'appui, et c'est la seule animation de touche du
+  jeu. La doublure ne bouge pas — sans quoi rien n'aurait l'air enfoncé.
+
+**La sélection est un enfoncement, jamais un cadre.** L'outil en cours, la
+matière triée, l'élément choisi dans le menu : tous sont la touche restée au
+fond. Il n'y a plus aucun cadre de sélection dans le jeu.
+
+**Deux teintes, pas une de plus.** La touche claire porte des signes sombres —
+la main, le plus, la croix ; la touche sombre porte des images claires — les
+machines, les matières. Chacune garde le fond sur lequel ses signes se lisent,
+et sa doublure prend l'autre valeur pour rester visible. Une touche éteinte en
+ardoise avait été essayée : elle tue la croix rouge, qui n'y tranche plus.
+
+Les huit propositions comparées ce jour-là sont dans le labo, avec leurs
+animations d'appui : `labo/boutons.html`.
+
 ### Retour visuel
 
 Toute action produit un retour dans la même frame : surbrillance de la cellule,
@@ -313,10 +342,12 @@ src/
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
-    texte.js        fonte bitmap 3 × 5
+    texte.js        fonte bitmap 5 × 7
+    plaque.js       les touches : forme, épaisseur, enfoncement
     demarrage.js    barre de chargement
     particules.js   fumée et étoiles
     sprites.js      atlas, dessin des tuiles
+    bouton.js       l'appui d'une touche, par clé
     hud.js          compteurs, boutons
   input/
     pointer.js      gestes unifiés, tracé

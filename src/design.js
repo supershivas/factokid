@@ -48,14 +48,23 @@ export const INDEX_PALETTE = [
   PALETTE.orange, PALETTE.jaune, PALETTE.vert, PALETTE.bleu,
 ];
 
-// Barre d'outils : deux boutons à la cible tactile pleine, et les bulles des
-// éléments constructibles qui sortent au-dessus du bouton construction.
-export const BOUTON = CIBLE_TACTILE;
-export const BOUTON_Y = GRILLE_Y + HAUTEUR_VUE + 16;
+// Barre d'outils : des touches rondes, et les bulles des éléments
+// constructibles qui sortent au-dessus du bouton construction.
+//
+// La touche est plus large que l'icône qu'elle porte : une icône de 48 unités
+// déborde d'un disque de 48 par les coins — la croix et la main en sortaient.
+// Le disque fait donc 56, l'icône reste à 48, centrée. La cible tactile y
+// gagne, elle ne perd rien.
+export const BOUTON = 56;
+export const BOUTON_ICONE = CIBLE_TACTILE;
+// Ce que la doublure du bouton dépasse en dessous : c'est elle qui lui donne
+// son épaisseur, et sur elle qu'il s'enfonce.
+export const BOUTON_SOUS = 6;
+export const BOUTON_Y = HAUTEUR_LOGIQUE - BANDEAU_BAS + 8;
 export const BOUTON_X = 12;
 export const BOUTON_ECART = 8;
-export const BULLE = CIBLE_TACTILE; // jamais en dessous de la cible tactile
-export const BULLE_ECART = 8;
+export const BULLE = BOUTON;        // les bulles sont des touches comme les autres
+export const BULLE_ECART = 12;  // la doublure d'une rangée ne touche pas la suivante
 export const BULLE_ANIMATION = 0.18; // secondes
 
 // Bandeau haut : le compteur à gauche, le bouton pause, la mini-carte à droite.
@@ -69,7 +78,7 @@ export const MINICARTE = {
   h: LIGNES * MINICARTE_PAS,
 };
 export const BOUTON_PAUSE = {
-  x: MINICARTE.x - 12 - CIBLE_TACTILE, y: 16, l: CIBLE_TACTILE, h: CIBLE_TACTILE,
+  x: MINICARTE.x - 12 - BOUTON, y: 14, l: BOUTON, h: BOUTON,
 };
 
 // Menu pause : des boutons de même largeur, empilés au milieu de l'écran.
@@ -112,7 +121,10 @@ export const ALERTE_DELAI = 1.2; // secondes
 // Panneau d'information d'un élément construit : son nom et ses options.
 export const PANNEAU = { x: 12, y: 408, l: 336, h: 148 };
 export const PANNEAU_TEXTE = { x: 12, y: 70 }; // décalages dans le panneau
-export const OPTION = CIBLE_TACTILE;
+// Les options du panneau sont des touches comme les autres : même rond, même
+// épaisseur. Cinq tiennent dans la largeur du panneau — c'est ce qu'il faut au
+// trieur : quatre matières et sa pause.
+export const OPTION = BOUTON;
 export const OPTION_ECART = 8;
 
 export function rectOption(j) {

@@ -8,6 +8,8 @@ import {
   PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, CELLULE, TEXTE_PETIT, rectChoix,
 } from '../design.js';
 import { spriteItem, dessinerPastille } from './sprites.js';
+import { dessinerPilule } from './plaque.js';
+import { enfoncement } from './bouton.js';
 import { dessinerMot, dessinerMotCentre, largeurMot } from './texte.js';
 
 export function dessinerChoix(ctx, interfaceJeu) {
@@ -25,11 +27,10 @@ export function dessinerChoix(ctx, interfaceJeu) {
   for (let j = 0; j < interfaceJeu.choix.length; j++) {
     const r = rectChoix(j);
     const c = interfaceJeu.choix[j];
-    ctx.fillStyle = PALETTE.creme;
-    ctx.fillRect(r.x, r.y, r.l, r.h);
-    dessinerPastille(ctx, c.icone, r.x + 12, r.y + (r.h - CELLULE) / 2, CELLULE);
+    const dy = dessinerPilule(ctx, r, { enfonce: enfoncement('essai:' + j) });
+    dessinerPastille(ctx, c.icone, r.x + 14, r.y + dy + (r.h - CELLULE) / 2, CELLULE);
     dessinerMotCentre(
-      ctx, c.nom, r.x + 12 + CELLULE + 12, r.y + r.h / 2, TEXTE_PETIT, PALETTE.noir,
+      ctx, c.nom, r.x + 14 + CELLULE + 14, r.y + dy + r.h / 2, TEXTE_PETIT, PALETTE.noir,
     );
   }
 }

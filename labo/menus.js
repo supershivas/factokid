@@ -7,7 +7,9 @@
 // jeu la joue avec le même décalage.
 
 import { PALETTE, BULLE, BULLE_ECART, RANGEE_L, progressionRangee } from '../src/design.js';
+import { dessinerPilule, SOMBRE } from '../src/render/plaque.js';
 import { INTERFACE } from '../src/render/sprites.js';
+import { dessinerTouche } from '../src/render/plaque.js';
 import { CONSTRUCTIBLES } from '../src/data/outils.js';
 import { borne, ressortAmorti, sortieCubique } from './atelier.js';
 
@@ -15,12 +17,13 @@ const RANGEES = 4;                    // de quoi voir le décalage sans tout des
 const PAS = BULLE + BULLE_ECART;      // ce qui sépare deux rangées, comme dans le jeu
 const MARGE = 8;
 
-// La barre d'outils, en bas de la vignette : c'est de là que tout sort.
+// La barre d'outils, en bas de la vignette : c'est de là que tout sort. C'est
+// la touche du jeu, appelée telle quelle.
 function bouton(ctx, x, y, actif) {
-  ctx.globalAlpha = actif ? 1 : 0.45;
-  ctx.drawImage(INTERFACE.bouton, x, y, BULLE, BULLE);
-  ctx.drawImage(INTERFACE.outilConstruction, x, y, BULLE, BULLE);
-  ctx.globalAlpha = 1;
+  dessinerTouche(
+    ctx, { x, y, l: BULLE, h: BULLE }, INTERFACE.outilConstruction,
+    { enfonce: actif ? 1 : 0 },
+  );
 }
 
 // Une rangée du menu : la plaque, la bulle, et la barre grise qui tient lieu
@@ -33,12 +36,10 @@ function rangee(ctx, x, y, j, alpha, echelle = 1) {
     ctx.scale(echelle, echelle);
     ctx.translate(-x - RANGEE_L / 2, -y - BULLE / 2);
   }
-  ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(x, y, RANGEE_L, BULLE);
-  ctx.drawImage(INTERFACE.bulleFond, x, y, BULLE, BULLE);
-  ctx.drawImage(INTERFACE[CONSTRUCTIBLES[j].icone], x, y, BULLE, BULLE);
-  ctx.fillStyle = PALETTE.ardoise;
-  ctx.fillRect(x + BULLE + 10, y + BULLE / 2 - 3, RANGEE_L - BULLE - 24, 6);
+  dessinerPilule(ctx, { x, y, l: RANGEE_L, h: BULLE }, { teinte: SOMBRE });
+  ctx.drawImage(INTERFACE[CONSTRUCTIBLES[j].icone], x + 4, y + 4, BULLE - 8, BULLE - 8);
+  ctx.fillStyle = PALETTE.creme;
+  ctx.fillRect(x + BULLE + 6, y + BULLE / 2 - 3, RANGEE_L - BULLE - 24, 6);
   ctx.restore();
 }
 

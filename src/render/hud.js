@@ -2,11 +2,13 @@
 // élément. Icônes et chiffres ; les seuls mots sont là pour l'adulte.
 
 import {
-  PALETTE, LARGEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE, TEXTE_GRAND, TEXTE_PETIT,
-  BULLE, PANNEAU, PANNEAU_TEXTE, OPTION, BOUTON_PAUSE, rectBouton, rectRangee, rectOption,
+  PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE,
+  TEXTE_GRAND, TEXTE_PETIT, BULLE, PANNEAU, PANNEAU_TEXTE, BOUTON_PAUSE,
+  rectBouton, rectRangee, rectOption,
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
-import { ecrasement } from './bouton.js';
+import { enfoncement } from './bouton.js';
+import { dessinerTouche, dessinerPilule, SOMBRE, DOUBLURE } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
 import { dessinerMotCentre, dessinerNombre, decouperTexte, hauteurTexte } from './texte.js';
@@ -23,53 +25,51 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   );
 
   // Le bouton pause, puis la carte du monde : où l'on est, et où l'on va.
-  ctx.drawImage(INTERFACE.bouton, BOUTON_PAUSE.x, BOUTON_PAUSE.y, BOUTON_PAUSE.l, BOUTON_PAUSE.h);
-  ctx.drawImage(INTERFACE.outilPause, BOUTON_PAUSE.x, BOUTON_PAUSE.y, BOUTON_PAUSE.l, BOUTON_PAUSE.h);
+  dessinerTouche(ctx, BOUTON_PAUSE, INTERFACE.outilPause, { enfonce: enfoncement('pause') });
   dessinerMiniCarte(ctx, monde);
 
   dessinerOutils(ctx, interfaceJeu);
-  dessinerPanneau(ctx, interfaceJeu);
 
   // Séparations discrètes des bandeaux.
   ctx.fillStyle = PALETTE.ardoise;
   ctx.fillRect(12, GRILLE_Y - 10, LARGEUR_LOGIQUE - 24, 1);
   ctx.fillRect(12, GRILLE_Y + HAUTEUR_VUE + 10, LARGEUR_LOGIQUE - 24, 1);
 
+  // Le menu de construction passe au-dessus de la barre et du bandeau : rien
+  // ne doit rester allumé derrière un choix ouvert.
+  dessinerRangees(ctx, interfaceJeu);
+  dessinerPanneau(ctx, interfaceJeu);
+
   // Le menu pause passe par-dessus tout, y compris la barre d'outils.
   dessinerMenu(ctx, interfaceJeu);
 }
 
-// Barre d'outils, et bulles des éléments constructibles qui en sortent.
+// Barre d'outils : trois touches rondes. L'outil en cours est en pleine
+// lumière, les autres attendent en ardoise — la différence se voit sans cadre
+// ni contour, et c'est la seule marque de sélection du jeu.
 function dessinerOutils(ctx, interfaceJeu) {
   for (let i = 0; i < interfaceJeu.boutons.length; i++) {
-    const r = rectBouton(i);
     const b = interfaceJeu.boutons[i];
-    // Un bouton qu'on vient de toucher s'aplatit puis rebondit : l'appui ne
-    // peut pas sembler ignoré.
-    const e = ecrasement(i);
-    ctx.save();
-    if (e) {
-      ctx.translate(r.x + r.l / 2, r.y + r.h / 2);
-      ctx.scale(e.x, e.y);
-      ctx.translate(-r.x - r.l / 2, -r.y - r.h / 2);
-    }
-    // L'outil en cours est à pleine intensité, l'autre s'efface : la
-    // différence se voit sans cadre ni contour.
-    ctx.globalAlpha = b.actif ? 1 : 0.45;
-    ctx.drawImage(INTERFACE.bouton, r.x, r.y, r.l, r.h);
-    ctx.drawImage(INTERFACE[b.icone], r.x, r.y, r.l, r.h);
-    ctx.globalAlpha = 1;
-    ctx.restore();
+    // L'outil en cours est la touche restée enfoncée : c'est toute la marque
+    // de sélection, et elle se lit comme une touche enclenchée.
+    dessinerTouche(ctx, rectBouton(i), INTERFACE[b.icone], {
+      enfonce: Math.max(enfoncement('outil:' + i), b.actif ? 1 : 0),
+    });
   }
+}
 
+// Les rangées du menu de construction, quand il est ouvert.
+function dessinerRangees(ctx, interfaceJeu) {
   if (interfaceJeu.menu <= 0 || !interfaceJeu.ancre) return;
 
-  // Le plateau s'assombrit : les bulles se lisent comme un choix posé
-  // par-dessus le jeu, pas comme une pièce de plus sur la grille.
-  ctx.globalAlpha = 0.55 * interfaceJeu.menu;
+  // Le voile couvre tout l'écran, barre d'outils comprise : tant qu'un choix
+  // est ouvert, rien d'autre ne s'allume — c'est le bouton qui a ouvert la
+  // liste qu'on redessine par-dessus, et lui seul.
+  ctx.globalAlpha = 0.6 * Math.min(1, interfaceJeu.menu);
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(0, 0, LARGEUR_LOGIQUE, GRILLE_Y + HAUTEUR_VUE);
+  ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
   ctx.globalAlpha = 1;
+  dessinerTouche(ctx, interfaceJeu.ancre, INTERFACE.outilConstruction, { enfonce: 1 });
 
   // La progression vient d'un ressort : elle dépasse un peu, puis se pose.
   // Chaque rangée part un peu après la précédente : la liste se déplie, elle
@@ -81,23 +81,23 @@ function dessinerOutils(ctx, interfaceJeu) {
     const bulle = interfaceJeu.bulles[j];
     const x = Math.round(r.x);
     const y = Math.round(r.y);
+    const alpha = Math.min(1, r.p);
+    // La rangée entière est une touche : une pilule sombre, qui porte l'image
+    // de l'élément et son nom. Celle qui est choisie reste enfoncée — le même
+    // signe que dans la barre d'outils.
+    const enfonce = Math.max(enfoncement('rangee:' + j), bulle.choisie ? 1 : 0);
+    const dy = dessinerPilule(ctx, { x, y, l: r.l, h: r.h }, { teinte: SOMBRE, enfonce, alpha });
 
-    ctx.globalAlpha = Math.min(1, r.p) * (bulle.grise ? 0.35 : 1);
-    // La plaque de la rangée : le nom s'écrit dessus, jamais sur le jeu.
-    // C'est elle qui tient la rangée ensemble, et c'est elle qu'on touche.
-    ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(x, y, r.l, r.h);
-    ctx.drawImage(INTERFACE.bulleFond, x, y, BULLE, BULLE);
-    ctx.drawImage(INTERFACE[bulle.icone], x, y, BULLE, BULLE);
-    // Le nom à côté de l'image : l'enfant reconnaît la forme, l'adulte lit.
-    if (bulle.nom) {
-      dessinerMotCentre(
-        ctx, bulle.nom, x + BULLE + 10, y + BULLE / 2, TEXTE_PETIT,
-        bulle.choisie ? PALETTE.creme : PALETTE.ardoise,
-      );
-    }
+    ctx.globalAlpha = alpha * (bulle.choisie ? 1 : 0.75);
+    ctx.drawImage(INTERFACE[bulle.icone], x + 4, y + dy + 4, BULLE - 8, BULLE - 8);
     ctx.globalAlpha = 1;
-    if (bulle.choisie) encadrer(ctx, x, y, r.l, r.h);
+    if (bulle.nom) {
+      ctx.globalAlpha = alpha;
+      dessinerMotCentre(
+        ctx, bulle.nom, x + BULLE + 6, y + dy + r.h / 2, TEXTE_PETIT, PALETTE.creme,
+      );
+      ctx.globalAlpha = 1;
+    }
   }
 }
 
@@ -137,22 +137,14 @@ function dessinerPanneau(ctx, interfaceJeu) {
   }
 
   for (let j = 0; j < p.options.length; j++) {
-    const r = rectOption(j);
-    ctx.drawImage(INTERFACE.plaqueOption, r.x, r.y, r.l, r.h);
     const option = p.options[j];
     const sprite = option.item ? spriteItem(option.item) : INTERFACE[option.icone];
-    // Ce qui est choisi est entouré ; le reste est simplement en retrait.
-    ctx.globalAlpha = option.choisie === false ? 0.45 : 1;
-    if (sprite) ctx.drawImage(sprite, r.x + 8, r.y + 8, OPTION - 16, OPTION - 16);
-    ctx.globalAlpha = 1;
-    if (option.choisie) encadrer(ctx, r.x, r.y, r.l);
+    // Ce qui est choisi est la touche allumée ; le reste attend en ardoise.
+    // Une option qui ne se choisit pas — la pause — est toujours allumée.
+    dessinerTouche(ctx, rectOption(j), sprite, {
+      teinte: SOMBRE,
+      enfonce: Math.max(enfoncement('option:' + j), option.choisie ? 1 : 0),
+    });
   }
   ctx.restore();
-}
-
-// Le cadre qui dit « c'est celui-ci ».
-function encadrer(ctx, x, y, l, h = l) {
-  ctx.strokeStyle = PALETTE.creme;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x + 1, y + 1, l - 2, h - 2);
 }

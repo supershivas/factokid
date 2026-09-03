@@ -331,23 +331,10 @@ for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(it
 
 // --- interface ------------------------------------------------------------
 
-// La touche est une plaque claire pleine, sans contour : c'est le signe qu'on
-// lit, pas son cadre. L'outil actif se distingue par sa pleine intensité,
-// l'autre s'efface (voir hud.js).
-const bouton = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 24, 24, PALETTE.creme);
-});
-
-// Les boutons du panneau, eux, restent sombres : leurs icônes sont claires —
-// la pause, l'extracteur — et une icône crème sur une plaque crème ne se voit
-// pas. La barre d'outils est claire, le panneau est sombre : chacun garde le
-// fond sur lequel ses signes se lisent.
-const plaqueOption = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 24, 24, PALETTE.noir);
-  rect(2, 2, 21, 21, PALETTE.ardoise);
-});
-
-const boutonActif = bouton;
+// Les touches ne sont plus des sprites d'atlas : leur forme, leur épaisseur et
+// leur enfoncement vivent dans render/plaque.js, qui les trame à la taille
+// demandée. Il ne reste ici que le rond des bulles, qui sert de fond aux
+// images posées sur une plaque claire.
 
 const bulleFond = toile(TUILE_PX, (rect, disque) => {
   disque(12, 12, 12, PALETTE.noir);
@@ -519,7 +506,7 @@ const bulliePlieuse = toile(TUILE_PX, (rect) => {
 });
 
 export const INTERFACE = {
-  bouton, boutonActif, plaqueOption, bulleFond, bulleConvoyeur, bulleExtracteur,
+  bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
   bullePause, bulleReprise,
   outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
