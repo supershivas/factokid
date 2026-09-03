@@ -7,7 +7,7 @@
 
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
-  BOUTON_PAUSE, rectBouton, rectRangee, rectOption, rectMenu, dansRect,
+  BOUTON_PAUSE, rectBouton, rectRangee, rectOption, rectMenu, rectChoix, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
@@ -15,7 +15,7 @@ import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
 import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes, coinCellule } from '../sim/grid.js';
-import { DEPART } from '../data/depart.js';
+import { SCENARIOS } from '../data/scenarios.js';
 import {
   machineEn, convoyeurEn, celluleLibre, poserConvoyeur, couperConvoyeur,
   prolongerConvoyeur, brancherConvoyeur, raccorderA, ajouterMachine, retirerMachine,
@@ -27,7 +27,10 @@ import { aUneSortie, attendus, maxEntrees } from '../sim/machine.js';
 const APPUI_LONG = 0.42 * 1000; // millisecondes
 const SEUIL_GLISSE = 6;         // unités logiques au-delà desquelles c'est un tracé
 
-export function brancherPointeur(canvas, vue, monde) {
+// `jeu` porte la partie en cours : `jeu.monde`, encore nul tant qu'aucun essai
+// n'est choisi, et `jeu.choisir(id)` qui en bâtit un. Le pointeur ne garde donc
+// pas de monde à lui : il lit toujours celui du moment.
+export function brancherPointeur(canvas, vue, jeu) {
   const etat = {
     // La main est l'outil du repos : on regarde le monde avant de le changer.
     outil: 'main',
@@ -48,6 +51,9 @@ export function brancherPointeur(canvas, vue, monde) {
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
     appuis: [],                  // boutons d'outil qui viennent d'être touchés
+    // L'écran des essais de la bêta : tant qu'il est là, rien du jeu ne se
+    // touche, et il n'y a d'ailleurs pas encore de monde.
+    choix: SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone })),
   };
   const trace = etat.trace;
   let pointeur = null;
@@ -62,7 +68,8 @@ export function brancherPointeur(canvas, vue, monde) {
   let animMenu = null;
   let animPanneau = null;
 
-  const scene = () => monde.scene;
+  const monde = () => jeu.monde;
+  const scene = () => jeu.monde.scene;
 
   function viser(cle, vers, courante) {
     if (courante) courante.stop();
@@ -229,8 +236,21 @@ export function brancherPointeur(canvas, vue, monde) {
         nom: toutEnPause() ? 'tout relancer' : 'tout arrêter',
         action: () => {
           const pause = !toutEnPause();
-          for (const m of monde.scene.machines) m.pause = pause;
+          for (const m of scene().machines) m.pause = pause;
           majMenuPause();
+        },
+      },
+      // La bêta se joue à trois essais : on revient les choisir d'ici, sans
+      // recharger la page.
+      {
+        icone: 'menuEssais',
+        nom: 'changer d\'essai',
+        action: () => {
+          etat.menuPause = null;
+          etat.panneau = null;
+          fermerMenu();
+          jeu.oublier();
+          etat.choix = SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone }));
         },
       },
     ];
@@ -239,7 +259,25 @@ export function brancherPointeur(canvas, vue, monde) {
   }
 
   function toutEnPause() {
-    return monde.scene.machines.length > 0 && monde.scene.machines.every((m) => m.pause);
+    // Le menu se prépare avant qu'un essai soit choisi : il n'y a alors pas
+    // encore de monde à arrêter.
+    if (!jeu.monde) return false;
+    return scene().machines.length > 0 && scene().machines.every((m) => m.pause);
+  }
+
+  // L'écran des essais avale tout : le jeu n'existe pas encore. Choisir bâtit
+  // le monde et rend la main.
+  function choixTouche(p) {
+    if (!etat.choix) return false;
+    for (let j = 0; j < etat.choix.length; j++) {
+      if (!dansRect(rectChoix(j), p.x, p.y)) continue;
+      jeu.choisir(etat.choix[j].id);
+      etat.choix = null;
+      majBoutons();
+      majMenuPause();
+      return true;
+    }
+    return true;
   }
 
   // Le menu avale tout : rien du jeu ne se touche tant qu'il est ouvert.
@@ -361,8 +399,8 @@ export function brancherPointeur(canvas, vue, monde) {
   // Pose un extracteur sur le gisement, et rend la main au convoyeur : on ne
   // reste jamais coincé dans un mode.
   function batirExtracteur(c) {
-    const g = gisementEn(monde, c.cx, c.cy);
-    if (!g || g.extracteur || !poserExtracteur(monde, c.cx, c.cy)) return false;
+    const g = gisementEn(monde(), c.cx, c.cy);
+    if (!g || g.extracteur || !poserExtracteur(monde(), c.cx, c.cy)) return false;
     marquerConstruit([c]);
     etat.constructible = 'convoyeur';
     etat.panneau = null;
@@ -395,8 +433,8 @@ export function brancherPointeur(canvas, vue, monde) {
       marquerDetruit([c]);
       return;
     }
-    const g = gisementEn(monde, c.cx, c.cy);
-    if (g && g.extracteur) { retirerExtracteur(monde, c.cx, c.cy); marquerDetruit([c]); }
+    const g = gisementEn(monde(), c.cx, c.cy);
+    if (g && g.extracteur) { retirerExtracteur(monde(), c.cx, c.cy); marquerDetruit([c]); }
   }
 
   // --- gestes -------------------------------------------------------------
@@ -421,6 +459,7 @@ export function brancherPointeur(canvas, vue, monde) {
     const p = point(e);
     e.preventDefault();
     appuiLongFait = false;
+    if (choixTouche(p)) { relacher(); return; }
     if (menuPauseTouche(p)) { relacher(); return; }
     if (panneauTouche(p)) { relacher(); return; }
     if (interfaceTouchee(p)) { relacher(); return; }
@@ -594,7 +633,7 @@ export function brancherPointeur(canvas, vue, monde) {
     const machine = machineEn(scene(), c.cx, c.cy);
     if (!machine) {
       // Un gisement nu propose d'y bâtir : c'est la seule chose à y faire.
-      const g = gisementEn(monde, c.cx, c.cy);
+      const g = gisementEn(monde(), c.cx, c.cy);
       if (g && !g.extracteur) { proposerExtracteur(c, g); return; }
       // Un appui court sur une branche de trieur ouvre aussi son filtre.
       const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
@@ -605,7 +644,6 @@ export function brancherPointeur(canvas, vue, monde) {
     if (machine.def.tri) ouvrirPanneau(machine, null);
   }
 
-  centrerCamera(DEPART.regard.cx, DEPART.regard.cy);
   majBoutons();
   majMenuPause();
   canvas.addEventListener('pointerdown', debut);

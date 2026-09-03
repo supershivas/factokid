@@ -86,6 +86,25 @@ export function rectMenu(j) {
   };
 }
 
+// Écran des essais : le choix de départ de la bêta. Des plaques larges,
+// empilées, à la même largeur — aucune n'est plus importante qu'une autre.
+export const CHOIX_BOUTON = { l: 264, h: 72 };
+export const CHOIX_ECART = 16;
+export const CHOIX_Y = 244;
+
+export function rectChoix(j) {
+  return {
+    x: (LARGEUR_LOGIQUE - CHOIX_BOUTON.l) / 2,
+    y: CHOIX_Y + j * (CHOIX_BOUTON.h + CHOIX_ECART),
+    l: CHOIX_BOUTON.l,
+    h: CHOIX_BOUTON.h,
+  };
+}
+
+// Bandeau du tutoriel : ce qu'il y a à faire, posé en haut de la fenêtre de
+// jeu. Une image, un mot pour l'adulte, et rien d'autre.
+export const TUTORIEL_BANDEAU = { x: 12, y: GRILLE_Y + 8, l: 336, h: 40 };
+
 // Un bouchon ne se signale qu'après avoir duré : sinon l'écran clignote au
 // moindre à-coup.
 export const ALERTE_DELAI = 1.2; // secondes

@@ -11,9 +11,14 @@ import { marquerPose, majPoses } from './render/pose.js';
 import { marquerAppui, majAppuis } from './render/bouton.js';
 import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
+import { dessinerChoix } from './render/choix.js';
+import { dessinerHalo, dessinerBandeau } from './render/tutoriel.js';
 import { creerDemarrage, avancerDemarrage, dessinerDemarrage } from './render/demarrage.js';
 import { spriteItem } from './render/sprites.js';
 import { creerMonde, majMonde } from './sim/world.js';
+import { creerTutoriel, majTutoriel, etapeCourante } from './tutoriel.js';
+import { SCENARIOS } from './data/scenarios.js';
+import { centrerCamera } from './camera.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
 import { brancherPointeur } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
@@ -21,18 +26,34 @@ import { demarrerBoucle } from './loop.js';
 const canvas = document.getElementById('jeu');
 const vue = creerVue(canvas);
 
-// Deux préparations : l'atlas des tuiles, déjà peint à l'import de sprites.js,
-// et le monde qu'on bâtit ici. La barre en rend compte, puis s'efface.
-const demarrage = creerDemarrage(2);
+// Une seule préparation : l'atlas des tuiles, déjà peint à l'import de
+// sprites.js. Le monde, lui, attend qu'un essai soit choisi.
+const demarrage = creerDemarrage(1);
 demarrage.faites = 1;
-const monde = creerMonde();
-demarrage.faites = 2;
-const interfaceJeu = brancherPointeur(canvas, vue, monde);
+
+// La partie en cours. Tant qu'aucun essai n'est choisi, il n'y a pas de monde :
+// l'écran des essais tient l'écran, et le pointeur le sait.
+const jeu = {
+  monde: null,
+  tutoriel: null,
+  choisir(id) {
+    const scenario = SCENARIOS.find((s) => s.id === id) || SCENARIOS[0];
+    jeu.monde = creerMonde(scenario.disposition);
+    jeu.tutoriel = scenario.tutoriel ? creerTutoriel() : null;
+    centrerCamera(scenario.disposition.regard.cx, scenario.disposition.regard.cy);
+  },
+  // Revenir aux essais : la partie est abandonnée, pas mise de côté. Rien ici
+  // n'est censé survivre — l'état permanent est ailleurs, et il n'existe pas
+  // encore.
+  oublier() { jeu.monde = null; jeu.tutoriel = null; },
+};
+
+const interfaceJeu = brancherPointeur(canvas, vue, jeu);
 const ctx = vue.ctx;
 
 // Sonde de test : laisse les outils lire l'état sans passer par le rendu.
 // Rien dans le jeu ne la lit.
-globalThis.sonde = { monde, interface: interfaceJeu };
+globalThis.sonde = { jeu, interface: interfaceJeu, choisir: (id) => jeu.choisir(id) };
 
 // Ce qui vient d'être construit lance sa gerbe d'étoiles, ce qui vient d'être
 // détruit part en éclats. Le geste est dans
@@ -56,7 +77,7 @@ function effetsDeConstruction() {
 // pas à savoir qu'un effet existe.
 const produitesAvant = new Map();
 function vapeurDesMachines() {
-  for (const machine of monde.scene.machines) {
+  for (const machine of jeu.monde.scene.machines) {
     if (!machine.def.vapeur) continue;
     const avant = produitesAvant.get(machine);
     produitesAvant.set(machine, machine.produits);
@@ -77,7 +98,7 @@ function fumeeDesMines(dt) {
   horlogeFumee += dt;
   if (horlogeFumee < 0.18) return;
   horlogeFumee = 0;
-  for (const machine of monde.scene.machines) {
+  for (const machine of jeu.monde.scene.machines) {
     if (!machine.def.mine || machine.creuse === false) continue;
     fumee(GRILLE_X + machine.cx * CELLULE + CELLULE / 2, GRILLE_Y + machine.cy * CELLULE + 10);
   }
@@ -86,15 +107,26 @@ function fumeeDesMines(dt) {
 demarrerBoucle(
   (dt) => {
     // Le menu pause arrête le temps : c'est le seul endroit où la simulation
-    // s'interrompt, et c'est le joueur qui le demande.
-    if (interfaceJeu.menuPause || !demarrage.fini) return;
-    majMonde(monde, dt);
+    // s'interrompt, et c'est le joueur qui le demande. L'écran des essais ne
+    // l'arrête pas : il n'y a rien à arrêter tant qu'aucun monde n'existe.
+    if (interfaceJeu.menuPause || !demarrage.fini || !jeu.monde) return;
+    majMonde(jeu.monde, dt);
+    const fetee = majTutoriel(jeu.tutoriel, jeu.monde, dt);
+    // Une étape réussie se fête là où elle a eu lieu : le tutoriel ne dessine
+    // rien, il dit seulement quelle case a bougé.
+    if (fetee) {
+      pose(GRILLE_X + fetee.cx * CELLULE + CELLULE / 2, GRILLE_Y + fetee.cy * CELLULE + CELLULE / 2);
+    }
   },
   (fps, dt) => {
     if (!avancerDemarrage(demarrage, dt)) {
       dessinerDemarrage(ctx, demarrage, spriteItem('bonbon'));
       return;
     }
+    // Pas encore d'essai choisi : l'écran des essais tient l'écran, et rien
+    // d'autre n'existe.
+    if (!jeu.monde) { dessinerChoix(ctx, interfaceJeu); return; }
+
     effetsDeConstruction();
     vapeurDesMachines();
     fumeeDesMines(dt);
@@ -102,12 +134,15 @@ demarrerBoucle(
     majPoses(dt);
     majAppuis(dt);
     // Les chevrons de la scène qu'on regarde : c'est du rendu, pas du jeu.
-    majChevrons(monde.scene, dt);
+    majChevrons(jeu.monde.scene, dt);
 
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
-    dessinerScene(ctx, monde, interfaceJeu.trace, dessinerParticules);
+    dessinerScene(ctx, jeu.monde, interfaceJeu.trace, dessinerParticules);
+    const etape = etapeCourante(jeu.tutoriel);
+    dessinerHalo(ctx, etape, jeu.tutoriel ? jeu.tutoriel.age : 0);
     bordureGrille(ctx);
-    dessinerHud(ctx, monde, fps, interfaceJeu);
+    dessinerBandeau(ctx, etape);
+    dessinerHud(ctx, jeu.monde, fps, interfaceJeu);
   },
 );

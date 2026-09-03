@@ -78,6 +78,17 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
+- **La bêta s'ouvre sur trois essais.** Au lancement, on choisit par quoi
+  commencer : *nouvelle partie* (carte nue, tutoriel), *usine qui tourne*
+  (la chaîne complète déjà posée), *bac à sable* (carte nue, sans tutoriel).
+  Un essai n'est qu'une disposition de départ plus le tutoriel ou non — c'est
+  une entrée de `data/scenarios.js`. Le menu pause y ramène, le temps de la
+  bêta.
+- **Le tutoriel est un système de plus, assumé, ajouté sur demande.** Il ne
+  sert qu'à la première partie et ne connaît que le résultat d'un geste, jamais
+  le geste : cinq étapes dans `data/tutoriel.js`, un halo sur les cellules à
+  toucher, et l'image de la bulle à poser. Une étape de plus y est une entrée
+  de plus. Rien du reste du jeu ne le regarde.
 
 ### Une seule carte, plus grande que l'écran
 
@@ -238,7 +249,9 @@ exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
 Toute vérification visuelle produit **les deux captures, systématiquement** :
 la cible mobile et l'aperçu desktop. Jamais l'une sans l'autre. `outils/captures.mjs`
-les génère toutes les deux.
+les génère toutes les deux ; il choisit l'essai « usine qui tourne » par la
+sonde, sinon il ne montrerait que l'écran des essais (`ESSAI=choix` pour le
+voir, `ESSAI=nouvelle` pour le tutoriel).
 
 Toute livraison fournit aussi **les deux URL à essayer**, jamais les captures
 seules :
@@ -259,6 +272,7 @@ vendor/             Motion, rangé tel quel, jamais modifié
 src/
   main.js           point d'entrée, sélection du conteneur
   camera.js         quelle partie du monde la fenêtre montre
+  tutoriel.js       où en est le premier contact
   loop.js           boucle à pas fixe
   anim.js           ressorts d'interface (Motion)
   sim/
@@ -273,7 +287,9 @@ src/
     machines.js     table des machines
     monde.js        gisements du monde
     biomes.js       biomes, régions, fondu
-    depart.js       disposition de départ, chemin pré-tracé
+    depart.js       dispositions de départ : usine qui tourne, carte nue
+    scenarios.js    les trois essais de la bêta
+    tutoriel.js     étapes du premier contact
     outils.js       outils et éléments constructibles
     recipes.js      table des recettes
     progression.js  paliers de déblocage, courbe
@@ -281,6 +297,8 @@ src/
     canvas.js       mise à l'échelle
     biome.js        la teinte de chaque cellule
     minicarte.js    le monde entier dans le bandeau haut
+    choix.js        l'écran des essais
+    tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
     texte.js        fonte bitmap 3 × 5
     demarrage.js    barre de chargement
@@ -337,7 +355,8 @@ Depuis, le lot a grossi sur décision : deuxième matière et première recette
 (a + b = c), gisements et trieur, la chaîne complète du bonbon, la
 construction des trieurs et des transformateurs, puis la carte générale — une
 seule grille de neuf fenêtres, où l'on mine et où l'on construit au même
-endroit. Ces ajouts sont décrits en section 1.
+endroit. La bêta y ajoute ses trois essais et le tutoriel du premier contact.
+Ces ajouts sont décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
 Mesuré à 208 items, 60 fps, image médiane 16,7 ms — avant que l'espacement ne

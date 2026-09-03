@@ -1,9 +1,12 @@
-// Disposition de départ. Table de données, aucune logique.
+// Dispositions de départ. Table de données, aucune logique.
 //
+// Il y en a deux, et un scénario choisit la sienne (voir scenarios.js) :
+// l'usine qui tourne déjà, et la carte nue. La livraison est posée dans les
+// deux : elle n'est pas constructible, elle ne peut donc pas manquer.
+
 // Une petite chaîne complète, posée au cœur du monde : quatre extracteurs sur
 // les quatre gisements les plus proches, et de quoi faire un bonbon. Tout le
 // reste du monde est à conquérir, un tapis à la fois.
-
 export const DEPART = {
   // La fenêtre s'ouvre ici : la livraison est au milieu de l'écran.
   regard: { cx: 10, cy: 15 },
@@ -49,4 +52,17 @@ export const DEPART = {
     { extracteur: { cx: 12, cy: 16 }, cible: 2, chemin: [{ cx: 11, cy: 16 }] },
     { source: 2, cible: 3, chemin: [{ cx: 10, cy: 17 }] },
   ],
+};
+
+// La carte nue : rien de construit, seule la livraison attend ses bonbons.
+// C'est le départ du bac à sable et celui de la première partie ; le regard
+// s'ouvre plus à l'ouest, là où le sucre et la fraise se touchent, pour que la
+// première chaîne tienne dans une fenêtre.
+export const DEPART_NU = {
+  regard: { cx: 6, cy: 13 },
+  extracteurs: [],
+  machines: [
+    { type: 'livraison', cx: 10, cy: 18 },
+  ],
+  convoyeurs: [],
 };

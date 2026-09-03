@@ -399,6 +399,12 @@ const menuReprise = toile(TUILE_PX, (rect) => {
   rect(15, 11, 2, 3, PALETTE.noir);
 });
 
+// Les trois essais de la bêta : trois plaques empilées, comme l'écran de
+// choix. Noire sur la plaque claire du menu, comme les autres signes.
+const menuEssais = toile(TUILE_PX, (rect) => {
+  for (let i = 0; i < 3; i++) rect(4, 4 + i * 7, 16, 5, PALETTE.noir);
+});
+
 // La main qui tire le monde, écrite en silhouette : un caractère par pixel,
 // peinte pleine. C'est le dessin des mains d'interface — une masse noire, des
 // doigts séparés par de fines fentes qui s'arrêtent avant la paume, un pouce
@@ -503,8 +509,25 @@ export const INTERFACE = {
   bouton, boutonActif, plaqueOption, bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
   bullePause, bulleReprise,
-  outilConstruction, outilDestruction, outilMain, outilPause, menuReprise,
+  outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
 };
+
+// Une icône peut venir de l'interface, des machines ou des items : on la
+// cherche là où elle est, pour que les tables n'aient pas à dire d'où elle
+// sort.
+export function spriteNomme(icone) {
+  return INTERFACE[icone] || ICONES[icone] || spritesItems[icone];
+}
+
+// Une icône posée dans son rond : c'est ainsi qu'elle se lit partout ailleurs
+// dans le jeu, et le rond lui donne le fond sombre dont ses traits clairs ont
+// besoin — sur une plaque crème, l'icône seule disparaîtrait.
+export function dessinerPastille(ctx, icone, x, y, taille) {
+  const image = spriteNomme(icone);
+  if (!image) return;
+  ctx.drawImage(INTERFACE.bulleFond, x, y, taille, taille);
+  ctx.drawImage(image, x, y, taille, taille);
+}
 
 // --- items ----------------------------------------------------------------
 

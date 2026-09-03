@@ -9,12 +9,14 @@ import { DEPART } from '../data/depart.js';
 import { creerScene, ajouterMachine, poserConvoyeur, majScene, itemsDeScene } from './scene.js';
 import { creerGisements, majGisements, gisementEn, poserExtracteur } from './gisement.js';
 
-export function creerMonde() {
+// `disposition` dit ce qui est déjà posé au premier instant : l'usine qui
+// tourne, ou la carte nue. C'est le scénario choisi qui l'apporte.
+export function creerMonde(disposition = DEPART) {
   const monde = { scene: creerScene(), gisements: creerGisements() };
 
-  for (const e of DEPART.extracteurs) poserExtracteur(monde, e.cx, e.cy);
+  for (const e of disposition.extracteurs) poserExtracteur(monde, e.cx, e.cy);
 
-  const machines = DEPART.machines.map(
+  const machines = disposition.machines.map(
     (m) => ajouterMachine(monde.scene, m.type, m.cx, m.cy, {}),
   );
 
@@ -22,7 +24,7 @@ export function creerMonde() {
     ? gisementEn(monde, c.extracteur.cx, c.extracteur.cy).extracteur
     : machines[c.source]);
 
-  for (const c of DEPART.convoyeurs) {
+  for (const c of disposition.convoyeurs) {
     poserConvoyeur(
       monde.scene, c.chemin.map((p) => ({ ...p })), source(c), machines[c.cible],
     );

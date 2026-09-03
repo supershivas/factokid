@@ -1,9 +1,13 @@
 // Capture les deux cibles d'affichage, toujours ensemble.
 // Usage : node outils/captures.mjs <dossier> [secondes] [base]
 //
-// On ne trace rien : la partie s'ouvre sur une chaîne complète, et c'est elle
-// qu'il faut voir. Pour éprouver un geste précis, on écrit un script à part —
-// celui-ci ne sert qu'à montrer le jeu tel qu'on le trouve, aux deux cibles.
+// On ne trace rien : l'essai « usine qui tourne » s'ouvre sur une chaîne
+// complète, et c'est elle qu'il faut voir. Pour éprouver un geste précis, on
+// écrit un script à part — celui-ci ne sert qu'à montrer le jeu tel qu'on le
+// trouve, aux deux cibles.
+//
+// Depuis la bêta, la partie s'ouvre sur l'écran des essais : la capture en
+// choisit un par la sonde, sinon elle ne montrerait que ce choix.
 //
 // Sans base, sert le dépôt localement ; avec une base
 // (ex. https://supershivas.github.io/factokid/), capture la version publiée.
@@ -17,6 +21,7 @@ const RACINE = new URL('..', import.meta.url).pathname;
 const SORTIE = process.argv[2] || '.';
 const ATTENTE = Number(process.argv[3] || 3) * 1000;
 const PORT = 8123;
+const ESSAI = process.env.ESSAI || 'usine';
 const BASE = process.argv[4] || `http://127.0.0.1:${PORT}/`;
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
@@ -47,6 +52,8 @@ const navigateur = await pw.chromium.launch({
 async function capturer(nom, page, url) {
   await page.goto(new URL(url, BASE).href);
   await page.waitForTimeout(400);
+  // L'essai est choisi par la sonde : la capture montre le jeu, pas le menu.
+  if (ESSAI !== 'choix') await page.evaluate((id) => globalThis.sonde.choisir(id), ESSAI);
   const geo = await page.evaluate(() => {
     const c = document.getElementById('jeu');
     const r = c.getBoundingClientRect();
