@@ -3,6 +3,14 @@
 // Une nouvelle fabrication est une entrée de plus, jamais du code en plus.
 
 export const RECETTES = {
+  // Le papier ne sort plus du sol : il vient des arbres, débités par la
+  // scierie. C'est une matière de plus dans la chaîne, pas un système de plus.
+  papier: {
+    id: 'papier',
+    entrees: { bois: 1 },
+    sortie: 'papier',
+    ticksParItem: 40,
+  },
   caramel: {
     id: 'caramel',
     entrees: { sucre: 1 },

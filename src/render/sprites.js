@@ -58,19 +58,22 @@ function decale(rect, ox, oy) {
 // contour noir disparaît, et la matière n'était plus lue que par sa couleur,
 // qui dessinait une croix là où on attendait une bille.
 const MOTIFS = {
-  // Le sucre : un cube plein, la seule silhouette parfaitement carrée.
-  carre: [
-    'nnnnnnnnn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'nnnnnnnnn',
+  // Le sucre : un petit cube, plus petit que les autres matières — c'est un
+  // morceau, pas une plaque. Une face d'ombre en ardoise avait été essayée :
+  // elle disparaît sur la bande du tapis, qui est de la même couleur.
+  cube: [
+    '.........',
+    '.nnnnnnn.',
+    '.ncccccn.',
+    '.ncccccn.',
+    '.ncccccn.',
+    '.ncccccn.',
+    '.ncccccn.',
+    '.nnnnnnn.',
+    '.........',
   ],
-  // La bille : un disque tracé au compas, éclat en haut à gauche.
+  // La bille : un disque tracé au compas, éclat en haut à gauche. La pastille
+  // s'en sert aussi — c'est la même chose, en orange.
   rond: [
     '..nnnnn..',
     '.nncccnn.',
@@ -82,17 +85,31 @@ const MOTIFS = {
     '.nncccnn.',
     '..nnnnn..',
   ],
-  // La menthe : un triangle posé sur sa base, pointe en haut.
-  triangle: [
-    '....n....',
-    '...ncn...',
-    '...ncn...',
-    '..ncccn..',
-    '..ncccn..',
-    '.ncccccn.',
-    '.ncccccn.',
+  // La fraise : épaules larges, pointe en bas, calice vert et graines claires.
+  // C'est la silhouette qu'un enfant dessine quand on lui dit « fraise ».
+  fraise: [
+    '..v.v.v..',
+    '.nvvvvvn.',
     'ncccccccn',
-    'nnnnnnnnn',
+    'ncbcccbcn',
+    'ncccccccn',
+    '.ncbcbcn.',
+    '.ncccccn.',
+    '..ncccn..',
+    '...nnn...',
+  ],
+  // La menthe : une feuille et sa nervure, pointue aux deux bouts. Une plante,
+  // plus un triangle — on ne confond pas une feuille avec un bonbon.
+  menthe: [
+    '...nnn...',
+    '..ncccn..',
+    '.nccbccn.',
+    'ncccbcccn',
+    'ncccbcccn',
+    'ncccbcccn',
+    '.nccbccn.',
+    '..ncbcn..',
+    '...nbn...',
   ],
   // Le caramel : une barre plate, silhouette qu'aucune autre matière n'a.
   barre: [
@@ -106,9 +123,22 @@ const MOTIFS = {
     '.........',
     '.........',
   ],
+  // Le bois : une bûche couchée, sa tranche claire à gauche. Elle sort des
+  // arbres, et la scierie la débite en papier.
+  buche: [
+    '.........',
+    '.nnnnnnn.',
+    'nbbcccccn',
+    'nbbcccccn',
+    'nbbcccccn',
+    'nbbcccccn',
+    'nbbcccccn',
+    '.nnnnnnn.',
+    '.........',
+  ],
   // Le papier : une feuille dont le coin est corné. Même en gris, on ne la
   // confond pas avec le sucre.
-  feuille: [
+  papier: [
     'nnnnnnn..',
     'ncccccnn.',
     'ncbcccccn',
@@ -142,6 +172,9 @@ function peindreMotif(motif) {
         if (signe === 'n') rect(x, y, 1, 1, PALETTE.noir);
         else if (signe === 'c') rect(x, y, 1, 1, couleur);
         else if (signe === 'b') rect(x, y, 1, 1, PALETTE.creme);
+        // Un signe de plus, pour ce qu'une matière porte en propre : le
+        // calice vert d'une fraise.
+        else if (signe === 'v') rect(x, y, 1, 1, PALETTE.vert);
       }
     }
   };
@@ -281,7 +314,33 @@ const plieuse = toile(TUILE_PX, (rect) => {
   rect(15, 5, 6, 15, PALETTE.noir);
   rect(5, 6, 3, 12, PALETTE.creme);
   rect(17, 6, 3, 12, PALETTE.creme);
-  formes.feuille(decale(rect, 8, 8), PALETTE.bleu);
+  formes.papier(decale(rect, 8, 8), PALETTE.bleu);
+});
+
+// La scierie : une lame ronde plantée dans une bûche. La lame est crème, ses
+// dents mordent le bois — on voit ce qui entre et ce qui en sort.
+function lame(rect, cx, cy, r, couleur) {
+  for (let y = -r - 1; y <= r + 1; y++) {
+    for (let x = -r - 1; x <= r + 1; x++) {
+      const d = Math.hypot(x, y);
+      // Les dents : le rayon bat huit fois autour du disque.
+      const bord = r + 0.9 * Math.cos(8 * Math.atan2(y, x));
+      if (d <= bord) rect(cx + x, cy + y, 1, 1, couleur);
+    }
+  }
+}
+
+const scierie = toile(TUILE_PX, (rect) => {
+  rect(0, 0, 24, 24, PALETTE.noir);
+  rect(2, 2, 21, 21, PALETTE.ardoise);
+  // La bûche, couchée en bas.
+  rect(3, 15, 18, 7, PALETTE.noir);
+  rect(4, 16, 16, 5, PALETTE.orange);
+  rect(4, 16, 3, 5, PALETTE.creme);
+  // La lame, qui mord dedans.
+  lame(rect, 13, 11, 6.5, PALETTE.noir);
+  lame(rect, 13, 11, 5.5, PALETTE.creme);
+  rect(12, 10, 2, 2, PALETTE.noir);
 });
 
 // La livraison : un bocal ouvert où tombent les bonbons.
@@ -306,6 +365,18 @@ function gisement(item) {
   });
 }
 
+// L'arbre : le gisement du bois. Un tronc et sa cime — on ne pose pas une
+// bûche sur un socle, on abat un arbre.
+const arbre = toile(TUILE_PX, (rect, disque) => {
+  rect(3, 19, 18, 3, PALETTE.ardoise);
+  rect(3, 22, 18, 1, PALETTE.noir);
+  rect(10, 12, 4, 8, PALETTE.noir);
+  rect(11, 12, 2, 7, PALETTE.orange);
+  disque(12, 8, 7, PALETTE.noir);
+  disque(12, 8, 6, PALETTE.vert);
+  disque(10, 6, 2, PALETTE.creme);
+});
+
 // Gisement ramassé : le socle reste, la matière repousse.
 const gisementVide = toile(TUILE_PX, (rect) => {
   rect(3, 17, 18, 4, PALETTE.ardoise);
@@ -323,11 +394,14 @@ const extracteur = toile(TUILE_PX, (rect) => {
 });
 
 export const ICONES = {
-  trieur, confiserie, plieuse, livraison, chaufferie, extracteur,
+  trieur, confiserie, plieuse, livraison, chaufferie, extracteur, scierie,
 };
 
 const spritesGisements = {};
 for (const item of Object.values(ITEMS)) spritesGisements[item.id] = gisement(item);
+// Le bois fait exception : ce qu'on voit sur la carte est l'arbre, pas la
+// bûche qu'on en tirera.
+spritesGisements.bois = arbre;
 
 // --- interface ------------------------------------------------------------
 
@@ -489,6 +563,15 @@ const bulleChaufferie = toile(TUILE_PX, (rect) => {
   for (let i = 0; i < 3; i++) rect(6 + i * 5, 17, 3, 4, PALETTE.orange);
 });
 
+const bulleScierie = toile(TUILE_PX, (rect) => {
+  rect(3, 15, 18, 7, PALETTE.noir);
+  rect(4, 16, 16, 5, PALETTE.orange);
+  rect(4, 16, 3, 5, PALETTE.creme);
+  lame(rect, 13, 10, 6.5, PALETTE.noir);
+  lame(rect, 13, 10, 5.5, PALETTE.creme);
+  rect(12, 9, 2, 2, PALETTE.noir);
+});
+
 const bulleConfiserie = toile(TUILE_PX, (rect) => {
   rect(5, 3, 4, 3, PALETTE.creme);
   rect(15, 3, 5, 3, PALETTE.creme);
@@ -502,12 +585,12 @@ const bulliePlieuse = toile(TUILE_PX, (rect) => {
   rect(17, 5, 4, 15, PALETTE.noir);
   rect(5, 6, 3, 12, PALETTE.creme);
   rect(17, 6, 3, 12, PALETTE.creme);
-  formes.feuille(decale(rect, 8, 8), PALETTE.bleu);
+  formes.papier(decale(rect, 8, 8), PALETTE.bleu);
 });
 
 export const INTERFACE = {
   bulleFond, bulleConvoyeur, bulleExtracteur,
-  bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse,
+  bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse, bulleScierie,
   bullePause, bulleReprise,
   outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
 };

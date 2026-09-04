@@ -18,7 +18,7 @@ export const BIOMES = {
 
 // Ce que chaque biome donne : c'est là que ses gisements sont abondants.
 export const MATIERE_DE = {
-  sucre: 'sucre', terre: 'papier', fraise: 'fraise', menthe: 'menthe',
+  sucre: 'sucre', terre: 'bois', fraise: 'fraise', menthe: 'menthe',
 };
 
 // Les trois nuances, en transparence sur le noir. Elles restent basses : le sol

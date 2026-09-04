@@ -15,7 +15,7 @@ export const DEPART = {
     { cx: 4, cy: 12 },   // sucre
     { cx: 8, cy: 11 },   // fraise
     { cx: 11, cy: 14 },  // menthe
-    { cx: 12, cy: 16 },  // papier
+    { cx: 12, cy: 16 },  // bois
   ],
 
   machines: [
@@ -23,6 +23,9 @@ export const DEPART = {
     { type: 'confiserie', cx: 8, cy: 14 },
     { type: 'plieuse', cx: 10, cy: 16 },
     { type: 'livraison', cx: 10, cy: 18 },
+    // La scierie s'intercale entre l'arbre et la plieuse : le papier ne se
+    // ramasse plus, il se débite.
+    { type: 'scierie', cx: 11, cy: 17 },
   ],
 
   // `source` et `cible` : soit un index de machine, soit une cellule
@@ -49,7 +52,8 @@ export const DEPART = {
       cible: 2,
       chemin: [{ cx: 8, cy: 15 }, { cx: 9, cy: 15 }, { cx: 9, cy: 16 }],
     },
-    { extracteur: { cx: 12, cy: 16 }, cible: 2, chemin: [{ cx: 11, cy: 16 }] },
+    { extracteur: { cx: 12, cy: 16 }, cible: 4, chemin: [{ cx: 12, cy: 17 }] },
+    { source: 4, cible: 2, chemin: [{ cx: 11, cy: 16 }] },
     { source: 2, cible: 3, chemin: [{ cx: 10, cy: 17 }] },
   ],
 };

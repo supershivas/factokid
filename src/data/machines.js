@@ -7,7 +7,7 @@ export const MACHINES = {
     description: "range une matière, le reste à part",
     nom: 'trieur',
     tri: true,          // deux sorties : la matière choisie, et tout le reste
-    triables: ['sucre', 'papier', 'fraise', 'menthe'],
+    triables: ['sucre', 'bois', 'fraise', 'menthe'],
     triDefaut: 'sucre',
     capacite: 6,        // file d'attente mélangée
     ticksParItem: 15,
@@ -34,6 +34,14 @@ export const MACHINES = {
     nom: 'livraison',
     entree: 'bonbon',
     ticksParItem: 60,
+    capacite: 4,
+  },
+  scierie: {
+    id: 'scierie',
+    description: 'débite le bois en papier',
+    nom: 'scierie',
+    recette: 'papier',
+    vapeur: true,       // souffle sa sciure en sortant sa feuille
     capacite: 4,
   },
   chaufferie: {

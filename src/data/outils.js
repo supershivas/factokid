@@ -15,6 +15,7 @@ export const CONSTRUCTIBLES = [
   { id: 'convoyeur', icone: 'bulleConvoyeur' },
   { id: 'extracteur', icone: 'bulleExtracteur' },
   { id: 'trieur', icone: 'bulleTrieur', machine: 'trieur' },
+  { id: 'scierie', icone: 'bulleScierie', machine: 'scierie' },
   { id: 'chaufferie', icone: 'bulleChaufferie', machine: 'chaufferie' },
   { id: 'confiserie', icone: 'bulleConfiserie', machine: 'confiserie' },
   { id: 'plieuse', icone: 'bulliePlieuse', machine: 'plieuse' },
