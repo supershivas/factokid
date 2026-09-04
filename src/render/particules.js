@@ -2,6 +2,7 @@
 // par le rendu. Rien ici n'entre dans la simulation.
 
 import { PALETTE, PIXEL } from '../design.js';
+import { deuxAuHasard, FREIN } from './vapeurs.js';
 
 const MAX = 240;
 const particules = [];
@@ -107,45 +108,32 @@ export function destruction(x, y) {
   }
 }
 
-// La vapeur d'une machine qui vient de réussir : deux jets par les flancs, et
-// un champignon au-dessus. Elle est blanche là où la fumée d'un extracteur est
-// ardoise — l'une dit « ça travaille », l'autre « ça vient de sortir ».
+// La vapeur d'une machine qui vient de réussir. Elle est blanche là où la
+// fumée d'un extracteur est ardoise — l'une dit « ça travaille », l'autre
+// « ça vient de sortir ».
 //
 // C'est de la vapeur sous pression : elle part vite et se freine, au lieu de
 // monter doucement comme une fumée. Ce freinage est tout ce qui les distingue.
+//
+// Sa forme, elle, n'est plus écrite ici : chaque bouffée tire deux des six
+// figures du labo (render/vapeurs.js) et les souffle ensemble. La machine ne
+// se répète donc jamais, et aucune bouffée n'est une figure pure — c'était le
+// mélange qu'on cherchait.
 export function vapeur(x, y) {
-  // Les deux flancs, à mi-hauteur de la machine.
-  for (const cote of [-1, 1]) {
-    for (let i = 0; i < 4; i++) {
-      ajouter({
-        x: x + cote * 14,
-        y: y + 4 - i,
-        vx: cote * (150 - i * 18),
-        vy: -30 - i * 6,
-        vie: -i * 0.045,
-        duree: 0.5 + i * 0.04,
-        genre: 'vapeur',
-        taille: 6 + i * 1.5,
-        couleur: PALETTE.creme,
-      });
-    }
-  }
-  // Le pied du champignon : un trait fin qui monte vite.
-  for (let i = 0; i < 3; i++) {
-    ajouter({
-      x, y: y - 6, vx: (Math.random() - 0.5) * 12, vy: -170 + i * 14,
-      vie: -i * 0.03, duree: 0.42, genre: 'vapeur', taille: 5, couleur: PALETTE.creme,
-    });
-  }
-  // Sa tête : elle s'ouvre plus haut, et plus tard.
-  for (let i = 0; i < 5; i++) {
-    const cote = i % 2 ? 1 : -1;
-    ajouter({
-      x, y: y - 24,
-      vx: cote * (40 + i * 16), vy: -34,
-      vie: -0.16 - i * 0.02, duree: 0.6, genre: 'vapeur', taille: 7 + i * 1.5,
+  for (const figure of deuxAuHasard()) {
+    figure.semer((dx, dy, vx, vy, retard, duree, taille) => ajouter({
+      x: x + dx,
+      y: y + dy,
+      vx,
+      vy,
+      // Un retard est une vie négative : le grain existe, il n'est pas encore
+      // né. C'est ainsi qu'un souffle s'étale au lieu de claquer d'un coup.
+      vie: -retard,
+      duree,
+      genre: 'vapeur',
+      taille,
       couleur: PALETTE.creme,
-    });
+    }));
   }
 }
 
@@ -166,8 +154,9 @@ export function majParticules(dt) {
     }
     if (p.genre === 'vapeur') {
       // Sous pression : le souffle part vite et se freine fort. Sans ce
-      // freinage, ce serait de la fumée.
-      const frein = 1 - 6 * dt;
+      // freinage, ce serait de la fumée. C'est ce même nombre qui traduit les
+      // distances des figures en vitesses de départ.
+      const frein = 1 - FREIN * dt;
       p.vx *= frein;
       p.vy *= frein;
     }
