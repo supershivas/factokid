@@ -14,16 +14,27 @@
 // sprites sont peints une fois et gardés — un bouton ne se redessine pas
 // soixante fois par seconde.
 
-import { PALETTE, PIXEL } from '../design.js';
+import { PALETTE, PIXEL, poserImage } from '../design.js';
 
 // Hauteur du socle, en pixels d'art. C'est aussi la course de l'appui : le
 // corps descend exactement jusqu'au sol.
 export const SOCLE = 3;
 
-// La part de la touche que l'icône occupe : le rond fait 28 pixels d'art,
-// l'icône 24. Le rapport tombe juste aux deux tailles employées — 56 unités
-// portent une icône de 48, 28 en portent une de 24.
-const PART_ICONE = 6 / 7;
+// La part de la touche qu'une image occupe. Deux valeurs, parce que les deux
+// familles d'images ne remplissent pas leur carré de la même façon : une icône
+// d'interface s'arrête avant ses coins (le rond peut donc être plus serré),
+// une matière remplit le sien jusqu'au bord et doit s'inscrire dans le cercle
+// — d'où le rapport proche de 1/√2.
+export const PART_ICONE = 6 / 7;
+export const PART_ITEM = 0.72;
+
+// Où poser l'image dans la touche : la règle est dans le design system, et
+// l'outil de lisibilité la relit — c'est elle qui garantit qu'une matière
+// reste centrée et nette dans son jeton.
+function dessinerImage(ctx, image, r, dy, part) {
+  const { taille, marge } = poserImage(r.l, image.width || 24, part);
+  ctx.drawImage(image, r.x + marge, r.y + dy + marge, taille, taille);
+}
 
 const cache = new Map();
 
@@ -105,7 +116,9 @@ function corpsRond(art, teinte) {
 // C'est là toute la marque de sélection du jeu : l'outil en cours est une
 // touche restée enfoncée. Pas de cadre, pas de couleur en plus — le signe est
 // celui qu'ont toutes les touches du monde.
-export function dessinerTouche(ctx, r, image, { teinte = CLAIRE, enfonce = 0, alpha = 1 } = {}) {
+export function dessinerTouche(
+  ctx, r, image, { teinte = CLAIRE, enfonce = 0, alpha = 1, part = PART_ICONE } = {},
+) {
   const art = Math.round(r.l / PIXEL);
   const dy = Math.round(enfonce * SOCLE) * PIXEL;
 
@@ -113,13 +126,9 @@ export function dessinerTouche(ctx, r, image, { teinte = CLAIRE, enfonce = 0, al
   ctx.globalAlpha = alpha;
   ctx.drawImage(socleRond(art, teinte), r.x, r.y, r.l, (art + SOCLE) * PIXEL);
   ctx.drawImage(corpsRond(art, teinte), r.x, r.y + dy, r.l, r.l);
-  if (image) {
-    // L'icône est centrée dans le rond : c'est le rond qui s'est élargi pour
-    // l'accueillir, pas l'icône qui a rétréci.
-    const taille = Math.round(r.l * PART_ICONE);
-    const marge = (r.l - taille) / 2;
-    ctx.drawImage(image, r.x + marge, r.y + dy + marge, taille, taille);
-  }
+  // L'image est centrée dans le rond : c'est le rond qui s'est élargi pour
+  // l'accueillir, pas l'image qui a rétréci.
+  if (image) dessinerImage(ctx, image, r, dy, part);
   ctx.restore();
 }
 

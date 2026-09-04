@@ -126,10 +126,13 @@ export const PANNEAU_TEXTE = { x: 12, y: 68 }; // décalages dans le panneau
 
 // La chaîne du panneau : les matières qui entrent, la flèche, ce qui sort.
 // Chaque jeton se touche et mène à la matière.
-export const JETON = 40;
+// Le jeton porte une matière, dessinée sur 9 pixels d'art : il faut qu'elle y
+// tienne à une échelle entière — 36 unités, soit ×4 — sans quoi elle se
+// décentre. C'est ce qui fixe la taille du jeton, pas l'inverse.
+export const JETON = 52;
 export const JETON_ECART = 6;
 export const SIGNE = 18;         // le « + » et la flèche, entre deux jetons
-export const CHAINE_Y = 86;      // décalage dans le panneau
+export const CHAINE_Y = 80;      // décalage dans le panneau
 
 // La géométrie de la chaîne, partagée par le rendu et l'entrée : une seule
 // source de vérité, sinon le jeton dessiné et le jeton touché divergent.
@@ -201,6 +204,21 @@ export function rectRangee(ancre, j, progression) {
 export function rectBulle(ancre, j, progression) {
   const r = rectRangee(ancre, j, progression);
   return { x: r.x, y: r.y, l: BULLE, h: BULLE };
+}
+
+// Poser une image de pixel art dans une touche : à quelle taille, et à quelle
+// marge. Une image ne se met à l'échelle qu'en nombre entier de fois — à ×1,4
+// ses pixels n'ont plus tous la même largeur et son centre tombe entre deux.
+// On prend donc le plus grand multiple entier du pixel natif qui tienne dans
+// la part voulue, et la marge se cale sur le pixel d'art.
+//
+// `natif` est la taille du sprite en pixels d'art (24 pour une icône
+// d'interface, 9 pour une matière), `part` ce qu'elle a le droit d'occuper.
+export function poserImage(cible, natif, part) {
+  const facteur = Math.max(1, Math.floor((cible * part) / natif));
+  const taille = natif * facteur;
+  const marge = Math.round((cible - taille) / 2 / PIXEL) * PIXEL;
+  return { taille, marge, facteur };
 }
 
 export function dansRect(r, x, y) {

@@ -8,7 +8,7 @@ import {
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
-import { dessinerTouche, dessinerPilule, SOMBRE } from './plaque.js';
+import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
 import { dessinerMotCentre, dessinerNombre, decouperTexte, hauteurTexte } from './texte.js';
@@ -146,6 +146,7 @@ function dessinerPanneau(ctx, interfaceJeu) {
     dessinerTouche(ctx, rectOption(j), sprite, {
       teinte: SOMBRE,
       enfonce: Math.max(enfoncement('option:' + j), option.choisie ? 1 : 0),
+      part: option.item ? PART_ITEM : undefined,
     });
   }
   ctx.restore();
@@ -164,6 +165,7 @@ function dessinerChaine(ctx, chaine) {
     dessinerTouche(ctx, r, spriteItem(element.item), {
       teinte: SOMBRE,
       enfonce: enfoncement('jeton:' + j),
+      part: PART_ITEM,
     });
   }
 }
