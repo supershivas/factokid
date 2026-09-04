@@ -8,7 +8,7 @@ import {
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
-import { dessinerTouche, dessinerPilule, SOMBRE, DOUBLURE } from './plaque.js';
+import { dessinerTouche, dessinerPilule, SOMBRE } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
 import { dessinerMotCentre, dessinerNombre, decouperTexte, hauteurTexte } from './texte.js';

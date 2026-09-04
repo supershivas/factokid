@@ -1,10 +1,9 @@
-// Huit façons de dire « ceci est un bouton », avec leur réponse à l'appui.
+// Le socle du bouton, et ce que fait son corps quand on appuie dessus.
 //
-// Le problème : une plaque crème pleine, posée sur un fond sombre, se lit
-// comme une étiquette autant que comme une touche. Il manque ce qui fait
-// qu'un bouton appelle le doigt — une forme qui se distingue de tout le reste
-// du jeu (rien n'est rond dans une usine carrée), et une épaisseur qui dit
-// qu'il dépasse de l'écran et peut donc s'enfoncer.
+// La forme est arrêtée : un rond, parce que rien n'est rond dans une usine
+// faite de cases. Restent deux questions, et ce sont elles qu'on compare ici :
+// de quoi le socle a l'air — c'est la pièce qui ne bouge jamais, le sol du
+// bouton — et ce que le corps fait en remontant quand le doigt le lâche.
 //
 // Tout est dessiné en pixels d'art, sur la grille de 24 du jeu, avec quatre
 // rangées de rab sous le bouton pour ce qui dépasse. Ce qui est choisi ici se
@@ -66,117 +65,120 @@ const R = 13.5;  // rayon du bouton rond, en pixels d'art
 const CX = 14;
 const CY = 14;
 
-// --- les huit fonds -------------------------------------------------------
+// --- les socles -----------------------------------------------------------
 //
-// Sauf la plaque carrée d'aujourd'hui, toutes gardent la même teinte claire :
-// une touche en ardoise éteint les signes qu'elle porte — la croix rouge n'y
-// tranche plus. La sélection se dit donc par l'enfoncement, jamais par la
-// couleur, et c'est ce qui a été retenu.
+// Le socle est ce qui reste au sol. Le corps du bouton, lui, est le même
+// partout : un disque clair cerné de noir, dessiné plus bas.
+//
+// Toutes les touches gardent la même teinte claire : une touche en ardoise
+// éteint les signes qu'elle porte — la croix rouge n'y tranche plus. La
+// sélection se dit par l'enfoncement, jamais par la couleur.
 
 const FONDS = {
-  // Ce que le jeu fait aujourd'hui : une plaque pleine, carrée.
-  carre: ({ rect }, actif) => {
-    rect(0, 0, ART, ART, actif ? PALETTE.creme : PALETTE.ardoise);
-  },
+  // Pas de socle du tout : le cercle nu, tel qu'il était avant. Il sert à
+  // comparer l'écrasement d'hier à l'enfoncement d'aujourd'hui.
+  cercle: () => {},
 
-  // Le cercle nu : rien d'autre n'est rond dans le jeu.
-  cercle: ({ disque }, actif) => {
-    disque(CX, CY, R, PALETTE.noir);
-    disque(CX, CY, R - 1, PALETTE.creme);
-  },
-
-  // Le cercle et sa doublure : un second cercle, en trait seul, décalé vers le
-  // bas. C'est l'épaisseur du bouton qu'on voit par en dessous.
-  double: ({ disque, anneau }, actif) => {
-    anneau(CX, CY + 3, R, 1.6, PALETTE.ardoise);
-    disque(CX, CY, R, PALETTE.noir);
-    disque(CX, CY, R - 1, PALETTE.creme);
-  },
-
-  // La même doublure, pleine : le bouton est posé sur sa tranche.
-  tranche: ({ disque }, actif) => {
+  // Le socle : un second cercle, plein, cerné de noir comme le corps. C'est
+  // une pièce du bouton, pas son ombre — et il ne bouge jamais.
+  double: ({ disque }) => {
     disque(CX, CY + 3, R, PALETTE.noir);
     disque(CX, CY + 3, R - 1, PALETTE.ardoise);
-    disque(CX, CY, R, PALETTE.noir);
-    disque(CX, CY, R - 1, PALETTE.creme);
   },
 
-  // Le jeton biseauté : une lèvre claire en haut, une ombre en bas, dans le
-  // disque lui-même.
-  jeton: ({ disque, rect }, actif) => {
-    disque(CX, CY, R, PALETTE.noir);
-    disque(CX, CY, R - 1, PALETTE.ardoise);
-    disque(CX, CY - 1, R - 2, PALETTE.creme);
-    rect(0, 0, 0, 0, PALETTE.noir);
+  // Un socle en trait seul : plus léger, mais le bouton semble flotter plutôt
+  // que reposer.
+  trait: ({ anneau }) => {
+    anneau(CX, CY + 3, R, 1.2, PALETTE.ardoise);
   },
 
-  // L'anneau seul : le bouton est un contour, son cœur est le fond du jeu.
-  anneau: ({ anneau, disque }, actif) => {
-    disque(CX, CY, R, PALETTE.noir);
-    anneau(CX, CY, R, 2.5, PALETTE.creme);
-  },
-
-  // Le cercle sur son socle carré : la cible tactile reste un carré plein,
-  // mais ce qu'on voit est rond.
-  socle: ({ rect, disque }) => {
-    rect(2, 2, ART - 4, ART - 2, PALETTE.noir);
-    disque(CX, CY, R - 1, PALETTE.creme);
-  },
-
-  // Le cercle et son ombre portée, décalée en biais : l'élévation vient de la
-  // lumière, pas de la tranche.
-  ombre: ({ disque }, actif) => {
-    disque(CX + 1, CY + 3, R, PALETTE.noir);
-    disque(CX, CY, R, PALETTE.noir);
-    disque(CX, CY, R - 1, PALETTE.creme);
+  // Un socle deux fois plus haut : la course est plus longue, le bouton plus
+  // haut sur pattes.
+  haut: ({ disque }) => {
+    disque(CX, CY + 5, R, PALETTE.noir);
+    disque(CX, CY + 5, R - 1, PALETTE.ardoise);
   },
 };
 
 // --- les réponses à l'appui -----------------------------------------------
-// Chacune rend le déplacement et l'échelle du bouton, et ce qu'il advient de
-// sa doublure.
+//
+// Le socle ne bouge dans aucune : c'est le sol du bouton. Ce qui change d'une
+// proposition à l'autre, c'est la façon dont le corps descend dessus et,
+// surtout, ce qu'il fait en remontant quand le doigt le lâche.
+//
+// Chaque réponse prend le temps écoulé et l'instant du relâchement, et rend le
+// déplacement du corps — en pixels d'art, vers le bas — plus son étirement.
+
+// Le ressort du jeu : il remonte du fond, dépasse le repos, et se pose. Le
+// dépassement vaut exp(-λπ/ω).
+function ressort(t, amorti, pulsation) {
+  return Math.exp(-amorti * t)
+    * (Math.cos(pulsation * t) + (amorti / pulsation) * Math.sin(pulsation * t));
+}
 
 const APPUIS = {
-  // L'écrasement élastique d'aujourd'hui : la touche garde son volume.
-  ecrase: (t) => {
-    const k = Math.exp(-9 * t) * Math.cos(24 * t);
-    return { x: 1 + 0.3 * k, y: 1 - 0.3 * k, dy: 0 };
+  // Ce qui est retenu : au fond tant que le doigt tient, puis un rebond franc
+  // qui décolle le bouton de son socle avant qu'il s'y repose.
+  rebond: (t, leve) => ({ dy: 3 * (t < leve ? 1 : ressort(t - leve, 4.5, 26)) }),
+
+  // Le même, sans rien au-dessus du repos : il remonte et s'arrête net.
+  sansRebond: (t, leve) => ({
+    dy: 3 * (t < leve ? 1 : 1 - sortieCubique((t - leve) / 0.16)),
+  }),
+
+  // Un rebond plus long, qui oscille deux fois de plus avant de se poser.
+  mou: (t, leve) => ({ dy: 3 * (t < leve ? 1 : ressort(t - leve, 2.4, 20)) }),
+
+  // Un rebond haut : le bouton saute presque une hauteur de socle au-dessus
+  // du repos. Vif, mais il quitte sa place.
+  saut: (t, leve) => ({ dy: 3 * (t < leve ? 1 : ressort(t - leve, 1.8, 30)) }),
+
+  // Le rebond retenu, plus l'étirement : le corps s'allonge en montant et
+  // s'écrase en retombant, comme une balle.
+  etire: (t, leve) => {
+    const u = t < leve ? 1 : ressort(t - leve, 4.5, 26);
+    // La vitesse du corps donne l'étirement : il s'allonge quand il monte.
+    const v = t < leve ? 0 : (ressort(t - leve, 4.5, 26) - ressort(t - leve + 0.016, 4.5, 26));
+    return { dy: 3 * u, x: 1 - v * 0.5, y: 1 + v * 0.5 };
   },
-  // Le bouton descend sur sa doublure, puis remonte : c'est le geste d'une
-  // vraie touche, et il n'a de sens qu'avec une élévation dessous.
-  enfonce: (t) => {
-    const rendu = ressortAmorti(Math.max(0, t - 0.12), 190, 24);
-    const descente = t < 0.12 ? 1 : 1 - borne(rendu);
-    return { x: 1, y: 1, dy: 3 * descente, doublure: 1 - descente };
-  },
-  // L'enfoncement sec, sans ressort : il tombe et remonte tout droit.
-  net: (t) => {
-    const descente = t < 0.1 ? 1 : 1 - sortieCubique((t - 0.1) / 0.18);
-    return { x: 1, y: 1, dy: 3 * descente, doublure: 1 - descente };
-  },
-  // Le bouton rentre en lui-même : il rapetisse, puis rebondit.
-  rentre: (t) => {
-    const k = 1 - 0.18 * Math.exp(-8 * t) * Math.cos(18 * t);
-    return { x: k, y: k, dy: 0 };
+
+  // L'écrasement d'avant les socles, pour mémoire : la touche se déforme au
+  // lieu de descendre.
+  ecrase: (t, leve) => {
+    if (t < leve) return { dy: 0, x: 1.2, y: 0.8 };
+    const k = Math.exp(-9 * (t - leve)) * Math.cos(24 * (t - leve));
+    return { dy: 0, x: 1 + 0.2 * k, y: 1 - 0.2 * k };
   },
 };
 
 // --- rendu d'une vignette -------------------------------------------------
 
-// Le bouton, à sa taille de jeu : 24 pixels d'art affichés sur 48 unités.
-function bouton(ctx, fond, icone, x, y, actif, mouvement) {
-  const image = plaque(fond + (actif ? '+' : '-'), (peintre) => FONDS[fond](peintre, actif));
+// Le corps du bouton : le disque clair et son contour. Il est le même partout
+// — c'est le socle qui change d'une proposition à l'autre, et la façon dont le
+// corps voyage dessus.
+const corps = plaque('corps', ({ disque }) => {
+  disque(CX, CY, R, PALETTE.noir);
+  disque(CX, CY, R - 1, PALETTE.creme);
+});
+
+// L'instant où le doigt lâche la touche, dans la boucle de la vignette.
+const LEVE = 0.4;
+
+function bouton(ctx, fond, icone, x, y, mouvement) {
+  const image = plaque(fond, (peintre) => FONDS[fond](peintre));
   const l = ART * PIXEL;
   const h = (ART + SOUS) * PIXEL;
-  const m = mouvement || { x: 1, y: 1, dy: 0 };
-
+  const m = mouvement || { dy: 0 };
   const marge = (ART - ICONE) / 2 * PIXEL;
+
+  // Le socle, à sa place, toujours. Il ne bouge dans aucune proposition.
+  ctx.drawImage(image, x, y, l, h);
 
   ctx.save();
   ctx.translate(x + l / 2, y + l / 2 + (m.dy || 0) * PIXEL);
-  ctx.scale(m.x, m.y);
+  ctx.scale(m.x || 1, m.y || 1);
   ctx.translate(-l / 2, -l / 2);
-  ctx.drawImage(image, 0, 0, l, h);
+  ctx.drawImage(corps, 0, 0, l, l);
   ctx.drawImage(INTERFACE[icone], marge, marge, ICONE * PIXEL, ICONE * PIXEL);
   ctx.restore();
 }
@@ -184,63 +186,64 @@ function bouton(ctx, fond, icone, x, y, actif, mouvement) {
 function vignette(fond, appui) {
   return (ctx, t, largeur, hauteur) => {
     const taille = ART * PIXEL;
-    const y = Math.round(hauteur / 2 - taille / 2) - 4;
+    const y = Math.round(hauteur / 2 - taille / 2) - 6;
     const x0 = Math.round((largeur - (taille * 2 + 16)) / 2);
-    // À gauche, la touche qu'on appuie ; à droite, l'outil en cours, resté
-    // enfoncé sur sa doublure — c'est ainsi que le jeu dit la sélection.
-    bouton(ctx, fond, 'outilConstruction', x0, y, true, APPUIS[appui](Math.max(0, t - 0.35)));
-    bouton(ctx, fond, 'outilDestruction', x0 + taille + 16, y, true, { x: 1, y: 1, dy: 3 });
+    // À gauche, la touche qu'on appuie : le doigt la tient un moment, puis la
+    // lâche. À droite, l'outil en cours, resté au fond — c'est ainsi que le
+    // jeu dit la sélection.
+    bouton(ctx, fond, 'outilConstruction', x0, y, APPUIS[appui](t, LEVE));
+    bouton(ctx, fond, 'outilDestruction', x0 + taille + 16, y, { dy: 3 });
   };
 }
 
 export const PLAQUES = [
   {
-    titre: 'plaque carrée — aujourd’hui',
-    note: 'la touche est un carré plein qui s’écrase à l’appui',
-    duree: 1.5,
-    dessiner: vignette('carre', 'ecrase'),
+    titre: 'socle plein, rebond — retenu',
+    note: 'au fond tant que le doigt tient, puis un rebond qui décolle le corps de son socle',
+    duree: 1.6,
+    dessiner: vignette('double', 'rebond'),
   },
   {
-    titre: 'cercle et doublure — retenu',
-    note: 'un second cercle en trait seul, dessous : le bouton descend dessus puis remonte',
-    duree: 1.5,
-    dessiner: vignette('double', 'enfonce'),
+    titre: 'sans rebond',
+    note: 'il remonte et s’arrête net : correct, mais rien ne récompense le doigt',
+    duree: 1.6,
+    dessiner: vignette('double', 'sansRebond'),
   },
   {
-    titre: 'cercle nu',
-    note: 'la forme suffit à dire la touche ; l’appui l’écrase',
-    duree: 1.5,
+    titre: 'rebond mou',
+    note: 'deux oscillations de plus : la touche a l’air molle',
+    duree: 1.6,
+    dessiner: vignette('double', 'mou'),
+  },
+  {
+    titre: 'rebond haut',
+    note: 'il saute presque une hauteur de socle : vif, mais il quitte sa place',
+    duree: 1.6,
+    dessiner: vignette('double', 'saut'),
+  },
+  {
+    titre: 'rebond et étirement',
+    note: 'le corps s’allonge en montant, s’écrase en retombant — une balle',
+    duree: 1.6,
+    dessiner: vignette('double', 'etire'),
+  },
+  {
+    titre: 'socle en trait seul',
+    note: 'le socle d’hier : plus léger, mais le bouton flotte au lieu de reposer',
+    duree: 1.6,
+    dessiner: vignette('trait', 'rebond'),
+  },
+  {
+    titre: 'socle deux fois plus haut',
+    note: 'course plus longue, bouton sur pattes : l’appui se voit de loin',
+    duree: 1.6,
+    dessiner: vignette('haut', 'rebond'),
+  },
+  {
+    titre: 'écrasement — avant les socles',
+    note: 'la touche se déforme au lieu de descendre : pour mémoire',
+    duree: 1.6,
     dessiner: vignette('cercle', 'ecrase'),
-  },
-  {
-    titre: 'cercle sur sa tranche',
-    note: 'la doublure est pleine : le bouton a une épaisseur, pas un trait',
-    duree: 1.5,
-    dessiner: vignette('tranche', 'enfonce'),
-  },
-  {
-    titre: 'jeton biseauté',
-    note: 'le relief est dans le disque : lèvre claire en haut, ombre en bas',
-    duree: 1.5,
-    dessiner: vignette('jeton', 'rentre'),
-  },
-  {
-    titre: 'anneau',
-    note: 'le bouton n’est qu’un contour — léger, mais il perd sa plaque de lecture',
-    duree: 1.5,
-    dessiner: vignette('anneau', 'rentre'),
-  },
-  {
-    titre: 'cercle sur socle',
-    note: 'la cible tactile reste carrée, le signe est rond',
-    duree: 1.5,
-    dessiner: vignette('socle', 'net'),
-  },
-  {
-    titre: 'ombre portée',
-    note: 'l’élévation vient de la lumière, en biais : le bouton flotte',
-    duree: 1.5,
-    dessiner: vignette('ombre', 'net'),
   },
 ];
 
@@ -253,42 +256,42 @@ const OUTILS = ['outilMain', 'outilConstruction', 'outilDestruction'];
 
 function barre(fond, appui) {
   return (ctx, t, largeur, hauteur) => {
-    const y = Math.round(hauteur / 2 - ART * PIXEL / 2) - 4;
-    const pas = ART * PIXEL + 8;
+    const taille = ART * PIXEL;
+    const y = Math.round(hauteur / 2 - taille / 2) - 6;
+    const pas = taille + 8;
     const x0 = Math.round((largeur - (pas * OUTILS.length - 8)) / 2);
     for (let i = 0; i < OUTILS.length; i++) {
       // Celle du milieu est l'outil en cours : elle reste au fond. C'est sur
-      // elle que l'appui se joue.
-      const enCours = i === 1;
-      const m = enCours ? APPUIS[appui](Math.max(0, t - 0.35)) : null;
-      bouton(ctx, fond, OUTILS[i], x0 + i * pas, y, true, enCours && !m ? { x: 1, y: 1, dy: 3 } : m);
+      // la première que l'appui se joue.
+      const m = i === 0 ? APPUIS[appui](t, LEVE) : { dy: i === 1 ? 3 : 0 };
+      bouton(ctx, fond, OUTILS[i], x0 + i * pas, y, m);
     }
   };
 }
 
 export const BARRES = [
   {
-    titre: 'plaque carrée — aujourd’hui',
-    note: 'trois carrés jointifs : la barre se lit comme un bandeau, pas comme trois touches',
-    duree: 1.5,
-    dessiner: barre('carre', 'ecrase'),
+    titre: 'socle plein, rebond — retenu',
+    note: 'la première rebondit, celle du milieu est l’outil en cours, la dernière attend',
+    duree: 1.6,
+    dessiner: barre('double', 'rebond'),
   },
   {
-    titre: 'cercle et doublure — retenu',
-    note: 'trois jetons posés, l’un enfoncé : la barre se compte à l’œil',
-    duree: 1.5,
-    dessiner: barre('double', 'enfonce'),
+    titre: 'socle en trait seul',
+    note: 'la barre s’allège, mais les touches semblent posées sur rien',
+    duree: 1.6,
+    dessiner: barre('trait', 'rebond'),
   },
   {
-    titre: 'cercle sur sa tranche',
-    note: 'plus épais, plus lourd : la barre gagne en présence, et en encombrement',
-    duree: 1.5,
-    dessiner: barre('tranche', 'enfonce'),
+    titre: 'socle deux fois plus haut',
+    note: 'trois jetons sur pattes : la barre gagne en présence, et en encombrement',
+    duree: 1.6,
+    dessiner: barre('haut', 'rebond'),
   },
   {
-    titre: 'ombre portée',
-    note: 'la lumière vient d’en haut à gauche pour toute la barre',
-    duree: 1.5,
-    dessiner: barre('ombre', 'net'),
+    titre: 'écrasement — avant les socles',
+    note: 'pour comparer : rien ne descend, tout se déforme',
+    duree: 1.6,
+    dessiner: barre('cercle', 'ecrase'),
   },
 ];

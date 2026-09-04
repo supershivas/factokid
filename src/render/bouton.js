@@ -1,37 +1,55 @@
-// L'appui d'une touche : elle s'enfonce sur sa doublure, puis remonte. Pure
-// présentation — la simulation n'en sait rien, et le rendu ne fait que lire.
+// L'appui d'une touche : elle descend sur son socle, y reste tant que le doigt
+// la tient, puis rebondit quand il la lâche. Pure présentation — la simulation
+// n'en sait rien, et le rendu ne fait que lire.
 //
-// C'était un écrasement élastique, du temps des plaques carrées : une plaque
-// sans dessous ne peut que se déformer. Une touche ronde posée sur sa doublure
-// a une course, et c'est cette course qu'on joue — le bouton descend d'un
-// coup, comme sous le doigt, puis remonte sur un ressort qui dépasse un peu.
+// Le socle, lui, ne bouge jamais : c'est le sol du bouton. Seul le corps
+// voyage, et c'est ce qui rend l'enfoncement lisible (voir plaque.js).
 //
 // Les touches se désignent par une clé quelconque : « outil:1 », « menu:2 »,
 // « option:0 ». Un seul système d'appui pour tous les boutons du jeu.
 
-const DUREE = 0.5;      // secondes, le temps que dure la réponse
-const DESCENTE = 0.06;  // secondes au fond, avant de remonter
+// Le ressort du relâchement : il remonte, dépasse le repos, et se pose. Les
+// deux réglages sont l'amortissement et la pulsation — le dépassement vaut
+// exp(-λπ/ω), soit un peu moins des deux tiers de la course ici.
+const AMORTI = 4.5;
+const PULSATION = 26;
 
-const appuis = new Map();
+const DUREE = 1;        // secondes : au-delà, le ressort est éteint
+const MAINTIEN_MAX = 2; // un doigt perdu ne laisse pas une touche au fond
 
-export function marquerAppui(cle) {
-  appuis.set(cle, 0);
+const touches = new Map();
+
+// Le doigt se pose : la touche descend d'un coup et y reste.
+export function presser(cle) {
+  touches.set(cle, { phase: 'bas', age: 0 });
+}
+
+// Le doigt se lève : le ressort part du fond.
+export function relacher(cle) {
+  const t = touches.get(cle);
+  if (!t || t.phase !== 'bas') return;
+  t.phase = 'rebond';
+  t.age = 0;
 }
 
 export function majAppuis(dt) {
-  for (const [cle, age] of appuis) {
-    const suivant = age + dt;
-    if (suivant >= DUREE) appuis.delete(cle);
-    else appuis.set(cle, suivant);
+  for (const [cle, t] of touches) {
+    t.age += dt;
+    // Un appui qu'on n'a jamais vu se lever — capture de pointeur volée,
+    // doigt sorti de l'écran — remonte quand même : rien ne doit rester
+    // enfoncé pour toujours.
+    if (t.phase === 'bas' && t.age > MAINTIEN_MAX) { t.phase = 'rebond'; t.age = 0; }
+    if (t.phase === 'rebond' && t.age >= DUREE) touches.delete(cle);
   }
 }
 
-// De 1 (au fond, posée sur sa doublure) à 0 (au repos). La remontée passe
-// brièvement sous zéro : la touche dépasse d'un pixel avant de se poser.
+// De 1 (au fond, posée sur son socle) à 0 (au repos). Le rebond passe dans les
+// négatifs : la touche décolle de son socle avant de s'y reposer.
 export function enfoncement(cle) {
-  const age = appuis.get(cle);
-  if (age === undefined) return 0;
-  if (age < DESCENTE) return 1;
-  const t = age - DESCENTE;
-  return Math.exp(-13 * t) * Math.cos(19 * t);
+  const t = touches.get(cle);
+  if (!t) return 0;
+  if (t.phase === 'bas') return 1;
+  const a = t.age;
+  return Math.exp(-AMORTI * a)
+    * (Math.cos(PULSATION * a) + (AMORTI / PULSATION) * Math.sin(PULSATION * a));
 }

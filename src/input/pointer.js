@@ -51,13 +51,15 @@ export function brancherPointeur(canvas, vue, jeu) {
     boutonsMenu: [],
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
-    appuis: [],                  // touches qui viennent d'être appuyées, par clé
+    appuis: [],                  // touches sur lesquelles le doigt vient de se poser
+    relaches: [],                // touches que le doigt vient de lâcher
     // L'écran des essais de la bêta : tant qu'il est là, rien du jeu ne se
     // touche, et il n'y a d'ailleurs pas encore de monde.
     choix: SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone })),
   };
   const trace = etat.trace;
   let pointeur = null;
+  let toucheAppuyee = null;      // la touche que le doigt tient en ce moment
   let actionsBulles = [];
   let actionsBoutons = [];
   let departCellule = null;
@@ -68,6 +70,19 @@ export function brancherPointeur(canvas, vue, jeu) {
   let actionsMenu = [];
   let animMenu = null;
   let animPanneau = null;
+
+  // Le doigt se pose sur une touche : on la retient, pour la lâcher au moment
+  // où il se lève. C'est ce relâchement qui fait rebondir le bouton.
+  function presser(cle) {
+    toucheAppuyee = cle;
+    etat.appuis.push(cle);
+  }
+
+  function lacherTouche() {
+    if (toucheAppuyee === null) return;
+    etat.relaches.push(toucheAppuyee);
+    toucheAppuyee = null;
+  }
 
   const monde = () => jeu.monde;
   const scene = () => jeu.monde.scene;
@@ -216,7 +231,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (!etat.panneau) return false;
     for (let j = 0; j < etat.panneau.options.length; j++) {
       if (!dansRect(rectOption(j), p.x, p.y)) continue;
-      etat.appuis.push('option:' + j);
+      presser('option:' + j);
       etat.panneau.options[j].action();
       return true;
     }
@@ -278,7 +293,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (!etat.choix) return false;
     for (let j = 0; j < etat.choix.length; j++) {
       if (!dansRect(rectChoix(j), p.x, p.y)) continue;
-      etat.appuis.push('essai:' + j);
+      presser('essai:' + j);
       jeu.choisir(etat.choix[j].id);
       etat.choix = null;
       majBoutons();
@@ -294,7 +309,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (etat.menuPause === 'recettes') { etat.menuPause = 'menu'; return true; }
     for (let j = 0; j < etat.boutonsMenu.length; j++) {
       if (!dansRect(rectMenu(j), p.x, p.y)) continue;
-      etat.appuis.push('menu:' + j);
+      presser('menu:' + j);
       actionsMenu[j]();
       return true;
     }
@@ -302,7 +317,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   }
 
   function interfaceTouchee(p) {
-    if (dansRect(BOUTON_PAUSE, p.x, p.y)) { etat.appuis.push('pause'); ouvrirMenuPause(); return true; }
+    if (dansRect(BOUTON_PAUSE, p.x, p.y)) { presser('pause'); ouvrirMenuPause(); return true; }
     // Un doigt sur la mini-carte y emmène la fenêtre : un geste, pas deux.
     if (dansRect(MINICARTE, p.x, p.y)) {
       const c = celluleMiniCarte(p);
@@ -316,14 +331,14 @@ export function brancherPointeur(canvas, vue, jeu) {
       for (let j = 0; j < etat.bulles.length; j++) {
         const r = rectRangee(etat.ancre, j, etat.menu);
         if (r.p <= 0 || !dansRect(r, p.x, p.y)) continue;
-        etat.appuis.push('rangee:' + j);
+        presser('rangee:' + j);
         actionsBulles[j]();
         return true;
       }
     }
     for (let i = 0; i < etat.boutons.length; i++) {
       if (!dansRect(rectBouton(i), p.x, p.y)) continue;
-      etat.appuis.push('outil:' + i);
+      presser('outil:' + i);
       actionsBoutons[i]();
       return true;
     }
@@ -604,6 +619,9 @@ export function brancherPointeur(canvas, vue, jeu) {
   // Un convoyeur lâché en cours de route reste construit : on ne recommence
   // jamais du début.
   function fin(e) {
+    // Le doigt se lève : la touche qu'il tenait rebondit, même si le geste
+    // n'a jamais pris le pointeur — un appui sur l'interface n'en capture pas.
+    lacherTouche();
     if (e.pointerId !== pointeur) return;
     e.preventDefault();
     clearTimeout(minuterie);
@@ -667,7 +685,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   canvas.addEventListener('pointermove', deplacement);
   canvas.addEventListener('pointerup', fin);
   canvas.addEventListener('pointercancel', fin);
-  canvas.addEventListener('lostpointercapture', relacher);
+  canvas.addEventListener('lostpointercapture', () => { lacherTouche(); relacher(); });
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   return etat;

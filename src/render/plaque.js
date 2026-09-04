@@ -1,4 +1,4 @@
-// Les touches du jeu : leur forme, leur épaisseur, et la façon dont elles
+// Les touches du jeu : leur forme, leur socle, et la façon dont elles
 // s'enfoncent. Ne modifie jamais l'état.
 //
 // Une plaque crème posée sur un fond sombre se lit comme une étiquette autant
@@ -6,9 +6,9 @@
 //
 //   la forme — rien n'est rond dans une usine faite de cases, donc un rond
 //   n'est jamais qu'un bouton ;
-//   l'épaisseur — un second cercle, en trait seul, décalé sous le premier. Le
-//   bouton a un dessous, donc il peut descendre dessus. C'est ce que fait
-//   l'appui (voir bouton.js).
+//   le socle — un second cercle, plein, décalé sous le premier. Le socle ne
+//   bouge jamais : c'est le sol du bouton. Seul le corps descend dessus, et
+//   rebondit au-dessus quand le doigt le lâche (voir bouton.js).
 //
 // Tout est tramé au pixel d'art : jamais d'arc, jamais d'anti-crénelage. Les
 // sprites sont peints une fois et gardés — un bouton ne se redessine pas
@@ -16,9 +16,9 @@
 
 import { PALETTE, PIXEL } from '../design.js';
 
-// Décalage de la doublure, en pixels d'art. C'est aussi la course de l'appui :
-// le bouton s'enfonce exactement jusqu'à elle.
-export const DOUBLURE = 3;
+// Hauteur du socle, en pixels d'art. C'est aussi la course de l'appui : le
+// corps descend exactement jusqu'au sol.
+export const SOCLE = 3;
 
 // La part de la touche que l'icône occupe : le rond fait 28 pixels d'art,
 // l'icône 24. Le rapport tombe juste aux deux tailles employées — 56 unités
@@ -69,16 +69,23 @@ function garder(cle, fabriquer) {
 // Deux teintes de touche, et pas une de plus : la claire porte des signes
 // sombres — la main, le plus, la croix ; la sombre porte des images claires —
 // les machines, les matières. Chacune garde le fond sur lequel ses signes se
-// lisent, et sa doublure prend l'autre valeur pour rester visible.
-export const CLAIRE = { corps: PALETTE.creme, doublure: PALETTE.ardoise };
-export const SOMBRE = { corps: PALETTE.ardoise, doublure: PALETTE.creme };
+// lisent, et son socle prend l'autre valeur pour rester visible.
+export const CLAIRE = { corps: PALETTE.creme, socle: PALETTE.ardoise };
+export const SOMBRE = { corps: PALETTE.ardoise, socle: PALETTE.creme };
 
-// La doublure et le corps sont deux sprites, et c'est tout le mécanisme : la
-// doublure reste au sol, le corps descend dessus. S'ils ne faisaient qu'une
-// image, elle descendrait avec lui et le bouton n'aurait jamais l'air enfoncé.
-function doublureRonde(art, teinte) {
-  return garder('doublure' + art + teinte.doublure, () => toile(art, art + DOUBLURE, ({ anneau }) => {
-    anneau(art / 2, art / 2 + DOUBLURE, art / 2 - 0.5, 1.2, teinte.doublure);
+// Le socle et le corps sont deux sprites, et c'est tout le mécanisme : le
+// socle reste posé, le corps voyage dessus. S'ils ne faisaient qu'une image,
+// le socle descendrait avec lui et rien n'aurait l'air enfoncé.
+//
+// Le socle est un disque plein, cerné de noir comme le corps : c'est une
+// pièce du bouton, pas son ombre. On n'en voit que le croissant du bas quand
+// le bouton est au repos, et tout entier quand il décolle au rebond.
+function socleRond(art, teinte) {
+  return garder('socle' + art + teinte.socle, () => toile(art, art + SOCLE, ({ disque }) => {
+    const c = art / 2;
+    const r = art / 2 - 0.5;
+    disque(c, c + SOCLE, r, PALETTE.noir);
+    disque(c, c + SOCLE, r - 1, teinte.socle);
   }));
 }
 
@@ -100,11 +107,11 @@ function corpsRond(art, teinte) {
 // celui qu'ont toutes les touches du monde.
 export function dessinerTouche(ctx, r, image, { teinte = CLAIRE, enfonce = 0, alpha = 1 } = {}) {
   const art = Math.round(r.l / PIXEL);
-  const dy = Math.round(enfonce * DOUBLURE) * PIXEL;
+  const dy = Math.round(enfonce * SOCLE) * PIXEL;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.drawImage(doublureRonde(art, teinte), r.x, r.y, r.l, (art + DOUBLURE) * PIXEL);
+  ctx.drawImage(socleRond(art, teinte), r.x, r.y, r.l, (art + SOCLE) * PIXEL);
   ctx.drawImage(corpsRond(art, teinte), r.x, r.y + dy, r.l, r.l);
   if (image) {
     // L'icône est centrée dans le rond : c'est le rond qui s'est élargi pour
@@ -129,10 +136,10 @@ function corpsPilule(g, l, h, dy, couleur, retrait) {
   g.rect(r, dy + retrait, l - h, h - retrait * 2, couleur);
 }
 
-function doublurePilule(l, h, teinte) {
-  return garder('doublurePilule' + l + 'x' + h + teinte.doublure, () => toile(l, h + DOUBLURE, (g) => {
-    corpsPilule(g, l, h, DOUBLURE, teinte.doublure, 0);
-    corpsPilule(g, l, h, DOUBLURE, PALETTE.noir, 1.2);
+function soclePilule(l, h, teinte) {
+  return garder('soclePilule' + l + 'x' + h + teinte.socle, () => toile(l, h + SOCLE, (g) => {
+    corpsPilule(g, l, h, SOCLE, PALETTE.noir, 0);
+    corpsPilule(g, l, h, SOCLE, teinte.socle, 1);
   }));
 }
 
@@ -148,11 +155,11 @@ function spritePilule(l, h, teinte) {
 export function dessinerPilule(ctx, r, { teinte = CLAIRE, enfonce = 0, alpha = 1 } = {}) {
   const l = Math.round(r.l / PIXEL);
   const h = Math.round(r.h / PIXEL);
-  const dy = Math.round(enfonce * DOUBLURE) * PIXEL;
+  const dy = Math.round(enfonce * SOCLE) * PIXEL;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.drawImage(doublurePilule(l, h, teinte), r.x, r.y, r.l, (h + DOUBLURE) * PIXEL);
+  ctx.drawImage(soclePilule(l, h, teinte), r.x, r.y, r.l, (h + SOCLE) * PIXEL);
   ctx.drawImage(spritePilule(l, h, teinte), r.x, r.y + dy, r.l, r.h);
   ctx.restore();
   return dy;

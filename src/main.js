@@ -8,7 +8,7 @@ import {
   majParticules, dessinerParticules, fumee, pose, destruction, vapeur,
 } from './render/particules.js';
 import { marquerPose, majPoses } from './render/pose.js';
-import { marquerAppui, majAppuis } from './render/bouton.js';
+import { presser, relacher, majAppuis } from './render/bouton.js';
 import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
 import { dessinerChoix } from './render/choix.js';
@@ -68,8 +68,10 @@ function effetsDeConstruction() {
     destruction(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
   }
   interfaceJeu.debris.length = 0;
-  for (const cle of interfaceJeu.appuis) marquerAppui(cle);
+  for (const cle of interfaceJeu.appuis) presser(cle);
   interfaceJeu.appuis.length = 0;
+  for (const cle of interfaceJeu.relaches) relacher(cle);
+  interfaceJeu.relaches.length = 0;
 }
 
 // Une machine qui vient de sortir sa pièce souffle un coup de vapeur. Le
