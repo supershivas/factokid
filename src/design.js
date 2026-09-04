@@ -118,9 +118,30 @@ export const TUTORIEL_BANDEAU = { x: 12, y: GRILLE_Y + 8, l: 336, h: 40 };
 // moindre à-coup.
 export const ALERTE_DELAI = 1.2; // secondes
 
-// Panneau d'information d'un élément construit : son nom et ses options.
-export const PANNEAU = { x: 12, y: 408, l: 336, h: 148 };
-export const PANNEAU_TEXTE = { x: 12, y: 70 }; // décalages dans le panneau
+// Panneau d'information d'un élément construit : son nom, ce qu'il fait de
+// quoi, et ses réglages. Il a grandi le jour où la recette y est entrée : un
+// bâtiment doit dire ce qu'il lui faut, et chaque matière s'y touche.
+export const PANNEAU = { x: 12, y: 356, l: 336, h: 200 };
+export const PANNEAU_TEXTE = { x: 12, y: 68 }; // décalages dans le panneau
+
+// La chaîne du panneau : les matières qui entrent, la flèche, ce qui sort.
+// Chaque jeton se touche et mène à la matière.
+export const JETON = 40;
+export const JETON_ECART = 6;
+export const SIGNE = 18;         // le « + » et la flèche, entre deux jetons
+export const CHAINE_Y = 86;      // décalage dans le panneau
+
+// La géométrie de la chaîne, partagée par le rendu et l'entrée : une seule
+// source de vérité, sinon le jeton dessiné et le jeton touché divergent.
+export function rectsChaine(chaine) {
+  let x = PANNEAU.x + 14;
+  return chaine.map((element) => {
+    const l = element.signe ? SIGNE : JETON;
+    const r = { x, y: PANNEAU.y + CHAINE_Y, l, h: JETON };
+    x += l + JETON_ECART;
+    return r;
+  });
+}
 // Les options du panneau sont des touches comme les autres : même rond, même
 // épaisseur. Cinq tiennent dans la largeur du panneau — c'est ce qu'il faut au
 // trieur : quatre matières et sa pause.

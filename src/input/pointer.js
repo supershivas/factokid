@@ -7,12 +7,15 @@
 
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
-  BOUTON_PAUSE, rectBouton, rectRangee, rectOption, rectMenu, rectChoix, dansRect,
+  BOUTON_PAUSE, rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
+  rectsChaine, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
+import { RECETTES } from '../data/recipes.js';
+import { BIOMES, MATIERE_DE } from '../data/biomes.js';
 import { ressort } from '../anim.js';
 import { celluleDepuisPoint, adjacentes, coinCellule } from '../sim/grid.js';
 import { SCENARIOS } from '../data/scenarios.js';
@@ -165,12 +168,88 @@ export function brancherPointeur(canvas, vue, jeu) {
     animPanneau = viser('panneauAnim', 1, animPanneau);
   }
 
+  // --- ce qu'un bâtiment dit de lui-même --------------------------------
+  //
+  // Un bâtiment doit montrer ce qu'il lui faut : sa recette est posée dans son
+  // panneau, matière par matière, et chaque matière s'y touche. De là on passe
+  // à la matière, puis aux machines qui l'emploient — on remonte la chaîne
+  // sans jamais avoir à lire.
+
+  // La recette, en jetons : les entrées, la flèche, ce qui sort.
+  function chaineRecette(recette) {
+    const jetons = [];
+    const entrees = Object.keys(recette.entrees);
+    for (let i = 0; i < entrees.length; i++) {
+      if (i > 0) jetons.push({ signe: 'plus' });
+      jetons.push({ item: entrees[i], action: () => ouvrirMatiere(entrees[i]) });
+    }
+    jetons.push({ signe: 'fleche' });
+    jetons.push({ item: recette.sortie, action: () => ouvrirMatiere(recette.sortie) });
+    return jetons;
+  }
+
+  // Ce qu'un type de machine fait circuler : sa recette, la matière qu'il
+  // récolte, ou celle qu'il attend.
+  function chaineDe(def) {
+    if (def.recette) return chaineRecette(RECETTES[def.recette]);
+    if (def.entree) return [{ item: def.entree, action: () => ouvrirMatiere(def.entree) }];
+    return [];
+  }
+
+  // Le biome où une matière brute abonde : c'est là qu'il faut aller la
+  // chercher, et la couleur du sol le dit de loin.
+  function biomeDe(item) {
+    const trouve = Object.keys(MATIERE_DE).find((biome) => MATIERE_DE[biome] === item);
+    return trouve ? BIOMES[trouve] : null;
+  }
+
+  // Le panneau d'une matière : d'où elle vient, et ce qu'on en fait. Les
+  // machines qui l'emploient sont ses boutons — un appui, et on y est.
+  function ouvrirMatiere(item) {
+    const recette = Object.values(RECETTES).find((r) => r.sortie === item);
+    const fabricant = recette
+      ? Object.values(MACHINES).find((m) => m.recette === recette.id) : null;
+    const biome = biomeDe(item);
+    const emplois = Object.values(MACHINES).filter(
+      (m) => (m.recette && RECETTES[m.recette].entrees[item]) || m.entree === item,
+    );
+    etat.panneau = {
+      nom: ITEMS[item].nom,
+      description: fabricant ? 'sort de la ' + fabricant.nom
+        : biome ? 'se récolte dans ' + biome.nom
+          : 'se récolte sur ses gisements',
+      icone: item,
+      chaine: recette ? chaineRecette(recette) : [],
+      options: emplois.map((def) => ({
+        icone: def.id,
+        action: () => ouvrirTypeMachine(def),
+      })),
+    };
+    surgirPanneau();
+  }
+
+  // Le panneau d'un bâtiment qu'on ne touche pas : celui dont on vient de
+  // suivre la trace depuis une matière.
+  function ouvrirTypeMachine(def) {
+    etat.panneau = {
+      nom: def.nom,
+      description: def.description,
+      icone: def.id,
+      chaine: chaineDe(def),
+      options: [],
+    };
+    surgirPanneau();
+  }
+
   function ouvrirPanneau(machine, convoyeur) {
     if (machine) {
       etat.panneau = {
         nom: machine.def.nom,
         description: machine.def.description,
         icone: machine.type,
+        chaine: machine.def.mine
+          ? [{ item: machine.item, action: () => ouvrirMatiere(machine.item) }]
+          : chaineDe(machine.def),
         options: optionsMachine(machine),
       };
     } else if (convoyeur) {
@@ -184,6 +263,9 @@ export function brancherPointeur(canvas, vue, jeu) {
           : role === 'reste' ? 'emporte tout ce que le trieur ne range pas'
             : MACHINES.convoyeur.description,
         icone: 'bulleConvoyeur',
+        chaine: role === 'triee' && trieur
+          ? [{ item: trieur.matiereTriee, action: () => ouvrirMatiere(trieur.matiereTriee) }]
+          : [],
         options: trieur ? optionsMachine(trieur) : [],
       };
     } else return;
@@ -194,11 +276,18 @@ export function brancherPointeur(canvas, vue, jeu) {
   // L'image du panneau est la matière elle-même — c'est d'elle qu'on parle ;
   // l'extracteur n'est que le bouton qui la récolte.
   function proposerExtracteur(c, g) {
+    // Ce qu'on en fera est déjà là : les machines qui emploient la matière,
+    // en dessous de l'extracteur qu'on propose de bâtir.
+    const emplois = Object.values(MACHINES).filter(
+      (m) => (m.recette && RECETTES[m.recette].entrees[g.item]) || m.entree === g.item,
+    );
     etat.panneau = {
       nom: ITEMS[g.item].nom,
       description: 'pose un extracteur pour le récolter',
       icone: g.item,
-      options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }],
+      chaine: [],
+      options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }]
+        .concat(emplois.map((def) => ({ icone: def.id, action: () => ouvrirTypeMachine(def) }))),
     };
     surgirPanneau();
   }
@@ -229,6 +318,15 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   function panneauTouche(p) {
     if (!etat.panneau) return false;
+    // Les matières de la recette se touchent : chacune mène à ce qu'elle est.
+    const chaine = etat.panneau.chaine || [];
+    const rects = rectsChaine(chaine);
+    for (let j = 0; j < chaine.length; j++) {
+      if (!chaine[j].action || !dansRect(rects[j], p.x, p.y)) continue;
+      presser('jeton:' + j);
+      chaine[j].action();
+      return true;
+    }
     for (let j = 0; j < etat.panneau.options.length; j++) {
       if (!dansRect(rectOption(j), p.x, p.y)) continue;
       presser('option:' + j);

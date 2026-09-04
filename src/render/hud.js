@@ -3,8 +3,8 @@
 
 import {
   PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE,
-  TEXTE_GRAND, TEXTE_PETIT, BULLE, PANNEAU, PANNEAU_TEXTE, BOUTON_PAUSE,
-  rectBouton, rectRangee, rectOption,
+  TEXTE_GRAND, TEXTE_PETIT, BULLE, PANNEAU, PANNEAU_TEXTE, BOUTON_PAUSE, JETON,
+  rectBouton, rectRangee, rectOption, rectsChaine,
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
@@ -136,9 +136,11 @@ function dessinerPanneau(ctx, interfaceJeu) {
     );
   }
 
+  dessinerChaine(ctx, p.chaine || []);
+
   for (let j = 0; j < p.options.length; j++) {
     const option = p.options[j];
-    const sprite = option.item ? spriteItem(option.item) : INTERFACE[option.icone];
+    const sprite = option.item ? spriteItem(option.item) : spriteNomme(option.icone);
     // Ce qui est choisi est la touche allumée ; le reste attend en ardoise.
     // Une option qui ne se choisit pas — la pause — est toujours allumée.
     dessinerTouche(ctx, rectOption(j), sprite, {
@@ -147,4 +149,34 @@ function dessinerPanneau(ctx, interfaceJeu) {
     });
   }
   ctx.restore();
+}
+
+// Ce que le bâtiment fait, et de quoi : les matières qui entrent, la flèche,
+// ce qui sort. Chaque matière est une touche — un appui, et le panneau parle
+// d'elle. C'est ainsi qu'un bâtiment dit ce qu'il lui faut sans un mot.
+function dessinerChaine(ctx, chaine) {
+  const rects = rectsChaine(chaine);
+  for (let j = 0; j < chaine.length; j++) {
+    const element = chaine[j];
+    const r = rects[j];
+    if (element.signe === 'plus') { plus(ctx, r.x, r.y + JETON / 2); continue; }
+    if (element.signe === 'fleche') { fleche(ctx, r.x, r.y + JETON / 2); continue; }
+    dessinerTouche(ctx, r, spriteItem(element.item), {
+      teinte: SOMBRE,
+      enfonce: enfoncement('jeton:' + j),
+    });
+  }
+}
+
+// Les deux signes de la chaîne, tracés au pixel : un plus, une flèche.
+function plus(ctx, x, milieu) {
+  ctx.fillStyle = PALETTE.ardoise;
+  ctx.fillRect(x + 6, milieu - 8, 4, 16);
+  ctx.fillRect(x, milieu - 2, 16, 4);
+}
+
+function fleche(ctx, x, milieu) {
+  ctx.fillStyle = PALETTE.creme;
+  ctx.fillRect(x, milieu - 2, 12, 4);
+  for (let i = 0; i < 4; i++) ctx.fillRect(x + 8 + i, milieu - 6 + i, 2, 12 - 2 * i);
 }

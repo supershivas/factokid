@@ -39,10 +39,11 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   qui produit à partir de rien : chaque matière brute a ses gisements, posés
   sur la grande grille. Un extracteur posé dessus le récolte ; un gisement
   repousse après un délai.
-- **L'usine fabrique des bonbons.** La chaîne tient en trois recettes : le
-  sucre fond en caramel ; caramel, fraise et menthe font la pastille ; la
-  pastille et le papier font le bonbon. Les quatre matières brutes sortent de
-  gisements posés sur la grande carte.
+- **L'usine fabrique des bonbons.** La chaîne tient en quatre recettes : le
+  bois se débite en papier ; le sucre fond en caramel ; caramel, fraise et
+  menthe font la pastille ; la pastille et le papier font le bonbon. Les
+  quatre matières brutes — sucre, bois, fraise, menthe — sortent de gisements
+  posés sur la grande carte, et les gisements de bois sont des arbres.
 - **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
   confiserie et plieuse sont des éléments constructibles comme le convoyeur :
   on les pose sur une cellule libre, et l'outil destruction les retire. La
@@ -51,6 +52,11 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   branches : la matière que le joueur a choisie, et tout le reste. Le premier
   convoyeur tracé prend la matière choisie, le second ramasse le reste. La
   matière se change à tout moment depuis le panneau du trieur.
+- **Un bâtiment dit ce qu'il lui faut.** Son panneau porte sa recette en
+  jetons : ce qui entre, la flèche, ce qui sort. Chaque matière s'y touche et
+  ouvre son propre panneau — d'où elle vient, et les machines qui l'emploient,
+  qui sont à leur tour des touches. On remonte toute la chaîne sans lire un
+  mot.
 - **Un extracteur garde sa récolte** dans son propre stock : il faut tracer un
   convoyeur de là jusqu'à ce qu'on veut nourrir.
 - **Les machines n'ont pas d'orientation.** Elles acceptent un convoyeur par
@@ -220,10 +226,12 @@ que comme une touche. Deux choses disent mieux le bouton, et elles sont dans
   48 — le rond s'est élargi pour l'accueillir, sinon la croix et la main
   sortaient par les coins. Les boutons larges, qui portent un mot, sont des
   **pilules** de même facture.
-- **L'épaisseur.** Un second cercle, en trait seul, décalé de trois pixels
-  d'art sous le premier. Le bouton a un dessous, donc il peut descendre
-  dessus : c'est ce que fait l'appui, et c'est la seule animation de touche du
-  jeu. La doublure ne bouge pas — sans quoi rien n'aurait l'air enfoncé.
+- **Le socle.** Un second cercle, plein, cerné de noir comme le corps, décalé
+  de trois pixels d'art sous lui. Le socle **ne bouge jamais** : c'est le sol
+  du bouton, et on n'en voit que le croissant du bas — tout entier quand le
+  corps décolle. Seul le corps voyage : il descend au fond tant que le doigt
+  le tient, puis part sur un ressort quand il se lève, dépassant le repos
+  avant de s'y poser. C'est la seule animation de touche du jeu.
 
 **La sélection est un enfoncement, jamais un cadre.** L'outil en cours, la
 matière triée, l'élément choisi dans le menu : tous sont la touche restée au

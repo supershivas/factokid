@@ -41,6 +41,10 @@ const jeu = {
     jeu.monde = creerMonde(scenario.disposition);
     jeu.tutoriel = scenario.tutoriel ? creerTutoriel() : null;
     centrerCamera(scenario.disposition.regard.cx, scenario.disposition.regard.cy);
+    // L'écran des essais se referme, même quand l'essai est choisi d'ailleurs
+    // que par le doigt — la sonde des outils de capture passe par ici aussi,
+    // et l'entrée resterait sinon prise par un écran qu'on ne voit plus.
+    if (interfaceJeu) interfaceJeu.choix = null;
   },
   // Revenir aux essais : la partie est abandonnée, pas mise de côté. Rien ici
   // n'est censé survivre — l'état permanent est ailleurs, et il n'existe pas
