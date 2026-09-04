@@ -52,10 +52,13 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   branches : la matière que le joueur a choisie, et tout le reste. Le premier
   convoyeur tracé prend la matière choisie, le second ramasse le reste. La
   matière se change à tout moment depuis le panneau du trieur.
-- **Un bâtiment dit ce qu'il lui faut**, deux fois : en images et en mots. Son
-  panneau porte sa recette en jetons — ce qui entre, la flèche, ce qui sort —
-  et sa description en toutes lettres. Un extracteur posé nomme la matière
-  qu'il récolte, pas une matière en général.
+- **Un bâtiment dit ce qu'il lui faut, en toutes lettres.** Son panneau porte
+  sa description, et c'est elle qui donne la recette : « assemble la pastille
+  avec du caramel, une fraise et de la menthe ». Un extracteur posé nomme la
+  matière qu'il récolte, pas une matière en général. Les jetons de recette qui
+  doublaient la phrase en images ont été retirés sur décision : l'enfant visé
+  sait lire. Le reste du jeu — poser, tracer, détruire — se joue toujours sans
+  un mot.
 - **Ce qui s'explique est souligné.** Dans une description, les matières et les
   machines sont soulignées : les toucher ouvre une **surmodale** par-dessus le
   panneau, qui dit d'où la chose vient et où elle va — et qui se referme sans
@@ -240,6 +243,13 @@ que comme une touche. Deux choses disent mieux le bouton, et elles sont dans
   corps décolle. Seul le corps voyage : il descend au fond tant que le doigt
   le tient, puis part sur un ressort quand il se lève, dépassant le repos
   avant de s'y poser. C'est la seule animation de touche du jeu.
+
+**Deux rangs de boutons.** Le premier agit sur le monde : les outils, les
+éléments à poser, les choix d'un écran. Il est clair, large — 56 unités — et
+porte une icône de 48. Le second règle ce qu'on regarde sans rien changer au
+monde : la pause d'une machine, le bouton qui passe le tutoriel. Il est plus
+petit — 40 unités —, sombre, et se pose **à droite du titre** de ce qu'il
+règle, jamais dans la rangée des actions.
 
 **La sélection est un enfoncement, jamais un cadre.** L'outil en cours, la
 matière triée, l'élément choisi dans le menu : tous sont la touche restée au

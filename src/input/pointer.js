@@ -8,8 +8,8 @@
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
   BOUTON_PAUSE, PANNEAU_TEXTE, SURMODALE, TEXTE_PETIT,
-  rectBouton, rectRangee, rectOption, rectMenu, rectChoix, rectsChaine,
-  rectFermer, dansRect,
+  rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
+  rectFermer, rectSecondaire, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { analyserTexte, disposerMots } from '../render/texte.js';
@@ -195,27 +195,6 @@ export function brancherPointeur(canvas, vue, jeu) {
   // à la matière, puis aux machines qui l'emploient — on remonte la chaîne
   // sans jamais avoir à lire.
 
-  // La recette, en jetons : les entrées, la flèche, ce qui sort.
-  function chaineRecette(recette) {
-    const jetons = [];
-    const entrees = Object.keys(recette.entrees);
-    for (let i = 0; i < entrees.length; i++) {
-      if (i > 0) jetons.push({ signe: 'plus' });
-      jetons.push({ item: entrees[i], action: () => expliquer(entrees[i]) });
-    }
-    jetons.push({ signe: 'fleche' });
-    jetons.push({ item: recette.sortie, action: () => expliquer(recette.sortie) });
-    return jetons;
-  }
-
-  // Ce qu'un type de machine fait circuler : sa recette, la matière qu'il
-  // récolte, ou celle qu'il attend.
-  function chaineDe(def) {
-    if (def.recette) return chaineRecette(RECETTES[def.recette]);
-    if (def.entree) return [{ item: def.entree, action: () => expliquer(def.entree) }];
-    return [];
-  }
-
   // Le biome où une matière brute abonde : c'est là qu'il faut aller la
   // chercher, et la couleur du sol le dit de loin.
   function biomeDe(item) {
@@ -280,9 +259,9 @@ export function brancherPointeur(canvas, vue, jeu) {
         nom: machine.def.nom,
         mots: decrire(dit, LARGEUR_TEXTE),
         icone: machine.type,
-        chaine: machine.def.mine
-          ? [{ item: machine.item, action: () => expliquer(machine.item) }]
-          : chaineDe(machine.def),
+        // La pause est au second rang : un petit bouton à droite du nom, pas
+        // une option de plus dans la rangée du bas.
+        secondaire: optionPause(machine),
         options: optionsMachine(machine),
       };
     } else if (convoyeur) {
@@ -297,9 +276,7 @@ export function brancherPointeur(canvas, vue, jeu) {
           : role === 'reste' ? 'emporte tout ce que le {trieur} ne range pas'
             : MACHINES.convoyeur.description, LARGEUR_TEXTE),
         icone: 'bulleConvoyeur',
-        chaine: role === 'triee' && trieur
-          ? [{ item: trieur.matiereTriee, action: () => expliquer(trieur.matiereTriee) }]
-          : [],
+        secondaire: trieur ? optionPause(trieur) : null,
         options: trieur ? optionsMachine(trieur) : [],
       };
     } else return;
@@ -323,7 +300,6 @@ export function brancherPointeur(canvas, vue, jeu) {
         LARGEUR_TEXTE,
       ),
       icone: g.item,
-      chaine: [],
       options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }]
         .concat(emplois.map((def) => ({ icone: def.id, action: () => expliquer(def.id) }))),
     };
@@ -339,19 +315,16 @@ export function brancherPointeur(canvas, vue, jeu) {
     };
   }
 
+  // Les réglages d'une machine, en bas du panneau. La pause n'en est plus :
+  // elle est passée au second rang, à droite du nom. Un trieur laisse choisir
+  // la matière qu'il range ; les autres n'ont rien à régler.
   function optionsMachine(machine) {
-    // Le téléporteur n'a pas de bouton vers sa carte : un appui court y mène
-    // déjà. Deux chemins pour un même geste, c'est un de trop.
-    //
-    // Un trieur laisse choisir la matière qu'il range.
-    if (machine.def.tri) {
-      return machine.def.triables.map((item) => ({
-        item,
-        choisie: item === machine.matiereTriee,
-        action: () => { machine.matiereTriee = item; ouvrirPanneau(machine, null); },
-      })).concat(optionPause(machine));
-    }
-    return [optionPause(machine)];
+    if (!machine.def.tri) return [];
+    return machine.def.triables.map((item) => ({
+      item,
+      choisie: item === machine.matiereTriee,
+      action: () => { machine.matiereTriee = item; ouvrirPanneau(machine, null); },
+    }));
   }
 
   // Un mot souligné touché : on rend sa clé.
@@ -377,18 +350,15 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   function panneauTouche(p) {
     if (!etat.panneau) return false;
-    // Les mots soulignés de la description s'expliquent, comme les jetons.
+    // Les mots soulignés de la description s'expliquent.
     const cleMot = motTouche(
       etat.panneau.mots, PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y, p,
     );
     if (cleMot) { expliquer(cleMot); return true; }
-    // Les matières de la recette se touchent : chacune mène à ce qu'elle est.
-    const chaine = etat.panneau.chaine || [];
-    const rects = rectsChaine(chaine);
-    for (let j = 0; j < chaine.length; j++) {
-      if (!chaine[j].action || !dansRect(rects[j], p.x, p.y)) continue;
-      presser('jeton:' + j);
-      chaine[j].action();
+    // Le bouton secondaire, à droite du nom.
+    if (etat.panneau.secondaire && dansRect(rectSecondaire(), p.x, p.y)) {
+      presser('secondaire');
+      etat.panneau.secondaire.action();
       return true;
     }
     for (let j = 0; j < etat.panneau.options.length; j++) {

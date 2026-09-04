@@ -121,12 +121,12 @@ export const ALERTE_DELAI = 1.2; // secondes
 // Panneau d'information d'un élément construit : son nom, ce qu'il fait de
 // quoi, et ses réglages. Il a grandi le jour où la recette y est entrée : un
 // bâtiment doit dire ce qu'il lui faut, et chaque matière s'y touche.
-export const PANNEAU = { x: 12, y: 356, l: 336, h: 200 };
+export const PANNEAU = { x: 12, y: 396, l: 336, h: 160 };
 export const PANNEAU_TEXTE = { x: 12, y: 68 }; // décalages dans le panneau
 
 // La surmodale : ce qu'un mot souligné explique. Elle se pose au-dessus du
 // panneau, sans le fermer — on revient à ce qu'on regardait en la refermant.
-export const SURMODALE = { x: 24, y: 228, l: 312, h: 116 };
+export const SURMODALE = { x: 24, y: 268, l: 312, h: 116 };
 export const FERMER = { l: 40, h: 40 };
 
 export function rectFermer() {
@@ -138,30 +138,24 @@ export function rectFermer() {
   };
 }
 
-// La chaîne du panneau : les matières qui entrent, la flèche, ce qui sort.
-// Chaque jeton se touche et mène à la matière.
-// Le jeton porte une matière, dessinée sur 9 pixels d'art : il faut qu'elle y
-// tienne à une échelle entière — 36 unités, soit ×4 — sans quoi elle se
-// décentre. C'est ce qui fixe la taille du jeton, pas l'inverse.
-export const JETON = 52;
-export const JETON_ECART = 6;
-export const SIGNE = 18;         // le « + » et la flèche, entre deux jetons
-export const CHAINE_Y = 80;      // décalage dans le panneau
+// Un bouton secondaire : plus petit qu'une touche d'outil, sombre, posé à
+// droite d'un titre. C'est le second rang du design system — ce qui règle
+// l'élément qu'on regarde, jamais ce qui agit sur le monde. La pause d'une
+// machine en est un.
+export const BOUTON_SECONDAIRE = 40;
 
-// La géométrie de la chaîne, partagée par le rendu et l'entrée : une seule
-// source de vérité, sinon le jeton dessiné et le jeton touché divergent.
-export function rectsChaine(chaine) {
-  let x = PANNEAU.x + 14;
-  return chaine.map((element) => {
-    const l = element.signe ? SIGNE : JETON;
-    const r = { x, y: PANNEAU.y + CHAINE_Y, l, h: JETON };
-    x += l + JETON_ECART;
-    return r;
-  });
+export function rectSecondaire() {
+  return {
+    x: PANNEAU.x + PANNEAU.l - BOUTON_SECONDAIRE - 12,
+    y: PANNEAU.y + 12 + (CELLULE - BOUTON_SECONDAIRE) / 2,
+    l: BOUTON_SECONDAIRE,
+    h: BOUTON_SECONDAIRE,
+  };
 }
+
 // Les options du panneau sont des touches comme les autres : même rond, même
-// épaisseur. Cinq tiennent dans la largeur du panneau — c'est ce qu'il faut au
-// trieur : quatre matières et sa pause.
+// épaisseur. Il n'en reste que les réglages — les quatre matières d'un trieur ;
+// la pause est passée au second rang, à droite du nom.
 export const OPTION = BOUTON;
 export const OPTION_ECART = 8;
 
