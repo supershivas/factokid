@@ -129,24 +129,24 @@ export function rectPasserTuto() {
 export const ALERTE_DELAI = 1.2; // secondes
 
 // Panneau d'information d'un élément construit : son nom, ce qu'il fait de
-// quoi, et ses réglages. Il a grandi le jour où la recette y est entrée : un
-// bâtiment doit dire ce qu'il lui faut, et chaque matière s'y touche.
-export const PANNEAU = { x: 12, y: 396, l: 336, h: 160 };
+// quoi, et ses réglages. Sa hauteur n'est pas un nombre écrit ici : elle se
+// calcule depuis ce qu'il y a dedans. Une hauteur fixe marchait tant que les
+// descriptions tenaient sur deux lignes — celle du sucre en fait quatre, et
+// le texte passait sous les réglages.
+//
+// Le bas ne bouge pas : le panneau pousse vers le haut, au-dessus de la barre
+// d'outils, et ce qu'on règle reste sous le pouce.
+export const PANNEAU = { x: 12, l: 336, bas: 556 };
 export const PANNEAU_TEXTE = { x: 12, y: 68 }; // décalages dans le panneau
+export const PANNEAU_MARGE = 12;
 
 // La surmodale : ce qu'un mot souligné explique. Elle se pose au-dessus du
 // panneau, sans le fermer — on revient à ce qu'on regardait en la refermant.
-export const SURMODALE = { x: 24, y: 268, l: 312, h: 116 };
+// Elle se mesure comme lui, et se cale juste au-dessus.
+export const SURMODALE = { x: 24, l: 312 };
+export const SURMODALE_TEXTE = { x: 12, y: 72 };
+export const SURMODALE_ECART = 12;
 export const FERMER = { l: 40, h: 40 };
-
-export function rectFermer() {
-  return {
-    x: SURMODALE.x + SURMODALE.l - FERMER.l - 10,
-    y: SURMODALE.y + 10,
-    l: FERMER.l,
-    h: FERMER.h,
-  };
-}
 
 // Un bouton secondaire : plus petit qu'une touche d'outil, sombre, posé à
 // droite d'un titre. C'est le second rang du design system — ce qui règle
@@ -154,25 +154,55 @@ export function rectFermer() {
 // machine en est un.
 export const BOUTON_SECONDAIRE = 40;
 
-export function rectSecondaire() {
-  return {
-    x: PANNEAU.x + PANNEAU.l - BOUTON_SECONDAIRE - 12,
-    y: PANNEAU.y + 12 + (CELLULE - BOUTON_SECONDAIRE) / 2,
-    l: BOUTON_SECONDAIRE,
-    h: BOUTON_SECONDAIRE,
-  };
-}
-
 // Les options du panneau sont des touches comme les autres : même rond, même
 // épaisseur. Il n'en reste que les réglages — les quatre matières d'un trieur ;
 // la pause est passée au second rang, à droite du nom.
 export const OPTION = BOUTON;
 export const OPTION_ECART = 8;
+export const OPTION_HAUT = 10; // ce qui sépare la rangée du texte au-dessus
 
-export function rectOption(j) {
+// Ce que mesure un panneau qui porte tant de lignes de texte et, s'il y en a,
+// une rangée de réglages. `interligne` vient de la mise en page du texte : le
+// panneau ne le recalcule pas, il le reçoit.
+export function boitePanneau(lignes, interligne, options) {
+  const texte = Math.max(1, lignes) * interligne;
+  const bas = options
+    ? OPTION_HAUT + OPTION + BOUTON_SOUS + PANNEAU_MARGE
+    : PANNEAU_MARGE;
+  const h = PANNEAU_TEXTE.y + texte + bas;
+  return { x: PANNEAU.x, y: PANNEAU.bas - h, l: PANNEAU.l, h };
+}
+
+// La surmodale se mesure pareil, et se pose juste au-dessus du panneau qu'elle
+// recouvre — elle grandit donc avec lui, sans jamais mordre dessus.
+export function boiteSurmodale(lignes, interligne, panneau) {
+  const h = SURMODALE_TEXTE.y + Math.max(1, lignes) * interligne + PANNEAU_MARGE;
+  const bas = panneau ? panneau.y - SURMODALE_ECART : (HAUTEUR_LOGIQUE + h) / 2;
+  return { x: SURMODALE.x, y: Math.max(PANNEAU_MARGE, bas - h), l: SURMODALE.l, h };
+}
+
+export function rectFermer(boite) {
   return {
-    x: PANNEAU.x + 12 + j * (OPTION + OPTION_ECART),
-    y: PANNEAU.y + PANNEAU.h - OPTION - 10,
+    x: boite.x + boite.l - FERMER.l - 10,
+    y: boite.y + 10,
+    l: FERMER.l,
+    h: FERMER.h,
+  };
+}
+
+export function rectSecondaire(boite) {
+  return {
+    x: boite.x + boite.l - BOUTON_SECONDAIRE - 12,
+    y: boite.y + PANNEAU_MARGE + (CELLULE - BOUTON_SECONDAIRE) / 2,
+    l: BOUTON_SECONDAIRE,
+    h: BOUTON_SECONDAIRE,
+  };
+}
+
+export function rectOption(j, boite) {
+  return {
+    x: boite.x + 12 + j * (OPTION + OPTION_ECART),
+    y: boite.y + boite.h - PANNEAU_MARGE - BOUTON_SOUS - OPTION,
     l: OPTION,
     h: OPTION,
   };

@@ -3,8 +3,9 @@
 
 import {
   PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE,
-  TEXTE_GRAND, TEXTE_PETIT, BULLE, PANNEAU, PANNEAU_TEXTE, BOUTON_PAUSE,
-  SURMODALE, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
+  TEXTE_GRAND, TEXTE_PETIT, TUILE_PX, BULLE, PANNEAU_TEXTE, PANNEAU_MARGE, BOUTON_PAUSE,
+  poserImage,
+  SURMODALE_TEXTE, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
@@ -12,6 +13,20 @@ import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
 import { dessinerMotCentre, dessinerMots, dessinerNombre } from './texte.js';
+
+// L'image en grand d'une modale : ce dont elle parle. Elle se pose comme dans
+// une touche, à l'échelle entière — une matière de neuf pixels d'art étirée
+// sur quarante-huit n'est plus qu'une tache blanche, et c'est ce qu'on voyait
+// sur le panneau du sucre.
+const PART_VIGNETTE = 0.8;
+
+function dessinerVignette(ctx, icone, x, y) {
+  const image = spriteNomme(icone);
+  if (!image) return;
+  const natif = image.width || TUILE_PX;
+  const { taille, marge } = poserImage(CELLULE, natif, natif === TUILE_PX ? 1 : PART_VIGNETTE);
+  ctx.drawImage(image, x + marge, y + marge, taille, taille);
+}
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   const livraison = monde.scene.machines.find((m) => m.def.entree);
@@ -52,30 +67,32 @@ function dessinerSurmodale(ctx, interfaceJeu) {
   const s = interfaceJeu.surmodale;
   if (!s) return;
   const echelle = interfaceJeu.surmodaleAnim;
+  // La boîte a été mesurée à l'ouverture, sur le texte qu'elle porte : le
+  // rendu la lit, il ne la recalcule pas.
+  const b = s.boite;
 
   ctx.save();
-  ctx.translate(SURMODALE.x + SURMODALE.l / 2, SURMODALE.y + SURMODALE.h / 2);
+  ctx.translate(b.x + b.l / 2, b.y + b.h / 2);
   ctx.scale(echelle, echelle);
-  ctx.translate(-(SURMODALE.x + SURMODALE.l / 2), -(SURMODALE.y + SURMODALE.h / 2));
+  ctx.translate(-(b.x + b.l / 2), -(b.y + b.h / 2));
 
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(SURMODALE.x, SURMODALE.y, SURMODALE.l, SURMODALE.h);
+  ctx.fillRect(b.x, b.y, b.l, b.h);
   ctx.strokeStyle = PALETTE.creme;
   ctx.lineWidth = 2;
-  ctx.strokeRect(SURMODALE.x + 1, SURMODALE.y + 1, SURMODALE.l - 2, SURMODALE.h - 2);
+  ctx.strokeRect(b.x + 1, b.y + 1, b.l - 2, b.h - 2);
 
-  const image = spriteNomme(s.icone);
-  if (image) ctx.drawImage(image, SURMODALE.x + 12, SURMODALE.y + 12, CELLULE, CELLULE);
+  dessinerVignette(ctx, s.icone, b.x + PANNEAU_MARGE, b.y + PANNEAU_MARGE);
   dessinerMotCentre(
-    ctx, s.nom, SURMODALE.x + 12 + CELLULE + 12, SURMODALE.y + 12 + CELLULE / 2,
+    ctx, s.nom, b.x + PANNEAU_MARGE + CELLULE + 12, b.y + PANNEAU_MARGE + CELLULE / 2,
     TEXTE_PETIT, PALETTE.creme,
   );
   dessinerMots(
-    ctx, s.mots || [], SURMODALE.x + 12, SURMODALE.y + 72,
+    ctx, s.mots || [], b.x + SURMODALE_TEXTE.x, b.y + SURMODALE_TEXTE.y,
     TEXTE_PETIT, PALETTE.ardoise, PALETTE.creme,
   );
 
-  dessinerTouche(ctx, rectFermer(), INTERFACE.menuFermer, { enfonce: enfoncement('fermer') });
+  dessinerTouche(ctx, rectFermer(b), INTERFACE.menuFermer, { enfonce: enfoncement('fermer') });
   ctx.restore();
 }
 
@@ -143,28 +160,30 @@ function dessinerPanneau(ctx, interfaceJeu) {
 
   // Le panneau surgit de son propre centre.
   const echelle = interfaceJeu.panneauAnim;
+  // Sa hauteur vient de son contenu : elle a été mesurée à l'ouverture, et
+  // c'est le bas qui reste posé — le panneau pousse vers le haut.
+  const b = p.boite;
   ctx.save();
-  ctx.translate(PANNEAU.x + PANNEAU.l / 2, PANNEAU.y + PANNEAU.h / 2);
+  ctx.translate(b.x + b.l / 2, b.y + b.h / 2);
   ctx.scale(echelle, echelle);
-  ctx.translate(-(PANNEAU.x + PANNEAU.l / 2), -(PANNEAU.y + PANNEAU.h / 2));
+  ctx.translate(-(b.x + b.l / 2), -(b.y + b.h / 2));
 
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(PANNEAU.x, PANNEAU.y, PANNEAU.l, PANNEAU.h);
+  ctx.fillRect(b.x, b.y, b.l, b.h);
   ctx.strokeStyle = PALETTE.creme;
   ctx.lineWidth = 2;
-  ctx.strokeRect(PANNEAU.x + 1, PANNEAU.y + 1, PANNEAU.l - 2, PANNEAU.h - 2);
+  ctx.strokeRect(b.x + 1, b.y + 1, b.l - 2, b.h - 2);
 
-  const image = spriteNomme(p.icone);
-  if (image) ctx.drawImage(image, PANNEAU.x + 12, PANNEAU.y + 12, CELLULE, CELLULE);
+  dessinerVignette(ctx, p.icone, b.x + PANNEAU_MARGE, b.y + PANNEAU_MARGE);
   dessinerMotCentre(
-    ctx, p.nom, PANNEAU.x + 12 + CELLULE + 12, PANNEAU.y + 12 + CELLULE / 2,
+    ctx, p.nom, b.x + PANNEAU_MARGE + CELLULE + 12, b.y + PANNEAU_MARGE + CELLULE / 2,
     TEXTE_PETIT, PALETTE.creme,
   );
 
   // Le bouton secondaire, à droite du nom : ce qui règle l'élément qu'on
   // regarde, plus petit et plus sombre que ce qui agit sur le monde.
   if (p.secondaire) {
-    dessinerTouche(ctx, rectSecondaire(), spriteNomme(p.secondaire.icone), {
+    dessinerTouche(ctx, rectSecondaire(b), spriteNomme(p.secondaire.icone), {
       teinte: SOMBRE,
       enfonce: enfoncement('secondaire'),
     });
@@ -173,7 +192,7 @@ function dessinerPanneau(ctx, interfaceJeu) {
   // Ce que l'élément fait, en toutes lettres. Les matières et les machines
   // qu'on y nomme sont soulignées : les toucher les explique, par-dessus.
   dessinerMots(
-    ctx, p.mots || [], PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y,
+    ctx, p.mots || [], b.x + PANNEAU_TEXTE.x, b.y + PANNEAU_TEXTE.y,
     TEXTE_PETIT, PALETTE.ardoise, PALETTE.creme,
   );
 
@@ -182,7 +201,7 @@ function dessinerPanneau(ctx, interfaceJeu) {
     const sprite = option.item ? spriteItem(option.item) : spriteNomme(option.icone);
     // Ce qui est choisi est la touche allumée ; le reste attend en ardoise.
     // Une option qui ne se choisit pas — la pause — est toujours allumée.
-    dessinerTouche(ctx, rectOption(j), sprite, {
+    dessinerTouche(ctx, rectOption(j, b), sprite, {
       teinte: SOMBRE,
       enfonce: enfoncement('option:' + j, option.choisie ? 1 : 0),
       part: option.item ? PART_ITEM : undefined,

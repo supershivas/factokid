@@ -7,7 +7,8 @@
 
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
-  BOUTON_PAUSE, PANNEAU_TEXTE, SURMODALE, TEXTE_PETIT,
+  BOUTON_PAUSE, PANNEAU_TEXTE, SURMODALE, SURMODALE_TEXTE, TEXTE_PETIT,
+  boitePanneau, boiteSurmodale,
   rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
   rectFermer, rectSecondaire, rectPasserTuto, dansRect,
 } from '../design.js';
@@ -181,13 +182,27 @@ export function brancherPointeur(canvas, vue, jeu) {
     : MACHINES[cle] ? MACHINES[cle].nom : cle);
 
   // Une description devient des mots placés : c'est la même disposition que le
-  // rendu dessine et que le doigt touche.
+  // rendu dessine et que le doigt touche. Elle rend aussi ce qu'elle occupe —
+  // c'est de là que sort la hauteur de la modale, au lieu d'un nombre écrit
+  // d'avance qui laissait le texte passer sous les réglages.
   function decrire(texte, largeur) {
-    return disposerMots(analyserTexte(texte || '', nommer), largeur, TEXTE_PETIT).mots;
+    return disposerMots(analyserTexte(texte || '', nommer), largeur, TEXTE_PETIT);
+  }
+
+  // Un panneau se pose autour de ce qu'il dit : le texte donne sa hauteur, la
+  // rangée de réglages ce qu'il faut de plus en bas.
+  function poserPanneau(champs, dit, options) {
+    const texte = decrire(dit, LARGEUR_TEXTE);
+    etat.panneau = {
+      ...champs,
+      mots: texte.mots,
+      options,
+      boite: boitePanneau(texte.lignes, texte.interligne, options.length > 0),
+    };
   }
 
   const LARGEUR_TEXTE = PANNEAU.l - PANNEAU_TEXTE.x * 2;
-  const LARGEUR_SURMODALE = SURMODALE.l - 24;
+  const LARGEUR_SURMODALE = SURMODALE.l - SURMODALE_TEXTE.x * 2;
 
   // --- ce qu'un bâtiment dit de lui-même --------------------------------
   //
@@ -236,10 +251,14 @@ export function brancherPointeur(canvas, vue, jeu) {
   function expliquer(cle) {
     const machine = MACHINES[cle];
     const texte = machine ? machine.description : texteMatiere(cle);
+    const dit = decrire(texte.replace('{matiere}', ''), LARGEUR_SURMODALE);
     etat.surmodale = {
       nom: nommer(cle),
       icone: cle,
-      mots: decrire(texte.replace('{matiere}', ''), LARGEUR_SURMODALE),
+      mots: dit.mots,
+      // Elle se cale au-dessus du panneau qu'elle recouvre : c'est lui qui dit
+      // où elle s'arrête, et il a lui-même la hauteur de son texte.
+      boite: boiteSurmodale(dit.lignes, dit.interligne, etat.panneau && etat.panneau.boite),
     };
     etat.surmodaleAnim = 0;
     animSurmodale = viser('surmodaleAnim', 1, animSurmodale);
@@ -256,30 +275,29 @@ export function brancherPointeur(canvas, vue, jeu) {
       const dit = machine.def.description.replace(
         '{matiere}', machine.item ? 'du {' + machine.item + '}' : 'sa matière',
       );
-      etat.panneau = {
-        nom: machine.def.nom,
-        mots: decrire(dit, LARGEUR_TEXTE),
-        icone: machine.type,
-        // La pause est au second rang : un petit bouton à droite du nom, pas
-        // une option de plus dans la rangée du bas.
-        secondaire: optionPause(machine),
-        options: optionsMachine(machine),
-      };
+      // La pause est au second rang : un petit bouton à droite du nom, pas
+      // une option de plus dans la rangée du bas.
+      poserPanneau(
+        { nom: machine.def.nom, icone: machine.type, secondaire: optionPause(machine) },
+        dit, optionsMachine(machine),
+      );
     } else if (convoyeur) {
       const role = convoyeur.role;
       const trieur = convoyeur.source && convoyeur.source.def && convoyeur.source.def.tri
         ? convoyeur.source : null;
-      etat.panneau = {
-        nom: role === 'triee' && trieur ? ITEMS[trieur.matiereTriee].nom
-          : role === 'reste' ? 'le reste' : 'convoyeur',
-        mots: decrire(role === 'triee' && trieur
+      poserPanneau(
+        {
+          nom: role === 'triee' && trieur ? ITEMS[trieur.matiereTriee].nom
+            : role === 'reste' ? 'le reste' : 'convoyeur',
+          icone: 'bulleConvoyeur',
+          secondaire: trieur ? optionPause(trieur) : null,
+        },
+        role === 'triee' && trieur
           ? 'emporte le {' + trieur.matiereTriee + '} que le {trieur} range'
           : role === 'reste' ? 'emporte tout ce que le {trieur} ne range pas'
-            : MACHINES.convoyeur.description, LARGEUR_TEXTE),
-        icone: 'bulleConvoyeur',
-        secondaire: trieur ? optionPause(trieur) : null,
-        options: trieur ? optionsMachine(trieur) : [],
-      };
+            : MACHINES.convoyeur.description,
+        trieur ? optionsMachine(trieur) : [],
+      );
     } else return;
     surgirPanneau();
   }
@@ -293,17 +311,13 @@ export function brancherPointeur(canvas, vue, jeu) {
     const emplois = Object.values(MACHINES).filter(
       (m) => (m.recette && RECETTES[m.recette].entrees[g.item]) || m.entree === g.item,
     );
-    etat.panneau = {
-      nom: ITEMS[g.item].nom,
-      mots: decrire(
-        'pose un extracteur pour récolter le {' + g.item + '}, qui '
-        + provenance(g.item) + usages(g.item) + '.',
-        LARGEUR_TEXTE,
-      ),
-      icone: g.item,
-      options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }]
+    poserPanneau(
+      { nom: ITEMS[g.item].nom, icone: g.item },
+      'pose un extracteur pour récolter le {' + g.item + '}, qui '
+      + provenance(g.item) + usages(g.item) + '.',
+      [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }]
         .concat(emplois.map((def) => ({ icone: def.id, action: () => expliquer(def.id) }))),
-    };
+    );
     surgirPanneau();
   }
 
@@ -341,34 +355,38 @@ export function brancherPointeur(canvas, vue, jeu) {
   // qu'on touche. La refermer ne referme pas ce qu'il y a dessous.
   function surmodaleTouchee(p) {
     if (!etat.surmodale) return false;
-    if (dansRect(rectFermer(), p.x, p.y)) { presser('fermer'); fermerSurmodale(); return true; }
-    const cle = motTouche(etat.surmodale.mots, SURMODALE.x + 12, SURMODALE.y + 72, p);
+    const boite = etat.surmodale.boite;
+    if (dansRect(rectFermer(boite), p.x, p.y)) { presser('fermer'); fermerSurmodale(); return true; }
+    const cle = motTouche(
+      etat.surmodale.mots, boite.x + SURMODALE_TEXTE.x, boite.y + SURMODALE_TEXTE.y, p,
+    );
     if (cle) { expliquer(cle); return true; }
-    if (dansRect(SURMODALE, p.x, p.y)) return true;
+    if (dansRect(boite, p.x, p.y)) return true;
     fermerSurmodale();
     return true;
   }
 
   function panneauTouche(p) {
     if (!etat.panneau) return false;
+    const boite = etat.panneau.boite;
     // Les mots soulignés de la description s'expliquent.
     const cleMot = motTouche(
-      etat.panneau.mots, PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y, p,
+      etat.panneau.mots, boite.x + PANNEAU_TEXTE.x, boite.y + PANNEAU_TEXTE.y, p,
     );
     if (cleMot) { expliquer(cleMot); return true; }
     // Le bouton secondaire, à droite du nom.
-    if (etat.panneau.secondaire && dansRect(rectSecondaire(), p.x, p.y)) {
+    if (etat.panneau.secondaire && dansRect(rectSecondaire(boite), p.x, p.y)) {
       presser('secondaire');
       etat.panneau.secondaire.action();
       return true;
     }
     for (let j = 0; j < etat.panneau.options.length; j++) {
-      if (!dansRect(rectOption(j), p.x, p.y)) continue;
+      if (!dansRect(rectOption(j, boite), p.x, p.y)) continue;
       presser('option:' + j);
       etat.panneau.options[j].action();
       return true;
     }
-    if (dansRect(PANNEAU, p.x, p.y)) return true;
+    if (dansRect(boite, p.x, p.y)) return true;
     etat.panneau = null;
     return false;
   }

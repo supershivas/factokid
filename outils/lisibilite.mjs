@@ -15,7 +15,7 @@
 // Chaque paire de couleurs est déclarée ici avec ce qu'elle doit tenir : c'est
 // une table, elle grossit avec le jeu.
 
-import { PALETTE, PIXEL, TUILE_PX, poserImage } from '../src/design.js';
+import { PALETTE, PIXEL, TUILE_PX, CELLULE, poserImage } from '../src/design.js';
 import { MOTIFS } from '../src/render/motifs.js';
 import { ITEMS } from '../src/data/items.js';
 
@@ -165,6 +165,10 @@ const POSES = [
   { quoi: 'jeton de recette', cible: 52, natif: 9, part: 0.72 },
   { quoi: 'croix de la surmodale', cible: 40, natif: TUILE_PX, part: 6 / 7 },
   { quoi: 'touche du labo', cible: 28, natif: TUILE_PX, part: 6 / 7 },
+  // La vignette d'une modale n'est pas une touche : elle n'a pas de rond, et
+  // son image peut donc remplir son carré jusqu'aux coins.
+  { quoi: 'vignette de modale, icône', cible: CELLULE, natif: TUILE_PX, part: 1, rond: false },
+  { quoi: 'vignette de modale, matière', cible: CELLULE, natif: 9, part: 0.8, rond: false },
 ];
 
 console.log('\npose des images dans les touches');
@@ -181,7 +185,7 @@ for (const p of POSES) {
 // Une matière remplit son carré jusqu'aux bords : ses coins doivent tenir dans
 // le cercle de la touche, sinon ils en sortent.
 console.log('\nles matières tiennent dans leur rond');
-for (const p of POSES.filter((x) => x.natif === 9)) {
+for (const p of POSES.filter((x) => x.natif === 9 && x.rond !== false)) {
   const { taille } = poserImage(p.cible, p.natif, p.part);
   const coin = Math.hypot(taille / 2, taille / 2);
   const rayon = p.cible / 2;
