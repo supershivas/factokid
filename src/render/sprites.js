@@ -780,19 +780,27 @@ function fileTrieur(ctx, machine, coin) {
 // Flèches d'entrée et de sortie : par où ça rentre, par où ça sort.
 const FLECHE = 12;
 
-function fleche(ctx, machine, direction, versLInterieur, couleur) {
+// `cote` est le côté de la cellule où le convoyeur touche la machine, vu de la
+// machine : c'est là que la flèche se pose. Elle pointe vers l'intérieur pour
+// une entrée, vers l'extérieur pour une sortie.
+//
+// Les entrées se posaient jusqu'ici du côté opposé — on leur donnait la
+// direction du tapis vers la machine, qui est l'inverse du côté. Avec une ou
+// deux entrées ça passait pour un choix ; à trois, une machine montrait ses
+// flèches sur les côtés où rien n'arrive, et la flèche de gauche allait se
+// superposer à la sortie de droite.
+function fleche(ctx, machine, cote, versLInterieur, couleur) {
   const coin = coinCellule(machine.cx, machine.cy);
   const cx = coin.x + CELLULE / 2;
   const cy = coin.y + CELLULE / 2;
   const bord = CELLULE / 2 - 3;
-  // Pointe posée sur le bord concerné, base à l'intérieur.
-  const sensPointe = versLInterieur ? -1 : 1;
-  const px = cx + direction.dx * bord * (versLInterieur ? 1 : 1);
-  const py = cy + direction.dy * bord;
+  const px = cx + cote.dx * bord;
+  const py = cy + cote.dy * bord;
   ctx.fillStyle = couleur;
   ctx.beginPath();
-  const ux = direction.dx * sensPointe;
-  const uy = direction.dy * sensPointe;
+  // Pointe vers le dedans ou vers le dehors ; la base est à l'opposé.
+  const ux = cote.dx * (versLInterieur ? -1 : 1);
+  const uy = cote.dy * (versLInterieur ? -1 : 1);
   ctx.moveTo(px + ux * (FLECHE / 2), py + uy * (FLECHE / 2));
   ctx.lineTo(px - ux * (FLECHE / 2) + uy * (FLECHE / 2), py - uy * (FLECHE / 2) + ux * (FLECHE / 2));
   ctx.lineTo(px - ux * (FLECHE / 2) - uy * (FLECHE / 2), py - uy * (FLECHE / 2) - ux * (FLECHE / 2));
@@ -803,7 +811,7 @@ function fleche(ctx, machine, direction, versLInterieur, couleur) {
 function dessinerFleches(ctx, machine) {
   for (const convoyeur of machine.entrees) {
     const derniere = convoyeur.chemin[convoyeur.chemin.length - 1];
-    fleche(ctx, machine, sens(derniere, machine), true, PALETTE.bleu);
+    fleche(ctx, machine, sens(machine, derniere), true, PALETTE.bleu);
   }
   for (const convoyeur of machine.sorties) {
     fleche(ctx, machine, sens(machine, convoyeur.chemin[0]), false, PALETTE.creme);
