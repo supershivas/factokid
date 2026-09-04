@@ -302,21 +302,19 @@ export function brancherPointeur(canvas, vue, jeu) {
     surgirPanneau();
   }
 
-  // Toucher un gisement propose d'y bâtir : c'est la seule chose à y faire.
+  // Toucher un gisement propose d'y bâtir : c'est la seule chose à y faire,
+  // et c'est donc le seul bouton. Les machines qui emploient la matière y
+  // avaient leur touche : elles n'y font rien, et la phrase les nomme déjà —
+  // soulignées, elles s'expliquent d'un doigt.
+  //
   // L'image du panneau est la matière elle-même — c'est d'elle qu'on parle ;
   // l'extracteur n'est que le bouton qui la récolte.
   function proposerExtracteur(c, g) {
-    // Ce qu'on en fera est déjà là : les machines qui emploient la matière,
-    // en dessous de l'extracteur qu'on propose de bâtir.
-    const emplois = Object.values(MACHINES).filter(
-      (m) => (m.recette && RECETTES[m.recette].entrees[g.item]) || m.entree === g.item,
-    );
     poserPanneau(
       { nom: ITEMS[g.item].nom, icone: g.item },
-      'pose un extracteur pour récolter le {' + g.item + '}, qui '
+      'pose un extracteur pour récolter ' + ITEMS[g.item].le + ' {' + g.item + '}, qui '
       + provenance(g.item) + usages(g.item) + '.',
-      [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }]
-        .concat(emplois.map((def) => ({ icone: def.id, action: () => expliquer(def.id) }))),
+      [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }],
     );
     surgirPanneau();
   }
