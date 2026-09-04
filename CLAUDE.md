@@ -246,6 +246,28 @@ ardoise avait été essayée : elle tue la croix rouge, qui n'y tranche plus.
 Les huit propositions comparées ce jour-là sont dans le labo, avec leurs
 animations d'appui : `labo/boutons.html`.
 
+### Lisibilité : elle se vérifie, elle ne se suppose pas
+
+`node outils/lisibilite.mjs` relit le design system hors du navigateur et
+échoue si quelque chose ne se lit plus. Il tourne avant toute livraison
+visuelle, comme `outils/tapis.mjs` avant toute livraison de convoyeurs. Ce
+qu'il tient :
+
+- **Le contraste** de chaque paire de couleurs qu'on pose l'une sur l'autre,
+  au rapport WCAG : 4,5 pour du texte, 3 pour un signe. Les paires sont
+  déclarées dans l'outil — une nouvelle s'y ajoute le jour où on la dessine.
+  Ce qui détache une matière du tapis n'est pas sa couleur (quatre des huit ne
+  peuvent pas y trancher sans sortir de la palette) mais **le noir qui la
+  cerne** : c'est lui qui est mesuré.
+- **Les silhouettes** : deux matières ne peuvent pas avoir la même forme en
+  niveaux de gris, et aucune ne peut être peinte à même le sol — chaque pixel
+  de couleur doit toucher du noir ou de la couleur, jamais le vide.
+- **La pose des images** : une image de pixel art ne se met à l'échelle qu'en
+  **nombre entier de fois**. À ×1,4 ses pixels n'ont plus tous la même largeur
+  et son centre tombe entre deux — c'est ce qui décentrait les matières dans
+  leurs jetons. `poserImage()` (dans `design.js`) donne la taille et la marge ;
+  l'outil vérifie chaque couple touche / image employé dans le jeu.
+
 ### Retour visuel
 
 Toute action produit un retour dans la même frame : surbrillance de la cellule,
@@ -297,7 +319,8 @@ tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
-Toute vérification visuelle produit **les deux captures, systématiquement** :
+Toute vérification visuelle passe d'abord par `node outils/lisibilite.mjs`,
+puis produit **les deux captures, systématiquement** :
 la cible mobile et l'aperçu desktop. Jamais l'une sans l'autre. `outils/captures.mjs`
 les génère toutes les deux ; il choisit l'essai « usine qui tourne » par la
 sonde, sinon il ne montrerait que l'écran des essais (`ESSAI=choix` pour le

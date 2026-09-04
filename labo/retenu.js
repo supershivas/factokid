@@ -3,7 +3,7 @@
 
 import { PALETTE } from '../src/design.js';
 import { INTERFACE } from '../src/render/sprites.js';
-import { marquerAppui, majAppuis, enfoncement } from '../src/render/bouton.js';
+import { presser, relacher, majAppuis, enfoncement } from '../src/render/bouton.js';
 import { dessinerAlerte } from '../src/render/alerte.js';
 import {
   pose, destruction, vapeur, majParticules, dessinerParticules,
@@ -74,9 +74,13 @@ export const RETENUS = [
     note: 'trait fin centré au pixel près, croix crème à cœur rouge, écrasement élastique',
     duree: 2.4,
     dessiner(ctx, t, taille) {
-      if (t < 0.02 && this.attend !== 'plus') { marquerAppui(0); this.attend = 'plus'; }
-      if (t > 1.1 && t < 1.14 && this.attend !== 'croix') { marquerAppui(1); this.attend = 'croix'; }
-      if (t > 1.5) this.attend = null;
+      // Le doigt se pose, le tient un instant, puis le lâche : c'est au
+      // relâchement que la touche rebondit.
+      if (t < 0.02 && this.attend !== 'plus') { presser(0); this.attend = 'plus'; }
+      if (t > 0.35 && t < 0.39) relacher(0);
+      if (t > 1.1 && t < 1.14 && this.attend !== 'croix') { presser(1); this.attend = 'croix'; }
+      if (t > 1.45 && t < 1.49) relacher(1);
+      if (t > 1.6) this.attend = null;
       const y = (taille - BOUTON) / 2;
       boutonJeu(ctx, (taille - 2 * BOUTON - 4) / 2, y, 'outilConstruction', 0);
       boutonJeu(ctx, (taille - 2 * BOUTON - 4) / 2 + BOUTON + 4, y, 'outilDestruction', 1);

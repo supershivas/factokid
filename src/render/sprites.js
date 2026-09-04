@@ -9,6 +9,7 @@ import {
 import { decalage, fenetre, celluleVisible } from '../camera.js';
 import { tuileSol } from './biome.js';
 import { ITEMS } from '../data/items.js';
+import { FORMES as formes } from './motifs.js';
 import { REPOUSSE_TICKS } from '../data/monde.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
@@ -51,137 +52,7 @@ function decale(rect, ox, oy) {
   return (x, y, w, h, couleur) => rect(x + ox, y + oy, w, h, couleur);
 }
 
-// Chaque item est une matrice de 9 × 9 pixels d'art : « n » le contour noir,
-// « c » la couleur de la matière, « b » l'éclat crème, « . » le vide. La
-// silhouette *colorée* est la forme elle-même — un rond est rond en couleur,
-// pas seulement en contour. C'est ce qui manquait : sur un sol sombre, le
-// contour noir disparaît, et la matière n'était plus lue que par sa couleur,
-// qui dessinait une croix là où on attendait une bille.
-const MOTIFS = {
-  // Le sucre : un petit cube, plus petit que les autres matières — c'est un
-  // morceau, pas une plaque. Une face d'ombre en ardoise avait été essayée :
-  // elle disparaît sur la bande du tapis, qui est de la même couleur.
-  cube: [
-    '.........',
-    '.nnnnnnn.',
-    '.ncccccn.',
-    '.ncccccn.',
-    '.ncccccn.',
-    '.ncccccn.',
-    '.ncccccn.',
-    '.nnnnnnn.',
-    '.........',
-  ],
-  // La bille : un disque tracé au compas, éclat en haut à gauche. La pastille
-  // s'en sert aussi — c'est la même chose, en orange.
-  rond: [
-    '..nnnnn..',
-    '.nncccnn.',
-    'nncccccnn',
-    'ncbcccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'nncccccnn',
-    '.nncccnn.',
-    '..nnnnn..',
-  ],
-  // La fraise : épaules larges, pointe en bas, calice vert et graines claires.
-  // C'est la silhouette qu'un enfant dessine quand on lui dit « fraise ».
-  fraise: [
-    '..v.v.v..',
-    '.nvvvvvn.',
-    'ncccccccn',
-    'ncbcccbcn',
-    'ncccccccn',
-    '.ncbcbcn.',
-    '.ncccccn.',
-    '..ncccn..',
-    '...nnn...',
-  ],
-  // La menthe : une feuille et sa nervure, pointue aux deux bouts. Une plante,
-  // plus un triangle — on ne confond pas une feuille avec un bonbon.
-  menthe: [
-    '...nnn...',
-    '..ncccn..',
-    '.nccbccn.',
-    'ncccbcccn',
-    'ncccbcccn',
-    'ncccbcccn',
-    '.nccbccn.',
-    '..ncbcn..',
-    '...nbn...',
-  ],
-  // Le caramel : une barre plate, silhouette qu'aucune autre matière n'a.
-  barre: [
-    '.........',
-    '.........',
-    'nnnnnnnnn',
-    'ncbcccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'nnnnnnnnn',
-    '.........',
-    '.........',
-  ],
-  // Le bois : une bûche couchée, sa tranche claire à gauche. Elle sort des
-  // arbres, et la scierie la débite en papier.
-  buche: [
-    '.........',
-    '.nnnnnnn.',
-    'nbbcccccn',
-    'nbbcccccn',
-    'nbbcccccn',
-    'nbbcccccn',
-    'nbbcccccn',
-    '.nnnnnnn.',
-    '.........',
-  ],
-  // Le papier : une feuille dont le coin est corné. Même en gris, on ne la
-  // confond pas avec le sucre.
-  papier: [
-    'nnnnnnn..',
-    'ncccccnn.',
-    'ncbcccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'ncccccccn',
-    'nnnnnnnnn',
-  ],
-  // Le bonbon : un cœur et ses deux papillotes, pincées de part et d'autre.
-  bonbon: [
-    '.........',
-    '..nnnnn..',
-    'nnncccnnn',
-    'ncncccncn',
-    'ncccccccn',
-    'ncncccncn',
-    'nnncccnnn',
-    '..nnnnn..',
-    '.........',
-  ],
-};
 
-// Un motif devient un peintre : la couleur de la matière est le seul réglage.
-function peindreMotif(motif) {
-  return (rect, couleur) => {
-    for (let y = 0; y < motif.length; y++) {
-      for (let x = 0; x < motif[y].length; x++) {
-        const signe = motif[y][x];
-        if (signe === 'n') rect(x, y, 1, 1, PALETTE.noir);
-        else if (signe === 'c') rect(x, y, 1, 1, couleur);
-        else if (signe === 'b') rect(x, y, 1, 1, PALETTE.creme);
-        // Un signe de plus, pour ce qu'une matière porte en propre : le
-        // calice vert d'une fraise.
-        else if (signe === 'v') rect(x, y, 1, 1, PALETTE.vert);
-      }
-    }
-  };
-}
-
-const formes = {};
-for (const nom of Object.keys(MOTIFS)) formes[nom] = peindreMotif(MOTIFS[nom]);
 
 
 // --- tuiles ---------------------------------------------------------------
