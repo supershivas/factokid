@@ -10,7 +10,11 @@
 // `a` est ce qui précède son nom quand on y envoie quelque chose — « à la »
 // confiserie, « au » trieur —, écrit en toutes lettres comme les articles des
 // matières : la phrase le prend tel quel plutôt que de deviner un genre.
-
+//
+// `capacite` a doublé : une machine tient maintenant huit pièces au lieu de
+// quatre, et le trieur douze au lieu de six. Une chaîne encaisse donc un
+// à-coup deux fois plus long avant de se signaler — et les jauges sont
+// devenues des barres, qui ne se comptent plus une par une.
 
 export const MACHINES = {
   trieur: {
@@ -21,7 +25,7 @@ export const MACHINES = {
     tri: true,          // deux sorties : la matière choisie, et tout le reste
     triables: ['sucre', 'bois', 'fraise', 'menthe'],
     triDefaut: 'sucre',
-    capacite: 6,        // file d'attente mélangée
+    capacite: 12,       // file d'attente mélangée
     ticksParItem: 15,
   },
   confiserie: {
@@ -31,7 +35,7 @@ export const MACHINES = {
     a: 'à la ',
     recette: 'pastille',
     vapeur: true,       // souffle en sortant sa pastille
-    capacite: 4,
+    capacite: 8,
   },
   plieuse: {
     id: 'plieuse',
@@ -40,7 +44,7 @@ export const MACHINES = {
     a: 'à la ',
     recette: 'bonbon',
     vapeur: true,       // souffle en sortant son bonbon
-    capacite: 4,
+    capacite: 8,
   },
   livraison: {
     id: 'livraison',
@@ -49,7 +53,7 @@ export const MACHINES = {
     a: 'à la ',
     entree: 'bonbon',
     ticksParItem: 60,
-    capacite: 4,
+    capacite: 8,
   },
   scierie: {
     id: 'scierie',
@@ -58,7 +62,7 @@ export const MACHINES = {
     a: 'à la ',
     recette: 'papier',
     vapeur: true,       // souffle sa sciure en sortant sa feuille
-    capacite: 4,
+    capacite: 8,
   },
   chaufferie: {
     id: 'chaufferie',
@@ -66,7 +70,7 @@ export const MACHINES = {
     nom: 'chaufferie',
     a: 'à la ',
     recette: 'caramel',   // le sucre y fond
-    capacite: 4,
+    capacite: 8,
   },
   extracteur: {
     id: 'extracteur',
@@ -74,7 +78,7 @@ export const MACHINES = {
     nom: 'extracteur',
     a: 'à l’',
     mine: true,           // se remplit du gisement qu'il occupe
-    capacite: 4,
+    capacite: 8,
     ticksParItem: 20,     // cadence à laquelle il verse sur le tapis
   },
   convoyeur: {

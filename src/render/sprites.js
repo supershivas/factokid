@@ -767,18 +767,14 @@ function contenuMine(ctx, machine, coin) {
   ctx.drawImage(spritesItems[machine.item], coin.x + 15, coin.y + 24, TAILLE_ITEM, TAILLE_ITEM);
 }
 
-// La file d'un trieur, telle quelle : on voit le mélange qui attend.
+// La file d'un trieur : une barre, comme les stocks des autres machines, mais
+// rayée des couleurs de ce qui attend — c'est un mélange, et le mélange se
+// voit. Elle était une grille de douze pastilles ; à douze places, elle ne
+// tenait plus dans la cellule et personne ne les comptait.
 function fileTrieur(ctx, machine, coin) {
   if (!machine.def.tri) return;
-  const n = machine.def.capacite;
-  for (let i = 0; i < n; i++) {
-    const x = coin.x + 4 + (i % 3) * 14;
-    const y = coin.y + CELLULE - 15 + Math.floor(i / 3) * 7;
-    ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(x - 1, y - 1, 14, 7);
-    ctx.fillStyle = i < machine.file.length ? PALETTE[ITEMS[machine.file[i]].couleur] : PALETTE.ardoise;
-    ctx.fillRect(x, y, 12, 5);
-  }
+  const teintes = machine.file.map((item) => PALETTE[ITEMS[item].couleur]);
+  barre(ctx, coin, 0, machine.file.length / machine.def.capacite, teintes);
 }
 
 // Flèches d'entrée et de sortie : par où ça rentre, par où ça sort.
@@ -815,27 +811,56 @@ function dessinerFleches(ctx, machine) {
 }
 
 // Dessine une carte : même grille, même échelle, gisements et mines.
-// Jauge de stock : une rangée de pastilles par ingrédient attendu, à la
-// couleur de l'item. Le bouchon se voit sur la machine, pas seulement sur le
-// convoyeur.
-const PASTILLE = 4;
-const PAS_PASTILLE = 6;
+// Jauge de stock : une barre par ingrédient attendu, à la couleur de l'item.
+// Le bouchon se voit sur la machine, pas seulement sur le convoyeur.
+//
+// C'étaient des pastilles, une par pièce : à quatre places on les comptait
+// d'un coup d'œil, à huit on ne les compte plus et elles ne tiennent plus
+// dans la cellule. Une barre dit la même chose — « plein », « à moitié »,
+// « vide » — sans rien demander à personne, et elle dira aussi bien seize.
+// Tout est en multiples du pixel d'art : un trait d'une unité logique n'est
+// qu'un demi-pixel, et il s'efface au rendu. Le cadre en fait donc deux.
+const BARRE_L = 36;          // 18 pixels d'art
+const BARRE_H = 4;           // 2 pixels d'art
+const BARRE_CADRE = PIXEL;   // le noir qui la cerne
+const BARRE_PAS = BARRE_H + BARRE_CADRE; // les cadres se partagent un bord
+
+// Une barre remplie d'une part, posée à la rangée `r` du bas de la cellule.
+// `teintes` donne les couleurs de ce qui la remplit : une seule pour un stock
+// d'une matière, autant que de pièces pour la file mélangée d'un trieur.
+function barre(ctx, coin, r, part, teintes) {
+  const x = coin.x + Math.round((CELLULE - BARRE_L) / 2);
+  const y = coin.y + CELLULE - BARRE_CADRE - BARRE_H - r * BARRE_PAS;
+  // Le cadre noir dit toujours où la barre s'arrête, même vide : c'est lui qui
+  // la détache de la machine, qui est de la même ardoise que son creux.
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(x - BARRE_CADRE, y - BARRE_CADRE, BARRE_L + BARRE_CADRE * 2, BARRE_H + BARRE_CADRE * 2);
+  ctx.fillStyle = PALETTE.ardoise;
+  ctx.fillRect(x, y, BARRE_L, BARRE_H);
+  // Le remplissage se cale sur le pixel d'art : une barre nette, jamais un
+  // bord à moitié peint.
+  const plein = Math.round((Math.min(1, part) * BARRE_L) / PIXEL) * PIXEL;
+  if (plein <= 0) return;
+  if (teintes.length <= 1) {
+    ctx.fillStyle = teintes[0];
+    ctx.fillRect(x, y, plein, BARRE_H);
+    return;
+  }
+  // Un mélange : chaque pièce prend sa tranche, dans l'ordre où elle attend.
+  for (let i = 0; i < teintes.length; i++) {
+    const debut = Math.round((i * plein) / teintes.length / PIXEL) * PIXEL;
+    const fin = Math.round(((i + 1) * plein) / teintes.length / PIXEL) * PIXEL;
+    if (fin <= debut) continue;
+    ctx.fillStyle = teintes[i];
+    ctx.fillRect(x + debut, y, fin - debut, BARRE_H);
+  }
+}
 
 function dessinerStock(ctx, machine, coin) {
   const rangees = attendus(machine);
   for (let r = 0; r < rangees.length; r++) {
     const { item, capacite } = rangees[r];
-    const largeur = capacite * PASTILLE + (capacite - 1) * (PAS_PASTILLE - PASTILLE);
-    const x = coin.x + Math.round((CELLULE - largeur) / 2);
-    const y = coin.y + CELLULE - 7 - r * (PASTILLE + 2);
-    // Fond sombre derrière la rangée : les places vides doivent se voir autant
-    // que les pleines, sinon on ne lit pas combien il en reste.
-    ctx.fillStyle = PALETTE.noir;
-    ctx.fillRect(x - 2, y - 1, largeur + 4, PASTILLE + 2);
-    for (let i = 0; i < capacite; i++) {
-      ctx.fillStyle = i < machine.stocks[item] ? PALETTE[ITEMS[item].couleur] : PALETTE.ardoise;
-      ctx.fillRect(x + i * PAS_PASTILLE, y, PASTILLE, PASTILLE);
-    }
+    barre(ctx, coin, r, machine.stocks[item] / capacite, [PALETTE[ITEMS[item].couleur]]);
   }
 }
 
