@@ -111,8 +111,18 @@ export function rectChoix(j) {
 }
 
 // Bandeau du tutoriel : ce qu'il y a à faire, posé en haut de la fenêtre de
-// jeu. Une image, un mot pour l'adulte, et rien d'autre.
-export const TUTORIEL_BANDEAU = { x: 12, y: GRILLE_Y + 8, l: 336, h: 40 };
+// jeu. Une image, un mot, et le bouton qui passe le tutoriel — un secondaire,
+// à droite, comme la pause d'une machine.
+export const TUTORIEL_BANDEAU = { x: 12, y: GRILLE_Y + 8, l: 336, h: 48 };
+
+export function rectPasserTuto() {
+  return {
+    x: TUTORIEL_BANDEAU.x + TUTORIEL_BANDEAU.l - BOUTON_SECONDAIRE - 6,
+    y: TUTORIEL_BANDEAU.y + (TUTORIEL_BANDEAU.h - BOUTON_SECONDAIRE) / 2,
+    l: BOUTON_SECONDAIRE,
+    h: BOUTON_SECONDAIRE,
+  };
+}
 
 // Un bouchon ne se signale qu'après avoir duré : sinon l'écran clignote au
 // moindre à-coup.

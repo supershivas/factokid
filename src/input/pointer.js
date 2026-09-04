@@ -9,10 +9,11 @@ import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
   BOUTON_PAUSE, PANNEAU_TEXTE, SURMODALE, TEXTE_PETIT,
   rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
-  rectFermer, rectSecondaire, dansRect,
+  rectFermer, rectSecondaire, rectPasserTuto, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { analyserTexte, disposerMots } from '../render/texte.js';
+import { passerTutoriel } from '../tutoriel.js';
 import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
@@ -450,6 +451,13 @@ export function brancherPointeur(canvas, vue, jeu) {
   }
 
   function interfaceTouchee(p) {
+    // Passer le tutoriel : il ne guide plus, et rien n'est posé à la place du
+    // joueur. Le bouton n'existe que tant qu'il guide.
+    if (jeu.tutoriel && !jeu.tutoriel.fini && dansRect(rectPasserTuto(), p.x, p.y)) {
+      presser('passer');
+      passerTutoriel(jeu.tutoriel);
+      return true;
+    }
     if (dansRect(BOUTON_PAUSE, p.x, p.y)) { presser('pause'); ouvrirMenuPause(); return true; }
     // Un doigt sur la mini-carte y emmène la fenêtre : un geste, pas deux.
     if (dansRect(MINICARTE, p.x, p.y)) {

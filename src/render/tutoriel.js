@@ -7,12 +7,14 @@
 
 import {
   PALETTE, CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PIXEL,
-  TEXTE_PETIT, TUTORIEL_BANDEAU,
+  TEXTE_PETIT, TUTORIEL_BANDEAU, rectPasserTuto,
 } from '../design.js';
 import { decalage, celluleVisible, fenetre } from '../camera.js';
 import { coinCellule } from '../sim/grid.js';
 import { dessinerMotCentre } from './texte.js';
-import { dessinerPastille } from './sprites.js';
+import { dessinerPastille, INTERFACE } from './sprites.js';
+import { dessinerTouche, SOMBRE } from './plaque.js';
+import { enfoncement } from './bouton.js';
 
 // Le halo bat lentement : il attire l'œil sans clignoter.
 const PERIODE = 1.4; // secondes
@@ -49,7 +51,9 @@ export function dessinerHalo(ctx, etape, age) {
   ctx.restore();
 }
 
-export function dessinerBandeau(ctx, etape) {
+// `part` dit où l'on en est, de 0 à 1 : le tutoriel a une fin, et la barre
+// la montre. Sans elle, on ne saurait pas s'il en reste deux gestes ou vingt.
+export function dessinerBandeau(ctx, etape, part) {
   if (!etape) return;
   const b = TUTORIEL_BANDEAU;
   ctx.fillStyle = PALETTE.noir;
@@ -58,7 +62,24 @@ export function dessinerBandeau(ctx, etape) {
   ctx.lineWidth = 2;
   ctx.strokeRect(b.x + 1, b.y + 1, b.l - 2, b.h - 2);
 
-  const taille = b.h - 12;
-  dessinerPastille(ctx, etape.icone, b.x + 6, b.y + 6, taille);
-  dessinerMotCentre(ctx, etape.nom, b.x + 6 + taille + 10, b.y + b.h / 2, TEXTE_PETIT, PALETTE.creme);
+  const taille = b.h - 16;
+  dessinerPastille(ctx, etape.icone, b.x + 6, b.y + 8, taille);
+  // Le mot s'arrête avant le bouton qui passe : il ne passe jamais dessous.
+  dessinerMotCentre(
+    ctx, etape.nom, b.x + 6 + taille + 10, b.y + b.h / 2 - 3, TEXTE_PETIT, PALETTE.creme,
+  );
+
+  // La barre d'avancement, tout en bas du bandeau : deux pixels d'art.
+  const marge = 6;
+  const large = b.l - marge * 2;
+  ctx.fillStyle = PALETTE.ardoise;
+  ctx.fillRect(b.x + marge, b.y + b.h - 8, large, PIXEL);
+  ctx.fillStyle = PALETTE.creme;
+  ctx.fillRect(b.x + marge, b.y + b.h - 8, Math.round(large * part), PIXEL);
+
+  // Passer : on ne guide plus, et la carte reste telle qu'elle est.
+  dessinerTouche(ctx, rectPasserTuto(), INTERFACE.menuFermer, {
+    teinte: SOMBRE,
+    enfonce: enfoncement('passer'),
+  });
 }

@@ -104,11 +104,17 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   Un essai n'est qu'une disposition de départ plus le tutoriel ou non — c'est
   une entrée de `data/scenarios.js`. Le menu pause y ramène, le temps de la
   bêta.
-- **Le tutoriel est un système de plus, assumé, ajouté sur demande.** Il ne
-  sert qu'à la première partie et ne connaît que le résultat d'un geste, jamais
-  le geste : cinq étapes dans `data/tutoriel.js`, un halo sur les cellules à
-  toucher, et l'image de la bulle à poser. Une étape de plus y est une entrée
-  de plus. Rien du reste du jeu ne le regarde.
+- **Le tutoriel mène jusqu'à une usine qui tourne.** C'est un système de plus,
+  assumé : il ne sert qu'à la première partie et ne connaît que le résultat
+  d'un geste, jamais le geste. Dix-sept étapes dans `data/tutoriel.js`, un halo
+  sur les cellules à toucher, l'image de ce qu'il y a à poser, et une barre qui
+  dit ce qu'il en reste. À la dernière, le premier bonbon est livré : ce qu'on
+  obtient est exactement la chaîne de l'essai « usine qui tourne ». La fenêtre
+  suit l'étape quand elle sort du cadre.
+  Quatre épreuves seulement — un extracteur posé, une machine à sa case, des
+  tapis qui relient deux machines, un bonbon livré — et une étape de plus est
+  une entrée de plus. **Un bouton le passe** : on ne guide plus, et rien n'est
+  posé à la place du joueur.
 
 ### Une seule carte, plus grande que l'écran
 
@@ -336,6 +342,11 @@ tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640
 
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
+
+Trois outils gardent le jeu, et ils tournent avant toute livraison :
+`outils/tapis.mjs` pour les convoyeurs, `outils/lisibilite.mjs` pour ce qui se
+lit, `outils/tutoriel.mjs` qui joue les dix-sept étapes du premier contact et
+vérifie qu'au bout, l'usine livre.
 
 Toute vérification visuelle passe d'abord par `node outils/lisibilite.mjs`,
 puis produit **les deux captures, systématiquement** :
