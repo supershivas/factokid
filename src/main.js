@@ -135,16 +135,20 @@ demarrerBoucle(
       dessinerDemarrage(ctx, demarrage, spriteItem('bonbon'));
       return;
     }
+    // Les touches vivent avant tout le reste : l'écran des essais en a, lui
+    // aussi, et elles restaient immobiles tant que la suite n'était atteinte
+    // qu'une fois le monde bâti.
+    effetsDeConstruction();
+    majAppuis(dt);
+
     // Pas encore d'essai choisi : l'écran des essais tient l'écran, et rien
     // d'autre n'existe.
     if (!jeu.monde) { dessinerChoix(ctx, interfaceJeu); return; }
 
-    effetsDeConstruction();
     vapeurDesMachines();
     fumeeDesMines(dt);
     majParticules(dt);
     majPoses(dt);
-    majAppuis(dt);
     // Les chevrons de la scène qu'on regarde : c'est du rendu, pas du jeu.
     majChevrons(jeu.monde.scene, dt);
 

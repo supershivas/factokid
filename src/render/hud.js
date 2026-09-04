@@ -88,7 +88,7 @@ function dessinerOutils(ctx, interfaceJeu) {
     // L'outil en cours est la touche restée enfoncée : c'est toute la marque
     // de sélection, et elle se lit comme une touche enclenchée.
     dessinerTouche(ctx, rectBouton(i), INTERFACE[b.icone], {
-      enfonce: Math.max(enfoncement('outil:' + i), b.actif ? 1 : 0),
+      enfonce: enfoncement('outil:' + i, b.actif ? 1 : 0),
     });
   }
 }
@@ -120,7 +120,7 @@ function dessinerRangees(ctx, interfaceJeu) {
     // La rangée entière est une touche : une pilule sombre, qui porte l'image
     // de l'élément et son nom. Celle qui est choisie reste enfoncée — le même
     // signe que dans la barre d'outils.
-    const enfonce = Math.max(enfoncement('rangee:' + j), bulle.choisie ? 1 : 0);
+    const enfonce = enfoncement('rangee:' + j, bulle.choisie ? 1 : 0);
     const dy = dessinerPilule(ctx, { x, y, l: r.l, h: r.h }, { teinte: SOMBRE, enfonce, alpha });
 
     ctx.globalAlpha = alpha * (bulle.choisie ? 1 : 0.75);
@@ -184,7 +184,7 @@ function dessinerPanneau(ctx, interfaceJeu) {
     // Une option qui ne se choisit pas — la pause — est toujours allumée.
     dessinerTouche(ctx, rectOption(j), sprite, {
       teinte: SOMBRE,
-      enfonce: Math.max(enfoncement('option:' + j), option.choisie ? 1 : 0),
+      enfonce: enfoncement('option:' + j, option.choisie ? 1 : 0),
       part: option.item ? PART_ITEM : undefined,
     });
   }

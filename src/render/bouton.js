@@ -43,13 +43,26 @@ export function majAppuis(dt) {
   }
 }
 
-// De 1 (au fond, posée sur son socle) à 0 (au repos). Le rebond passe dans les
-// négatifs : la touche décolle de son socle avant de s'y reposer.
-export function enfoncement(cle) {
+// De combien la touche est descendue, entre 0 (au repos) et 1 (au fond).
+//
+// `repos` est la place où elle revient : 0 pour une touche ordinaire, 1 pour
+// celle qui reste enclenchée — l'outil en cours, la matière triée. C'est ce
+// second cas qui manquait : une touche qui s'enclenche descendait sans rien
+// dire de plus, et l'appui semblait ignoré. Elle décolle donc brièvement de
+// son socle avant de s'y recoller, comme claque un interrupteur.
+const DECOLLE = 0.55; // part de la course dont une touche enclenchée remonte
+
+export function enfoncement(cle, repos = 0) {
   const t = touches.get(cle);
-  if (!t) return 0;
+  if (!t) return repos;
   if (t.phase === 'bas') return 1;
   const a = t.age;
-  return Math.exp(-AMORTI * a)
-    * (Math.cos(PULSATION * a) + (AMORTI / PULSATION) * Math.sin(PULSATION * a));
+  const amorti = Math.exp(-AMORTI * a);
+  if (repos <= 0) {
+    // Elle remonte du fond, dépasse le repos, et s'y pose.
+    return amorti * (Math.cos(PULSATION * a) + (AMORTI / PULSATION) * Math.sin(PULSATION * a));
+  }
+  // Jamais plus bas que le fond : le socle ne fait que trois pixels d'art, et
+  // un corps qui les dépasserait passerait au travers de son propre sol.
+  return Math.min(1, repos - DECOLLE * amorti * Math.sin(PULSATION * a));
 }
