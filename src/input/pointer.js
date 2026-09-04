@@ -229,17 +229,25 @@ export function brancherPointeur(canvas, vue, jeu) {
       ? Object.values(MACHINES).find((m) => m.recette === recette.id) : null;
     if (fabricant) return 'sort de la {' + fabricant.id + '}';
     const biome = biomeDe(item);
-    return biome ? 'se récolte ' + biome.ou : 'se récolte sur ses gisements';
+    // « se trouve », et non « se récolte » : la phrase du gisement parle déjà
+    // de récolter, et le mot revenait deux fois dans la même ligne.
+    return biome ? 'se trouve ' + biome.ou : 'se trouve sur ses gisements';
   }
 
-  // Où elle va : les machines qui l'attendent.
-  function usages(item) {
-    const emplois = Object.values(MACHINES).filter(
+  // Les machines qui attendent une matière : c'est là qu'elle part.
+  function emploisDe(item) {
+    return Object.values(MACHINES).filter(
       (m) => (m.recette && RECETTES[m.recette].entrees[item]) || m.entree === item,
     );
+  }
+
+  // Où elle va. Chaque machine porte sa propre façon d'être abordée — « à la
+  // confiserie », « au trieur » — plutôt qu'un « à la » collé devant tout.
+  function usages(item) {
+    const emplois = emploisDe(item);
     if (emplois.length === 0) return '';
-    return ' et part ' + (emplois.length === 1 ? 'à la ' : 'vers ')
-      + emplois.map((m) => '{' + m.id + '}').join(', ');
+    if (emplois.length === 1) return ' et part ' + emplois[0].a + '{' + emplois[0].id + '}';
+    return ' et part vers ' + emplois.map((m) => '{' + m.id + '}').join(', ');
   }
 
   function texteMatiere(item) {
@@ -272,8 +280,11 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (machine) {
       // Un extracteur posé dit ce qu'il récolte : sa description porte la
       // matière de son gisement, pas une formule générale.
+      // « du fraise » n'existe pas : chaque matière porte son article, et
+      // c'est lui qui entre dans la phrase.
       const dit = machine.def.description.replace(
-        '{matiere}', machine.item ? 'du {' + machine.item + '}' : 'sa matière',
+        '{matiere}',
+        machine.item ? ITEMS[machine.item].du + ' {' + machine.item + '}' : 'sa matière',
       );
       // La pause est au second rang : un petit bouton à droite du nom, pas
       // une option de plus dans la rangée du bas.
