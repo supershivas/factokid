@@ -5,12 +5,13 @@ import {
   PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE,
   TEXTE_GRAND, TEXTE_PETIT, TUILE_PX, BULLE, PANNEAU_TEXTE, PANNEAU_MARGE, BOUTON_PAUSE,
   poserImage,
-  SURMODALE_TEXTE, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
+  SURMODALE_TEXTE, BOUTON_ZOOM, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
 import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
+import { auPlusLoin } from '../camera.js';
 import { dessinerMenu } from './menu.js';
 import { dessinerMotCentre, dessinerMots, dessinerNombre } from './texte.js';
 
@@ -41,6 +42,13 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
 
   // Le bouton pause, puis la carte du monde : où l'on est, et où l'on va.
   dessinerTouche(ctx, BOUTON_PAUSE, INTERFACE.outilPause, { enfonce: enfoncement('pause') });
+  // Le recul, au second rang : il règle ce qu'on regarde, pas le monde. Son
+  // signe montre ce qu'on obtient en appuyant — quatre grosses cases pour
+  // revenir bâtir, seize petites pour voir loin.
+  dessinerTouche(ctx, BOUTON_ZOOM, INTERFACE[auPlusLoin() ? 'zoomPres' : 'zoomLoin'], {
+    teinte: SOMBRE,
+    enfonce: enfoncement('zoom'),
+  });
   dessinerMiniCarte(ctx, monde);
 
   dessinerOutils(ctx, interfaceJeu);

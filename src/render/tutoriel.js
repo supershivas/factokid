@@ -9,7 +9,7 @@ import {
   PALETTE, CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PIXEL,
   TEXTE_PETIT, TUTORIEL_BANDEAU, rectPasserTuto,
 } from '../design.js';
-import { decalage, celluleVisible, fenetre } from '../camera.js';
+import { cadrerMonde, celluleVisible, fenetre } from '../camera.js';
 import { coinCellule } from '../sim/grid.js';
 import { dessinerMotCentre } from './texte.js';
 import { dessinerPastille, INTERFACE } from './sprites.js';
@@ -22,15 +22,11 @@ const PERIODE = 1.4; // secondes
 export function dessinerHalo(ctx, etape, age) {
   if (!etape) return;
   const f = fenetre();
-  const d = decalage();
   const battement = 0.5 + 0.5 * Math.sin((age / PERIODE) * Math.PI * 2);
   const epaisseur = PIXEL;
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE);
-  ctx.clip();
-  ctx.translate(-d.x, -d.y);
+  // Le halo vit dans le monde comme la scène : même cadre, donc même échelle.
+  cadrerMonde(ctx);
   ctx.fillStyle = PALETTE.creme;
   for (const c of etape.cibles) {
     if (!celluleVisible(c.cx, c.cy, f)) continue;

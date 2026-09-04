@@ -7,7 +7,7 @@
 
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
-  BOUTON_PAUSE, PANNEAU_TEXTE, SURMODALE, SURMODALE_TEXTE, TEXTE_PETIT,
+  BOUTON_PAUSE, BOUTON_ZOOM, PANNEAU_TEXTE, SURMODALE, SURMODALE_TEXTE, TEXTE_PETIT,
   boitePanneau, boiteSurmodale,
   rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
   rectFermer, rectSecondaire, rectPasserTuto, dansRect,
@@ -28,7 +28,7 @@ import {
   prolongerConvoyeur, brancherConvoyeur, raccorderA, ajouterMachine, retirerMachine,
 } from '../sim/scene.js';
 import { gisementEn, poserExtracteur, retirerExtracteur } from '../sim/gisement.js';
-import { camera, deplacerCamera, centrerCamera, versMonde } from '../camera.js';
+import { camera, deplacerCamera, centrerCamera, versMonde, zoomer } from '../camera.js';
 import { aUneSortie, attendus, maxEntrees } from '../sim/machine.js';
 
 const APPUI_LONG = 0.42 * 1000; // millisecondes
@@ -486,6 +486,9 @@ export function brancherPointeur(canvas, vue, jeu) {
       return true;
     }
     if (dansRect(BOUTON_PAUSE, p.x, p.y)) { presser('pause'); ouvrirMenuPause(); return true; }
+    // Reculer d'un cran, ou revenir. Rien du monde ne change : c'est le seul
+    // bouton du bandeau qui ne fait que déplacer le regard.
+    if (dansRect(BOUTON_ZOOM, p.x, p.y)) { presser('zoom'); zoomer(); return true; }
     // Un doigt sur la mini-carte y emmène la fenêtre : un geste, pas deux.
     if (dansRect(MINICARTE, p.x, p.y)) {
       const c = celluleMiniCarte(p);

@@ -77,6 +77,17 @@ export const MINICARTE = {
   l: COLONNES * MINICARTE_PAS,
   h: LIGNES * MINICARTE_PAS,
 };
+// Les niveaux de zoom, en unités logiques par cellule. Le zoom sert à voir de
+// plus loin, jamais de plus près : le premier niveau est celui où l'on bâtit,
+// et c'est déjà le plus gros.
+//
+// Il n'y a rien entre les deux, et rien en dessous : une image de pixel art ne
+// se met à l'échelle qu'en nombre entier de fois. À 48, un pixel d'art vaut
+// deux unités logiques ; à 24, il en vaut une, et il n'y a rien sous une
+// unité. Le cran de recul est donc unique, et c'est la grille qui le dit —
+// pas un réglage.
+export const ZOOMS = [CELLULE, CELLULE / 2];
+
 export const BOUTON_PAUSE = {
   x: MINICARTE.x - 12 - BOUTON, y: 14, l: BOUTON, h: BOUTON,
 };
@@ -153,6 +164,16 @@ export const FERMER = { l: 40, h: 40 };
 // l'élément qu'on regarde, jamais ce qui agit sur le monde. La pause d'une
 // machine en est un.
 export const BOUTON_SECONDAIRE = 40;
+
+// Le zoom est du second rang : il règle ce qu'on regarde, il ne touche pas au
+// monde. Sa touche se pose donc à gauche de la pause, du côté de la
+// mini-carte — les deux outils du regard voisinent.
+export const BOUTON_ZOOM = {
+  x: BOUTON_PAUSE.x - 12 - BOUTON_SECONDAIRE,
+  y: BOUTON_PAUSE.y + (BOUTON - BOUTON_SECONDAIRE) / 2,
+  l: BOUTON_SECONDAIRE,
+  h: BOUTON_SECONDAIRE,
+};
 
 // Les options du panneau sont des touches comme les autres : même rond, même
 // épaisseur. Il n'en reste que les réglages — les quatre matières d'un trieur ;

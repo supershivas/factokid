@@ -152,6 +152,23 @@ doigt tire le monde ; en construction, il trace. Pendant un tracé,
 arriver au bord de la fenêtre fait défiler tout seul, pour qu'un convoyeur
 traverse deux écrans sans que le doigt se lève.
 
+**Un cran de recul, et un seul.** Une touche du second rang, à côté de la
+mini-carte, éloigne la vue : la cellule passe de 48 à 24 et la fenêtre montre
+14 × 20 cellules au lieu de 7 × 10 — les deux tiers du monde. On recule autour
+de ce qu'on regardait, et un second appui revient. Le zoom sert à voir de
+**loin, jamais de près** : le niveau où l'on bâtit est déjà le plus gros.
+
+Il n'y a rien entre les deux, rien en dessous, et ce n'est pas un réglage :
+une image de pixel art ne se met à l'échelle qu'en nombre entier de fois. À
+48, un pixel d'art vaut deux unités logiques ; à 24, il en vaut une, et il n'y
+a rien sous une unité. C'est aussi pourquoi reculer ne coûte aucune finesse et
+ne cache rien : c'est l'art à sa résolution native, pas une réduction.
+
+**La simulation n'en sait rien.** La cellule vaut 48 pour elle quoi qu'il
+arrive, et un tapis avance toujours à 96 unités par seconde : le débit ne
+dépend jamais de ce qu'on regarde. Un seul endroit du rendu connaît l'échelle,
+`cadrerMonde()` dans `camera.js` ; tout le reste dessine en unités du monde.
+
 ### Règle de croissance
 
 Le jeu grossit par **ajout de données**, jamais par ajout de systèmes. Une
@@ -174,7 +191,8 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Résolution logique | 360 × 640 |
 | Pixel art natif | 24 × 24 par tuile |
 | Cellule de grille | 48 unités logiques |
-| Fenêtre | 7 × 10 cellules |
+| Niveaux de zoom | cellule à 48 (bâtir) ou 24 (regarder), rien d'autre |
+| Fenêtre | 7 × 10 cellules, 14 × 20 en reculant |
 | Monde | 21 × 30 cellules, soit neuf fenêtres |
 | Cible tactile minimale | 48 unités logiques |
 | Mise à l'échelle | entière uniquement (×1, ×2, ×3), jamais fractionnaire |
@@ -373,7 +391,7 @@ preview.html        aperçu desktop (même bundle, cadre différent)
 vendor/             Motion, rangé tel quel, jamais modifié
 src/
   main.js           point d'entrée, sélection du conteneur
-  camera.js         quelle partie du monde la fenêtre montre
+  camera.js         quelle partie du monde la fenêtre montre, et à quelle échelle
   tutoriel.js       où en est le premier contact
   loop.js           boucle à pas fixe
   anim.js           ressorts d'interface (Motion)
@@ -464,9 +482,13 @@ endroit. La bêta y ajoute ses trois essais et le tutoriel du premier contact.
 Ces ajouts sont décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
-Mesuré à 208 items, 60 fps, image médiane 16,7 ms — avant que l'espacement ne
-passe à 27, qui plafonne désormais un long convoyeur à 121 items. Le chiffre
-de 200 est donc à revoir ou à atteindre autrement.
+Remesuré depuis, avec l'espacement à 27 et le cran de recul : dix-neuf longs
+tapis remplis, 200 items à l'échelle où l'on bâtit et 400 en reculant, image
+médiane 16,7 ms dans les deux cas — 60 fps, et la pire image à 20,4 ms. Le
+recul ne coûte donc rien, alors qu'il double ce qui est à l'écran.
+
+C'est mesuré dans un Chromium sans fenêtre, pas sur un téléphone : le chiffre
+est bon, la cible ne l'est pas encore. Il reste à le refaire sur l'appareil.
 
 Tant que ce chiffre n'est pas mesuré, aucune recette, aucun déblocage, aucune
 courbe, aucun prestige. Si le critère n'est pas tenu, on bascule sur un débit

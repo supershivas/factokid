@@ -6,7 +6,7 @@ import {
   PALETTE, TUILE_PX, PIXEL, CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE,
   ALERTE_DELAI,
 } from '../design.js';
-import { decalage, fenetre, celluleVisible } from '../camera.js';
+import { cadrerMonde, fenetre, celluleVisible } from '../camera.js';
 import { tuileSol } from './biome.js';
 import { ITEMS } from '../data/items.js';
 import { FORMES as formes } from './motifs.js';
@@ -358,6 +358,23 @@ const menuEssais = toile(TUILE_PX, (rect) => signeEssais(rect, PALETTE.noir));
 // on ne détruit rien en refermant une explication.
 const menuFermer = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.noir, 5, 1.5));
 
+// Les deux signes du zoom. Rien de rond ici — une loupe est un cercle, et dans
+// ce jeu un cercle n'est jamais qu'un bouton. Ce sont donc des cases, et elles
+// montrent ce qu'on obtient en appuyant : quatre grosses pour revenir bâtir,
+// seize petites pour reculer et voir loin.
+function damier(rect, n, cote, ecart, couleur) {
+  const total = n * cote + (n - 1) * ecart;
+  const marge = (TUILE_PX - total) / 2;
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      rect(marge + x * (cote + ecart), marge + y * (cote + ecart), cote, cote, couleur);
+    }
+  }
+}
+
+const zoomLoin = toile(TUILE_PX, (rect) => damier(rect, 4, 4, 2, PALETTE.creme));
+const zoomPres = toile(TUILE_PX, (rect) => damier(rect, 2, 9, 2, PALETTE.creme));
+
 // La main qui tire le monde, écrite en silhouette : un caractère par pixel,
 // peinte pleine. C'est le dessin des mains d'interface — une masse noire, des
 // doigts séparés par de fines fentes qui s'arrêtent avant la paume, un pouce
@@ -469,7 +486,7 @@ export const INTERFACE = {
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse, bulleScierie,
   bullePause, bulleReprise,
   outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
-  menuFermer,
+  menuFermer, zoomLoin, zoomPres,
 };
 
 // Une icône peut venir de l'interface, des machines ou des items : on la
@@ -601,13 +618,10 @@ function tuile(ctx, sprite, cx, cy, quarts) {
 export function dessinerScene(ctx, monde, trace, dessinerParticules) {
   const scene = monde.scene;
   const f = fenetre();
-  const d = decalage();
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE);
-  ctx.clip();
-  ctx.translate(-d.x, -d.y);
+  // Tout ce qui suit est en unités du monde : c'est le cadre qui sait à quelle
+  // échelle on regarde, et il est le seul.
+  cadrerMonde(ctx);
 
   // Le sol vient des biomes : sa teinte change d'une région à l'autre, et se
   // mélange là où deux se rencontrent.

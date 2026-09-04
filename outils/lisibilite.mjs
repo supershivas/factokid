@@ -164,6 +164,7 @@ const POSES = [
   { quoi: 'option de panneau, matière', cible: 56, natif: 9, part: 0.72 },
   { quoi: 'jeton de recette', cible: 52, natif: 9, part: 0.72 },
   { quoi: 'croix de la surmodale', cible: 40, natif: TUILE_PX, part: 6 / 7 },
+  { quoi: 'signe du zoom, au second rang', cible: 40, natif: TUILE_PX, part: 6 / 7 },
   { quoi: 'touche du labo', cible: 28, natif: TUILE_PX, part: 6 / 7 },
   // La vignette d'une modale n'est pas une touche : elle n'a pas de rond, et
   // son image peut donc remplir son carré jusqu'aux coins.

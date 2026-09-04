@@ -6,7 +6,7 @@
 
 import { PALETTE, MINICARTE, MINICARTE_PAS, CELLULE, COLONNES, LIGNES } from '../design.js';
 import { ITEMS } from '../data/items.js';
-import { camera } from '../camera.js';
+import { camera, vue } from '../camera.js';
 import { teinteSol } from './biome.js';
 import { LARGEUR_VUE, HAUTEUR_VUE } from '../design.js';
 
@@ -62,7 +62,8 @@ export function dessinerMiniCarte(ctx, monde) {
   ctx.strokeRect(
     MINICARTE.x + Math.round(camera.x / CELLULE * P) + 0.5,
     MINICARTE.y + Math.round(camera.y / CELLULE * P) + 0.5,
-    (LARGEUR_VUE / CELLULE) * P, (HAUTEUR_VUE / CELLULE) * P,
+    // Le cadre grandit quand on recule : c'est bien plus de monde qu'on voit.
+    (vue().l / CELLULE) * P, (vue().h / CELLULE) * P,
   );
 }
 
