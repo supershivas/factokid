@@ -4,14 +4,14 @@
 import {
   PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE,
   TEXTE_GRAND, TEXTE_PETIT, BULLE, PANNEAU, PANNEAU_TEXTE, BOUTON_PAUSE, JETON,
-  rectBouton, rectRangee, rectOption, rectsChaine,
+  SURMODALE, rectBouton, rectRangee, rectOption, rectsChaine, rectFermer,
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
 import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { dessinerMenu } from './menu.js';
-import { dessinerMotCentre, dessinerNombre, decouperTexte, hauteurTexte } from './texte.js';
+import { dessinerMotCentre, dessinerMots, dessinerNombre } from './texte.js';
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   const livraison = monde.scene.machines.find((m) => m.def.entree);
@@ -39,9 +39,44 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   // ne doit rester allumé derrière un choix ouvert.
   dessinerRangees(ctx, interfaceJeu);
   dessinerPanneau(ctx, interfaceJeu);
+  dessinerSurmodale(ctx, interfaceJeu);
 
   // Le menu pause passe par-dessus tout, y compris la barre d'outils.
   dessinerMenu(ctx, interfaceJeu);
+}
+
+// La surmodale : ce qu'un mot souligné explique. Elle se pose au-dessus du
+// panneau sans le fermer — la croix la referme, et on retrouve ce qu'on
+// regardait. Un doigt posé à côté la referme aussi.
+function dessinerSurmodale(ctx, interfaceJeu) {
+  const s = interfaceJeu.surmodale;
+  if (!s) return;
+  const echelle = interfaceJeu.surmodaleAnim;
+
+  ctx.save();
+  ctx.translate(SURMODALE.x + SURMODALE.l / 2, SURMODALE.y + SURMODALE.h / 2);
+  ctx.scale(echelle, echelle);
+  ctx.translate(-(SURMODALE.x + SURMODALE.l / 2), -(SURMODALE.y + SURMODALE.h / 2));
+
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(SURMODALE.x, SURMODALE.y, SURMODALE.l, SURMODALE.h);
+  ctx.strokeStyle = PALETTE.creme;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(SURMODALE.x + 1, SURMODALE.y + 1, SURMODALE.l - 2, SURMODALE.h - 2);
+
+  const image = spriteNomme(s.icone);
+  if (image) ctx.drawImage(image, SURMODALE.x + 12, SURMODALE.y + 12, CELLULE, CELLULE);
+  dessinerMotCentre(
+    ctx, s.nom, SURMODALE.x + 12 + CELLULE + 12, SURMODALE.y + 12 + CELLULE / 2,
+    TEXTE_PETIT, PALETTE.creme,
+  );
+  dessinerMots(
+    ctx, s.mots || [], SURMODALE.x + 12, SURMODALE.y + 72,
+    TEXTE_PETIT, PALETTE.ardoise, PALETTE.creme,
+  );
+
+  dessinerTouche(ctx, rectFermer(), INTERFACE.menuFermer, { enfonce: enfoncement('fermer') });
+  ctx.restore();
 }
 
 // Barre d'outils : trois touches rondes. L'outil en cours est en pleine
@@ -126,15 +161,12 @@ function dessinerPanneau(ctx, interfaceJeu) {
     TEXTE_PETIT, PALETTE.creme,
   );
 
-  // Une ligne qui dit à quoi sert l'élément : le nom seul ne suffit pas.
-  const lignes = decouperTexte(p.description || '', PANNEAU.l - 24, TEXTE_PETIT);
-  const interligne = hauteurTexte(TEXTE_PETIT) + 4;
-  for (let i = 0; i < lignes.length; i++) {
-    dessinerMotCentre(
-      ctx, lignes[i], PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y + i * interligne,
-      TEXTE_PETIT, PALETTE.ardoise,
-    );
-  }
+  // Ce que l'élément fait, en toutes lettres. Les matières et les machines
+  // qu'on y nomme sont soulignées : les toucher les explique, par-dessus.
+  dessinerMots(
+    ctx, p.mots || [], PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y,
+    TEXTE_PETIT, PALETTE.ardoise, PALETTE.creme,
+  );
 
   dessinerChaine(ctx, p.chaine || []);
 

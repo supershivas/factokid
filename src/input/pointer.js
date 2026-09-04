@@ -7,10 +7,12 @@
 
 import {
   CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
-  BOUTON_PAUSE, rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
-  rectsChaine, dansRect,
+  BOUTON_PAUSE, PANNEAU_TEXTE, SURMODALE, TEXTE_PETIT,
+  rectBouton, rectRangee, rectOption, rectMenu, rectChoix, rectsChaine,
+  rectFermer, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
+import { analyserTexte, disposerMots } from '../render/texte.js';
 import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
@@ -46,6 +48,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     boutons: [],
     panneau: null,
     panneauAnim: 0,
+    // Ce qu'un mot souligné explique. Elle se pose au-dessus du panneau et le
+    // laisse ouvert : on revient à ce qu'on regardait en la refermant.
+    surmodale: null,
+    surmodaleAnim: 0,
     trace: {
       actif: false, source: null, chemin: [], reprise: null, branche: null,
       origine: null, contact: null,
@@ -73,6 +79,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   let actionsMenu = [];
   let animMenu = null;
   let animPanneau = null;
+  let animSurmodale = null;
 
   // Le doigt se pose sur une touche : on la retient, pour la lâcher au moment
   // où il se lève. C'est ce relâchement qui fait rebondir le bouton.
@@ -168,6 +175,19 @@ export function brancherPointeur(canvas, vue, jeu) {
     animPanneau = viser('panneauAnim', 1, animPanneau);
   }
 
+  // Le nom que porte une clé explicable : une matière, une machine.
+  const nommer = (cle) => (ITEMS[cle] ? ITEMS[cle].nom
+    : MACHINES[cle] ? MACHINES[cle].nom : cle);
+
+  // Une description devient des mots placés : c'est la même disposition que le
+  // rendu dessine et que le doigt touche.
+  function decrire(texte, largeur) {
+    return disposerMots(analyserTexte(texte || '', nommer), largeur, TEXTE_PETIT).mots;
+  }
+
+  const LARGEUR_TEXTE = PANNEAU.l - PANNEAU_TEXTE.x * 2;
+  const LARGEUR_SURMODALE = SURMODALE.l - 24;
+
   // --- ce qu'un bâtiment dit de lui-même --------------------------------
   //
   // Un bâtiment doit montrer ce qu'il lui faut : sa recette est posée dans son
@@ -181,10 +201,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     const entrees = Object.keys(recette.entrees);
     for (let i = 0; i < entrees.length; i++) {
       if (i > 0) jetons.push({ signe: 'plus' });
-      jetons.push({ item: entrees[i], action: () => ouvrirMatiere(entrees[i]) });
+      jetons.push({ item: entrees[i], action: () => expliquer(entrees[i]) });
     }
     jetons.push({ signe: 'fleche' });
-    jetons.push({ item: recette.sortie, action: () => ouvrirMatiere(recette.sortie) });
+    jetons.push({ item: recette.sortie, action: () => expliquer(recette.sortie) });
     return jetons;
   }
 
@@ -192,7 +212,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   // récolte, ou celle qu'il attend.
   function chaineDe(def) {
     if (def.recette) return chaineRecette(RECETTES[def.recette]);
-    if (def.entree) return [{ item: def.entree, action: () => ouvrirMatiere(def.entree) }];
+    if (def.entree) return [{ item: def.entree, action: () => expliquer(def.entree) }];
     return [];
   }
 
@@ -203,52 +223,65 @@ export function brancherPointeur(canvas, vue, jeu) {
     return trouve ? BIOMES[trouve] : null;
   }
 
-  // Le panneau d'une matière : d'où elle vient, et ce qu'on en fait. Les
-  // machines qui l'emploient sont ses boutons — un appui, et on y est.
-  function ouvrirMatiere(item) {
+  // Ce qu'une matière raconte d'elle-même : d'où elle vient, et ce qu'on en
+  // fait. Les machines nommées dans la phrase sont explicables à leur tour —
+  // on remonte la chaîne sans jamais perdre ce qu'on regardait.
+  // D'où vient une matière : la machine qui la fabrique, ou le sol où elle
+  // pousse.
+  function provenance(item) {
     const recette = Object.values(RECETTES).find((r) => r.sortie === item);
     const fabricant = recette
       ? Object.values(MACHINES).find((m) => m.recette === recette.id) : null;
+    if (fabricant) return 'sort de la {' + fabricant.id + '}';
     const biome = biomeDe(item);
+    return biome ? 'se récolte ' + biome.ou : 'se récolte sur ses gisements';
+  }
+
+  // Où elle va : les machines qui l'attendent.
+  function usages(item) {
     const emplois = Object.values(MACHINES).filter(
       (m) => (m.recette && RECETTES[m.recette].entrees[item]) || m.entree === item,
     );
-    etat.panneau = {
-      nom: ITEMS[item].nom,
-      description: fabricant ? 'sort de la ' + fabricant.nom
-        : biome ? 'se récolte dans ' + biome.nom
-          : 'se récolte sur ses gisements',
-      icone: item,
-      chaine: recette ? chaineRecette(recette) : [],
-      options: emplois.map((def) => ({
-        icone: def.id,
-        action: () => ouvrirTypeMachine(def),
-      })),
-    };
-    surgirPanneau();
+    if (emplois.length === 0) return '';
+    return ' et part ' + (emplois.length === 1 ? 'à la ' : 'vers ')
+      + emplois.map((m) => '{' + m.id + '}').join(', ');
   }
 
-  // Le panneau d'un bâtiment qu'on ne touche pas : celui dont on vient de
-  // suivre la trace depuis une matière.
-  function ouvrirTypeMachine(def) {
-    etat.panneau = {
-      nom: def.nom,
-      description: def.description,
-      icone: def.id,
-      chaine: chaineDe(def),
-      options: [],
+  function texteMatiere(item) {
+    return provenance(item) + usages(item) + '.';
+  }
+
+  // La surmodale : ce qu'un mot souligné explique. Elle se pose par-dessus le
+  // panneau et ne le referme pas.
+  function expliquer(cle) {
+    const machine = MACHINES[cle];
+    const texte = machine ? machine.description : texteMatiere(cle);
+    etat.surmodale = {
+      nom: nommer(cle),
+      icone: cle,
+      mots: decrire(texte.replace('{matiere}', ''), LARGEUR_SURMODALE),
     };
-    surgirPanneau();
+    etat.surmodaleAnim = 0;
+    animSurmodale = viser('surmodaleAnim', 1, animSurmodale);
+  }
+
+  function fermerSurmodale() {
+    etat.surmodale = null;
   }
 
   function ouvrirPanneau(machine, convoyeur) {
     if (machine) {
+      // Un extracteur posé dit ce qu'il récolte : sa description porte la
+      // matière de son gisement, pas une formule générale.
+      const dit = machine.def.description.replace(
+        '{matiere}', machine.item ? 'du {' + machine.item + '}' : 'sa matière',
+      );
       etat.panneau = {
         nom: machine.def.nom,
-        description: machine.def.description,
+        mots: decrire(dit, LARGEUR_TEXTE),
         icone: machine.type,
         chaine: machine.def.mine
-          ? [{ item: machine.item, action: () => ouvrirMatiere(machine.item) }]
+          ? [{ item: machine.item, action: () => expliquer(machine.item) }]
           : chaineDe(machine.def),
         options: optionsMachine(machine),
       };
@@ -259,12 +292,13 @@ export function brancherPointeur(canvas, vue, jeu) {
       etat.panneau = {
         nom: role === 'triee' && trieur ? ITEMS[trieur.matiereTriee].nom
           : role === 'reste' ? 'le reste' : 'convoyeur',
-        description: role === 'triee' ? 'emporte la matière que le trieur range'
-          : role === 'reste' ? 'emporte tout ce que le trieur ne range pas'
-            : MACHINES.convoyeur.description,
+        mots: decrire(role === 'triee' && trieur
+          ? 'emporte le {' + trieur.matiereTriee + '} que le {trieur} range'
+          : role === 'reste' ? 'emporte tout ce que le {trieur} ne range pas'
+            : MACHINES.convoyeur.description, LARGEUR_TEXTE),
         icone: 'bulleConvoyeur',
         chaine: role === 'triee' && trieur
-          ? [{ item: trieur.matiereTriee, action: () => ouvrirMatiere(trieur.matiereTriee) }]
+          ? [{ item: trieur.matiereTriee, action: () => expliquer(trieur.matiereTriee) }]
           : [],
         options: trieur ? optionsMachine(trieur) : [],
       };
@@ -283,11 +317,15 @@ export function brancherPointeur(canvas, vue, jeu) {
     );
     etat.panneau = {
       nom: ITEMS[g.item].nom,
-      description: 'pose un extracteur pour le récolter',
+      mots: decrire(
+        'pose un extracteur pour récolter le {' + g.item + '}, qui '
+        + provenance(g.item) + usages(g.item) + '.',
+        LARGEUR_TEXTE,
+      ),
       icone: g.item,
       chaine: [],
       options: [{ icone: 'bulleExtracteur', action: () => batirExtracteur(c) }]
-        .concat(emplois.map((def) => ({ icone: def.id, action: () => ouvrirTypeMachine(def) }))),
+        .concat(emplois.map((def) => ({ icone: def.id, action: () => expliquer(def.id) }))),
     };
     surgirPanneau();
   }
@@ -316,8 +354,34 @@ export function brancherPointeur(canvas, vue, jeu) {
     return [optionPause(machine)];
   }
 
+  // Un mot souligné touché : on rend sa clé.
+  function motTouche(mots, x0, y0, p) {
+    for (const mot of mots || []) {
+      const r = { x: x0 + mot.x, y: y0 + mot.y - 2, l: mot.l, h: mot.h + 6 };
+      if (mot.cle && dansRect(r, p.x, p.y)) return mot.cle;
+    }
+    return null;
+  }
+
+  // La surmodale passe avant le panneau : tant qu'elle est là, c'est elle
+  // qu'on touche. La refermer ne referme pas ce qu'il y a dessous.
+  function surmodaleTouchee(p) {
+    if (!etat.surmodale) return false;
+    if (dansRect(rectFermer(), p.x, p.y)) { presser('fermer'); fermerSurmodale(); return true; }
+    const cle = motTouche(etat.surmodale.mots, SURMODALE.x + 12, SURMODALE.y + 72, p);
+    if (cle) { expliquer(cle); return true; }
+    if (dansRect(SURMODALE, p.x, p.y)) return true;
+    fermerSurmodale();
+    return true;
+  }
+
   function panneauTouche(p) {
     if (!etat.panneau) return false;
+    // Les mots soulignés de la description s'expliquent, comme les jetons.
+    const cleMot = motTouche(
+      etat.panneau.mots, PANNEAU.x + PANNEAU_TEXTE.x, PANNEAU.y + PANNEAU_TEXTE.y, p,
+    );
+    if (cleMot) { expliquer(cleMot); return true; }
     // Les matières de la recette se touchent : chacune mène à ce qu'elle est.
     const chaine = etat.panneau.chaine || [];
     const rects = rectsChaine(chaine);
@@ -343,6 +407,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   function ouvrirMenuPause() {
     etat.menuPause = 'menu';
     etat.panneau = null;
+    fermerSurmodale();
     fermerMenu();
     majMenuPause();
   }
@@ -587,6 +652,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     appuiLongFait = false;
     if (choixTouche(p)) { relacher(); return; }
     if (menuPauseTouche(p)) { relacher(); return; }
+    if (surmodaleTouchee(p)) { relacher(); return; }
     if (panneauTouche(p)) { relacher(); return; }
     if (interfaceTouchee(p)) { relacher(); return; }
 
@@ -741,6 +807,7 @@ export function brancherPointeur(canvas, vue, jeu) {
         ? { hote: surPlace, cellule: c }
         : trace.contact;
       etat.panneau = null;
+      fermerSurmodale();
       marquerConstruit(trace.chemin);
       let pose;
       if (trace.branche) {

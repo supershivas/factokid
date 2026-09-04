@@ -353,6 +353,11 @@ const outilPause = toile(TUILE_PX, (rect) => signePause(rect, PALETTE.noir));
 const menuReprise = toile(TUILE_PX, (rect) => signeReprise(rect, PALETTE.noir));
 const menuEssais = toile(TUILE_PX, (rect) => signeEssais(rect, PALETTE.noir));
 
+// La croix qui referme une surmodale. Elle est noire, là où la croix de
+// destruction est rouge : même forme, deux emplois, et la couleur les sépare —
+// on ne détruit rien en refermant une explication.
+const menuFermer = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.noir, 5, 1.5));
+
 // La main qui tire le monde, écrite en silhouette : un caractère par pixel,
 // peinte pleine. C'est le dessin des mains d'interface — une masse noire, des
 // doigts séparés par de fines fentes qui s'arrêtent avant la paume, un pouce
@@ -464,6 +469,7 @@ export const INTERFACE = {
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse, bulleScierie,
   bullePause, bulleReprise,
   outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
+  menuFermer,
 };
 
 // Une icône peut venir de l'interface, des machines ou des items : on la

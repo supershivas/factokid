@@ -112,6 +112,58 @@ export function hauteurTexte(echelle) {
   return HAUTEUR * echelle;
 }
 
+// --- texte explicable ------------------------------------------------------
+//
+// Une description peut nommer une matière ou une machine : « débite le {bois}
+// en {papier} ». Ce qui est entre accolades est *explicable* — on peut le
+// toucher, et il s'explique. La syntaxe reste une table : `{id}` affiche le
+// nom qu'on lui donne, `{id|mot}` affiche autre chose (un pluriel, un
+// accord).
+//
+// Le texte se découpe ensuite en mots placés, parce qu'un mot explicable doit
+// se toucher : le rendu et l'entrée lisent la même disposition.
+
+export function analyserTexte(chaine, nommer) {
+  const morceaux = [];
+  const motif = /\{([^}|]+)(?:\|([^}]+))?\}/g;
+  let curseur = 0;
+  let trouve = motif.exec(chaine);
+  while (trouve) {
+    if (trouve.index > curseur) morceaux.push({ texte: chaine.slice(curseur, trouve.index) });
+    morceaux.push({ texte: trouve[2] || nommer(trouve[1]), cle: trouve[1] });
+    curseur = trouve.index + trouve[0].length;
+    trouve = motif.exec(chaine);
+  }
+  if (curseur < chaine.length) morceaux.push({ texte: chaine.slice(curseur) });
+  return morceaux;
+}
+
+// Place les mots en lignes, dans la largeur donnée. Chaque mot rend sa boîte :
+// c'est elle que le rendu souligne et que le doigt touche.
+export function disposerMots(morceaux, largeur, echelle) {
+  const mots = [];
+  const interligne = HAUTEUR * echelle + 5;
+  let x = 0;
+  let ligne = 0;
+  for (const morceau of morceaux) {
+    // Un morceau qui ne commence pas par une espace se colle à ce qui précède :
+    // c'est ce qui garde le point contre le mot souligné plutôt qu'à distance.
+    let colle = mots.length > 0 && !/^\s/.test(morceau.texte);
+    // On coupe sur les espaces, en les gardant collés au mot qui précède :
+    // sinon un mot explicable emporterait l'espace dans son soulignement.
+    for (const brut of morceau.texte.split(/(\s+)/)) {
+      if (brut === '') continue;
+      if (/^\s+$/.test(brut)) { x += AVANCE * echelle; colle = false; continue; }
+      if (colle) { x -= AVANCE * echelle; colle = false; }
+      const l = largeurMot(brut, echelle);
+      if (x > 0 && x + l > largeur) { ligne++; x = 0; }
+      mots.push({ texte: brut, cle: morceau.cle, x, y: ligne * interligne, l, h: HAUTEUR * echelle });
+      x += l + AVANCE * echelle;
+    }
+  }
+  return { mots, lignes: ligne + 1, interligne };
+}
+
 // Découpe un texte en lignes qui tiennent dans la largeur donnée.
 export function decouperTexte(texte, largeur, echelle) {
   const lignes = [];
@@ -151,6 +203,18 @@ export function dessinerMot(ctx, texte, x, y, echelle, couleur) {
 // chaque module ait à recalculer où poser son texte.
 export function dessinerMotCentre(ctx, texte, x, milieu, echelle, couleur) {
   dessinerMot(ctx, texte, x, milieu - hauteurTexte(echelle) / 2, echelle, couleur);
+}
+
+// Écrit des mots placés. Ce qui s'explique est souligné : c'est le seul
+// ornement de texte du jeu, et il ne veut dire que « touche-moi ».
+export function dessinerMots(ctx, mots, x, y, echelle, couleur, couleurExplicable) {
+  for (const mot of mots) {
+    const teinte = mot.cle ? couleurExplicable : couleur;
+    dessinerMot(ctx, mot.texte, x + mot.x, y + mot.y, echelle, teinte);
+    if (!mot.cle) continue;
+    ctx.fillStyle = teinte;
+    ctx.fillRect(x + mot.x, y + mot.y + mot.h + echelle, mot.l, echelle);
+  }
 }
 
 export function dessinerNombre(ctx, valeur, x, y, echelle, couleur) {

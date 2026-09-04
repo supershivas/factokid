@@ -52,11 +52,16 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   branches : la matière que le joueur a choisie, et tout le reste. Le premier
   convoyeur tracé prend la matière choisie, le second ramasse le reste. La
   matière se change à tout moment depuis le panneau du trieur.
-- **Un bâtiment dit ce qu'il lui faut.** Son panneau porte sa recette en
-  jetons : ce qui entre, la flèche, ce qui sort. Chaque matière s'y touche et
-  ouvre son propre panneau — d'où elle vient, et les machines qui l'emploient,
-  qui sont à leur tour des touches. On remonte toute la chaîne sans lire un
-  mot.
+- **Un bâtiment dit ce qu'il lui faut**, deux fois : en images et en mots. Son
+  panneau porte sa recette en jetons — ce qui entre, la flèche, ce qui sort —
+  et sa description en toutes lettres. Un extracteur posé nomme la matière
+  qu'il récolte, pas une matière en général.
+- **Ce qui s'explique est souligné.** Dans une description, les matières et les
+  machines sont soulignées : les toucher ouvre une **surmodale** par-dessus le
+  panneau, qui dit d'où la chose vient et où elle va — et qui se referme sans
+  fermer ce qu'on regardait. Les mots y sont explicables à leur tour : on
+  remonte toute la chaîne sans jamais perdre sa place. Ce qui est explicable
+  se déclare dans la table, entre accolades : `débite le {bois} en {papier}`.
 - **Un extracteur garde sa récolte** dans son propre stock : il faut tracer un
   convoyeur de là jusqu'à ce qu'on veut nourrir.
 - **Les machines n'ont pas d'orientation.** Elles acceptent un convoyeur par
@@ -214,6 +219,9 @@ l'adulte, jamais un passage obligé pour l'enfant.
 - Les hampes et les accents tiennent sur les deux rangées du haut, les
   jambages descendent sur deux rangées de plus.
 - Pas de capitales tracées, pas de texte dans les boutons d'action — icônes.
+- **Le soulignement est le seul ornement de texte du jeu**, et il ne veut dire
+  qu'une chose : touche-moi. Un mot souligné est en crème, le reste de la
+  phrase en ardoise.
 
 ### Boutons
 
@@ -373,7 +381,8 @@ src/
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
-    texte.js        fonte bitmap 5 × 7
+    texte.js        fonte bitmap 5 × 7, texte explicable
+    motifs.js       les matières en pixels d'art, table pure
     plaque.js       les touches : forme, épaisseur, enfoncement
     demarrage.js    barre de chargement
     particules.js   fumée et étoiles

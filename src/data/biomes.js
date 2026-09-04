@@ -9,11 +9,26 @@
 // `couleur` nomme une entrée de la palette, `motif` la texture minimale qui
 // s'y pose : un point d'un pixel, ou un trait d'un pixel d'épaisseur.
 
+// `ou` est le complément de lieu, tout fait : « dans les plaines de sucre »,
+// « sur la terre ». L'article est dans la table, pas dans une règle de
+// grammaire qu'il faudrait écrire.
 export const BIOMES = {
-  sucre: { id: 'sucre', nom: 'plaines de sucre', couleur: 'creme', motif: 'point' },
-  terre: { id: 'terre', nom: 'terre', couleur: 'orange', motif: 'couche' },
-  fraise: { id: 'fraise', nom: 'champs de fraises', couleur: 'rouge', motif: 'rang' },
-  menthe: { id: 'menthe', nom: 'champs de menthe', couleur: 'vert', motif: 'debout' },
+  sucre: {
+    id: 'sucre', nom: 'plaines de sucre', ou: 'dans les plaines de sucre',
+    couleur: 'creme', motif: 'point',
+  },
+  terre: {
+    id: 'terre', nom: 'terre', ou: 'sur la terre',
+    couleur: 'orange', motif: 'couche',
+  },
+  fraise: {
+    id: 'fraise', nom: 'champs de fraises', ou: 'dans les champs de fraises',
+    couleur: 'rouge', motif: 'rang',
+  },
+  menthe: {
+    id: 'menthe', nom: 'champs de menthe', ou: 'dans les champs de menthe',
+    couleur: 'vert', motif: 'debout',
+  },
 };
 
 // Ce que chaque biome donne : c'est là que ses gisements sont abondants.

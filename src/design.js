@@ -124,6 +124,20 @@ export const ALERTE_DELAI = 1.2; // secondes
 export const PANNEAU = { x: 12, y: 356, l: 336, h: 200 };
 export const PANNEAU_TEXTE = { x: 12, y: 68 }; // décalages dans le panneau
 
+// La surmodale : ce qu'un mot souligné explique. Elle se pose au-dessus du
+// panneau, sans le fermer — on revient à ce qu'on regardait en la refermant.
+export const SURMODALE = { x: 24, y: 228, l: 312, h: 116 };
+export const FERMER = { l: 40, h: 40 };
+
+export function rectFermer() {
+  return {
+    x: SURMODALE.x + SURMODALE.l - FERMER.l - 10,
+    y: SURMODALE.y + 10,
+    l: FERMER.l,
+    h: FERMER.h,
+  };
+}
+
 // La chaîne du panneau : les matières qui entrent, la flèche, ce qui sort.
 // Chaque jeton se touche et mène à la matière.
 // Le jeton porte une matière, dessinée sur 9 pixels d'art : il faut qu'elle y

@@ -163,6 +163,7 @@ const POSES = [
   { quoi: 'option de panneau, icône', cible: 56, natif: TUILE_PX, part: 6 / 7 },
   { quoi: 'option de panneau, matière', cible: 56, natif: 9, part: 0.72 },
   { quoi: 'jeton de recette', cible: 52, natif: 9, part: 0.72 },
+  { quoi: 'croix de la surmodale', cible: 40, natif: TUILE_PX, part: 6 / 7 },
   { quoi: 'touche du labo', cible: 28, natif: TUILE_PX, part: 6 / 7 },
 ];
 
