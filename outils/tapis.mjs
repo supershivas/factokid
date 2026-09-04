@@ -149,7 +149,45 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   veut(branche.items.length > 0, 'la branche reçoit sa part');
 }
 
-// ————— 5. martelage : on construit et on détruit au hasard, en vérifiant
+// ————— 5. trois tapis nourrissent la même machine, et un seul en sort
+//
+// Une machine occupe une cellule et accepte un convoyeur par côté : quatre
+// côtés, moins sa sortie, font trois entrées. C'était le nombre d'ingrédients
+// de sa recette, et une scierie — qui n'en a qu'un — perdait son premier tapis
+// dès qu'un second arrivait. Trois arbres éloignés ne pouvaient pas nourrir la
+// même scie.
+{
+  const s = creerScene();
+  const scie = ajouterMachine(s, 'scierie', 5, 5);
+  const arbres = [
+    { m: ajouterMachine(s, 'extracteur', 1, 5, { item: 'bois' }), chemin: ligne(2, 5, 3, 1, 0) },
+    { m: ajouterMachine(s, 'extracteur', 5, 1, { item: 'bois' }), chemin: ligne(5, 2, 3, 0, 1) },
+    { m: ajouterMachine(s, 'extracteur', 5, 9, { item: 'bois' }), chemin: ligne(5, 8, 3, 0, -1) },
+  ];
+  for (const a of arbres) poserConvoyeur(s, a.chemin, a.m, scie);
+  verifier(s, 'trois tapis vers une scierie');
+  veut(scie.entrees.length === 3, 'la scierie garde ses trois entrées');
+
+  // Le quatrième côté est celui de la sortie : un tapis de plus chasse le
+  // premier arrivé, il ne s'ajoute pas.
+  const quatrieme = ajouterMachine(s, 'extracteur', 9, 5, { item: 'bois' });
+  poserConvoyeur(s, ligne(8, 5, 3, -1, 0), quatrieme, scie);
+  verifier(s, 'quatrième tapis vers une scierie');
+  veut(scie.entrees.length === 3, 'la scierie n’en tient jamais plus de trois');
+
+  // Ce qui arrive par les trois côtés arrive vraiment dans le stock.
+  for (const c of s.convoyeurs) if (peutAccepter(c)) pousser(c, 'bois');
+  for (let k = 0; k < 400; k++) majScene(s, 1 / 60);
+  veut(scie.stocks.bois > 0 || scie.produits > 0, 'la scierie reçoit le bois de ses tapis');
+  verifier(s, 'trois tapis qui livrent');
+
+  // Une seule sortie, quoi qu'il arrive.
+  const aval = ajouterMachine(s, 'plieuse', 5, 7);
+  poserConvoyeur(s, ligne(5, 6, 1, 0, 1), scie, aval);
+  veut(scie.sorties.length === 1, 'la scierie ne sort que par un tapis');
+}
+
+// ————— 6. martelage : on construit et on détruit au hasard, en vérifiant
 // tous les invariants après chaque geste.
 {
   // Un générateur reproductible et correctement mélangé : les bits de poids

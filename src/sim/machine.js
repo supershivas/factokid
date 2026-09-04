@@ -50,10 +50,27 @@ export function attendus(machine) {
   return [];
 }
 
-// Combien de convoyeurs peuvent arriver sur cette machine : autant que sa
-// recette a d'ingrédients, deux pour un trieur.
+// Les quatre côtés d'une cellule : c'est tout ce qu'une machine peut relier.
+const COTES = 4;
+
+// Combien de convoyeurs peuvent arriver sur cette machine. Ce n'était pas la
+// bonne question : c'était le nombre d'ingrédients de sa recette, et une
+// scierie ne pouvait donc être nourrie que par un seul tapis. Deux arbres
+// éloignés, et le second détruisait le premier.
+//
+// Le nombre juste, c'est la géométrie qui le donne : une machine occupe une
+// cellule, accepte un convoyeur par côté, et n'a pas d'orientation. Quatre
+// côtés, moins ce qui en sort — trois entrées pour une usine de
+// transformation, deux pour un trieur qui a deux sorties. Rien n'est choisi
+// ici, tout est déduit.
+//
+// Ce qu'une machine attend reste ce que dit sa recette : trois tapis de bois
+// nourrissent la même scierie, et une confiserie prend ses trois matières par
+// trois côtés comme avant.
 export function maxEntrees(machine) {
-  return machine.def.tri ? 2 : attendus(machine).length;
+  // Ce qui n'accepte rien — un extracteur — n'a pas d'entrée du tout.
+  if (!machine.def.tri && attendus(machine).length === 0) return 0;
+  return COTES - maxSorties(machine);
 }
 
 // Ce que la machine stocke, donc ce que le rendu doit montrer.
