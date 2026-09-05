@@ -158,6 +158,17 @@ teintes, sur deux cellules : il n'existe aucune tuile de raccord, et la largeur
 du fondu est un réglage. Les textures sont minimales — un point d'un pixel, ou
 un trait d'un pixel d'épaisseur et de deux à trois de long.
 
+**Rien de régulier dans le sol.** Trois choses le faisaient ressembler à du
+carrelage, et toutes les trois sont parties : un semis unique par biome, qui
+répétait les mêmes points dans chaque case à quarante-huit unités d'intervalle
+(chaque cellule choisit maintenant le sien parmi douze) ; un pixel d'angle en
+ardoise, pleine couleur sur un sol à dix pour cent, qui dessinait un
+quadrillage de points brillants (il est passé à la teinte de la texture) ; et
+une formule de nuance qui faisait des rayures en diagonale (c'est un bruit doux
+à trois échelles). La frontière entre deux régions ondule au lieu de suivre une
+droite. Rien n'est tiré au moment de dessiner : tout est fonction de la
+cellule, sinon le sol scintillerait d'une image à l'autre.
+
 **La distance est la ressource.** Le gisement à trois cases coûte trois
 convoyeurs, celui à vingt en coûte vingt : la progression sort de la
 géographie, pas d'un multiplicateur. C'est ce que le téléporteur annulait, et
@@ -379,10 +390,12 @@ tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
-Trois outils gardent le jeu, et ils tournent avant toute livraison :
+Quatre outils gardent le jeu, et ils tournent avant toute livraison :
 `outils/tapis.mjs` pour les convoyeurs, `outils/lisibilite.mjs` pour ce qui se
 lit, `outils/tutoriel.mjs` qui joue les dix-sept étapes du premier contact et
-vérifie qu'au bout, l'usine livre.
+vérifie qu'au bout l'usine livre, `outils/carte.mjs` qui tire trois cents
+cartes et relit ce qu'elles promettent — clairière intacte, aucune matière qui
+manque, rien hors de la grille.
 
 Toute vérification visuelle passe d'abord par `node outils/lisibilite.mjs`,
 puis produit **les deux captures, systématiquement** :

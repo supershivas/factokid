@@ -44,6 +44,13 @@ export const NUANCES = [0.08, 0.11, 0.14];
 // changement sans le heurter.
 export const FONDU = 2;
 
+// La frontière entre deux régions ondule au lieu de suivre une droite : on
+// fausse la distance d'un bruit doux, d'au plus `ONDULATION` cellules, sur une
+// maille de `PAS_ONDULATION`. Sans ça le passage d'un biome à l'autre se voit
+// à la règle, et le sol a l'air découpé.
+export const ONDULATION = 3;
+export const PAS_ONDULATION = 6;
+
 // Chaque région tire le sol à elle : une cellule appartient à la région la
 // plus proche, et se teinte des deux plus proches quand elles se disputent.
 //
@@ -63,6 +70,10 @@ export const REGION_CENTRALE = { biome: 'terre' };
 export const REGIONS_TIREES = 26;
 export const ECART_REGIONS = 6; // en cellules
 
+// Combien de régions chaque biome reçoit d'office avant que le tirage soit
+// libre. Leur place, elle, reste tirée.
+export const REGIONS_GARANTIES = 2;
+
 // Autour de la clairière, on ne tire rien : ses quatre gisements doivent
 // rester les plus proches, sinon le premier écran ne raconte plus rien.
 export const RAYON_CLAIRIERE = 7; // en cellules
@@ -71,6 +82,14 @@ export const RAYON_CLAIRIERE = 7; // en cellules
 // au milieu de rien n'est pas une forêt, et c'est un bosquet qu'on veut
 // trouver au bout d'un tapis. Un bouquet tient dans son rayon, et porte la
 // matière du biome où tombe son cœur.
+// Le plancher qui compte vraiment : combien de gisements de chaque matière une
+// carte doit porter au minimum. Garantir des régions ne suffit pas — un
+// bouquet tombe où il tombe, et une graine sur cent donnait une carte à un
+// seul arbre. La partie n'y était pas perdue, les gisements de la clairière
+// repoussent, mais elle devenait une chasse au trésor : ce n'est pas le jeu.
+// On complète donc au pied d'une région du bon biome.
+export const MINIMUM_PAR_MATIERE = 12;
+
 export const BOUQUETS = 46;
 export const PAR_BOUQUET = [2, 5];  // combien de gisements, bornes comprises
 export const RAYON_BOUQUET = 2;     // en cellules

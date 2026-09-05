@@ -11,7 +11,7 @@
 
 import { PALETTE, TUILE_PX, COLONNES, LIGNES } from '../design.js';
 import { BIOMES, NUANCES } from '../data/biomes.js';
-import { voisinage } from '../sim/carte.js';
+import { voisinage, bruit, bruitLisse } from '../sim/carte.js';
 
 // --- teintes ---------------------------------------------------------------
 
@@ -42,20 +42,49 @@ function melange(a, b, part) {
 
 // --- texture ---------------------------------------------------------------
 
-// Un semis fixe : rien d'aléatoire au dessin, sinon le sol scintille d'une
-// image à l'autre. Un point d'un pixel, ou un trait d'un pixel d'épaisseur et
-// de deux à trois de long — jamais plus.
-const POINTS = {
-  point: [[5, 5], [15, 8], [9, 15], [20, 18], [3, 20]],
-  couche: [[3, 6], [14, 3], [8, 14], [17, 18], [6, 21]],
-  rang: [[3, 5], [11, 5], [18, 5], [3, 12], [11, 12], [18, 12], [3, 19], [11, 19], [18, 19]],
-  debout: [[6, 6], [17, 9], [9, 17], [20, 20], [3, 14]],
+// Le semis d'un biome : quelques marques d'un pixel, jamais plus. Rien n'est
+// tiré au moment de dessiner — le sol scintillerait d'une image à l'autre —
+// mais chaque cellule choisit son semis parmi plusieurs, et c'est ce qui casse
+// le carrelage. Un semis unique par biome faisait réapparaître les mêmes cinq
+// points dans chaque case, tous les quarante-huit unités : on ne voyait plus
+// que la grille.
+const VARIANTES = 12;
+const MARQUES = [3, 7]; // combien par cellule, bornes comprises
+
+// Chaque motif dit ce qu'il pose : un point, un trait couché, un trait debout.
+const TRACES = {
+  point: [1, 1],
+  couche: [3, 1],
+  rang: [3, 1],
+  debout: [1, 3],
 };
+
+// Les semis, peints une fois pour toutes. Le hachage sert ici à écrire la
+// table, pas à dessiner : elle est la même à chaque lancement.
+const SEMIS = {};
+for (const motif of Object.keys(TRACES)) {
+  const [l, h] = TRACES[motif];
+  SEMIS[motif] = [];
+  for (let v = 0; v < VARIANTES; v++) {
+    const marques = [];
+    const combien = MARQUES[0]
+      + Math.floor(bruit(v * 31 + 7, motif.length * 13) * (MARQUES[1] - MARQUES[0] + 1));
+    for (let i = 0; i < combien; i++) {
+      // Les marques peuvent frôler le bord : c'est ce qui les fait déborder
+      // d'une cellule sur l'autre, et le sol cesse d'avoir des coutures.
+      marques.push([
+        Math.floor(bruit(v * 101 + i, motif.length * 7 + 3) * (TUILE_PX - l)),
+        Math.floor(bruit(motif.length * 17 + 5, v * 53 + i) * (TUILE_PX - h)),
+      ]);
+    }
+    SEMIS[motif].push(marques);
+  }
+}
 
 const cache = new Map();
 
-function tuile(fond, dessus, motif) {
-  const cle = fond + dessus + motif;
+function tuile(fond, dessus, motif, variante) {
+  const cle = fond + dessus + motif + variante;
   if (cache.has(cle)) return cache.get(cle);
   const c = document.createElement('canvas');
   c.width = TUILE_PX;
@@ -64,13 +93,14 @@ function tuile(fond, dessus, motif) {
   g.fillStyle = fond;
   g.fillRect(0, 0, TUILE_PX, TUILE_PX);
   g.fillStyle = dessus;
-  for (const [x, y] of POINTS[motif]) {
-    if (motif === 'point') g.fillRect(x, y, 1, 1);
-    else if (motif === 'debout') g.fillRect(x, y, 1, 3);
-    else g.fillRect(x, y, 3, 1);
-  }
-  // Un seul pixel au coin : quatre cellules qui se touchent font un point.
-  g.fillStyle = PALETTE.ardoise;
+  const [l, h] = TRACES[motif];
+  for (const [x, y] of SEMIS[motif][variante]) g.fillRect(x, y, l, h);
+  // Un pixel au coin : quatre cellules qui se touchent font un point, et c'est
+  // tout ce qui reste de la grille sous les pieds. Il était en ardoise —
+  // pleine couleur sur un sol à dix pour cent — et faisait un quadrillage de
+  // points brillants qu'on voyait avant le sol. À la teinte de la texture, il
+  // dit la case sans la crier.
+  g.fillStyle = dessus;
   g.fillRect(0, 0, 1, 1);
   cache.set(cle, c);
   return c;
@@ -78,12 +108,34 @@ function tuile(fond, dessus, motif) {
 
 // --- la carte des sols -----------------------------------------------------
 
-// Une nuance stable par plaque de deux cases sur deux : les nuances font des
-// zones plutôt qu'un damier, et le sol ne bouge jamais d'une image à l'autre.
+// La nuance d'une cellule. C'était une formule sur des plaques de deux cases
+// sur deux : elle faisait des rayures en diagonale, régulières comme un
+// carrelage. C'est maintenant un bruit doux à deux échelles — de larges taches,
+// et un peu de grain par-dessus — et les nuances font des zones de forme
+// quelconque. Rien ne bouge d'une image à l'autre : c'est une fonction de la
+// cellule, pas un tirage.
+// Trois échelles dont les mailles ne s'alignent pas, lues à un point qu'on a
+// d'abord déplacé. Un bruit seul donne des rectangles : ce sont les mailles du
+// bruit, vues à travers trois paliers. Décalées et empilées, elles ne se
+// voient plus.
+const PAS_NUANCE = [7, 3.1, 1.7];
+const PARTS = [0.5, 0.32, 0.18];
+const DERIVE = 4;
+
 function nuanceDe(cx, cy) {
-  const px = Math.floor(cx / 2);
-  const py = Math.floor(cy / 2);
-  return (px * 5 + py * 3 + ((px * py) % 3)) % 3;
+  const x = cx + (bruitLisse(cx / DERIVE, cy / DERIVE) - 0.5) * DERIVE;
+  const y = cy + (bruitLisse((cx + 53) / DERIVE, (cy + 17) / DERIVE) - 0.5) * DERIVE;
+  let v = 0;
+  for (let i = 0; i < PAS_NUANCE.length; i++) {
+    v += bruitLisse(x / PAS_NUANCE[i], y / PAS_NUANCE[i]) * PARTS[i];
+  }
+  return Math.min(2, Math.floor(v * 3));
+}
+
+// Le semis que porte cette cellule : un hachage, donc stable et sans rapport
+// avec celui d'à côté. C'est là que le carrelage se défait.
+function varianteDe(cx, cy) {
+  return Math.floor(bruit(cx * 3 + 11, cy * 5 + 29) * VARIANTES);
 }
 
 const sols = new Array(COLONNES * LIGNES).fill(null);
@@ -112,7 +164,7 @@ function preparer(cx, cy) {
   const dessus = teinte(dominant.couleur, NUANCES[2] + 0.07);
   const i = cy * COLONNES + cx;
   teintes[i] = fond;
-  sols[i] = tuile(fond, dessus, dominant.motif);
+  sols[i] = tuile(fond, dessus, dominant.motif, varianteDe(cx, cy));
 }
 
 export function tuileSol(cx, cy) {
