@@ -3,8 +3,7 @@
 // puis affichées à l'échelle entière PIXEL (3 unités logiques par pixel).
 
 import {
-  PALETTE, TUILE_PX, PIXEL, CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE,
-  ALERTE_DELAI,
+  PALETTE, TUILE_PX, PIXEL, CELLULE, ALERTE_DELAI,
 } from '../design.js';
 import { cadrerMonde, fenetre, celluleVisible } from '../camera.js';
 import { tuileSol } from './biome.js';
@@ -903,8 +902,5 @@ function dessinerTrace(ctx, trace) {
   ctx.globalAlpha = 1;
 }
 
-export function bordureGrille(ctx) {
-  ctx.strokeStyle = PALETTE.ardoise;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(GRILLE_X - 0.5, GRILLE_Y - 0.5, LARGEUR_VUE + 1, HAUTEUR_VUE + 1);
-}
+// La bordure de la grille a disparu avec les bandeaux : la carte va d'un bord
+// à l'autre de l'écran, il n'y a plus rien à cerner.

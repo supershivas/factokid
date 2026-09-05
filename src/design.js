@@ -8,12 +8,13 @@ export const TUILE_PX = 24;      // pixel art natif
 export const CELLULE = 48;       // unités logiques par cellule
 export const PIXEL = CELLULE / TUILE_PX; // 2 unités logiques par pixel d'art
 
-// La fenêtre : 7 × 10 cellules (336 × 480), centrée horizontalement. C'est ce
-// qu'on voit à la fois, et ça n'a pas bougé — l'échelle, la cible tactile et la
-// mise en page en dépendent.
-// Dérogation validée : 10 × 10 ne tient pas dans 360 de large à 48/cellule.
-export const COLONNES_VUE = 7;
-export const LIGNES_VUE = 10;
+// La fenêtre, c'est l'écran. La carte va d'un bord à l'autre : il n'y a plus
+// de bandeau haut ni de bandeau bas, et tout ce qu'on posait dessus — le
+// compteur, les touches, les panneaux — s'y pose maintenant en incrustation.
+//
+// Elle montre donc sept cellules et demie sur treize et un tiers. Le compte
+// n'est plus rond, et c'est sans importance : la caméra est continue, seul le
+// monde se compte en cellules.
 
 // Le monde : trente-six fenêtres. Il en faisait neuf ; la distance est la
 // ressource, et neuf fenêtres se traversent trop vite pour que ce soit vrai
@@ -27,13 +28,12 @@ export const LIGNES = 60;
 // que la carte engendrée n'invente pas.
 export const CENTRE = { cx: 21, cy: 30 };
 
-export const GRILLE_X = (LARGEUR_LOGIQUE - COLONNES_VUE * CELLULE) / 2; // 12
-export const GRILLE_Y = 80;
-export const LARGEUR_VUE = COLONNES_VUE * CELLULE;
-export const HAUTEUR_VUE = LIGNES_VUE * CELLULE;
-
-export const BANDEAU_HAUT = GRILLE_Y;
-export const BANDEAU_BAS = HAUTEUR_LOGIQUE - (GRILLE_Y + HAUTEUR_VUE); // 80
+export const GRILLE_X = 0;
+export const GRILLE_Y = 0;
+export const LARGEUR_VUE = LARGEUR_LOGIQUE;
+export const HAUTEUR_VUE = HAUTEUR_LOGIQUE;
+export const COLONNES_VUE = LARGEUR_VUE / CELLULE; // 7,5
+export const LIGNES_VUE = HAUTEUR_VUE / CELLULE;   // 13,33
 
 export const CIBLE_TACTILE = 48;
 
@@ -66,7 +66,9 @@ export const BOUTON_ICONE = CIBLE_TACTILE;
 // Ce que la doublure du bouton dépasse en dessous : c'est elle qui lui donne
 // son épaisseur, et sur elle qu'il s'enfonce.
 export const BOUTON_SOUS = 6;
-export const BOUTON_Y = HAUTEUR_LOGIQUE - BANDEAU_BAS + 8;
+// La barre d'outils flotte au-dessus de la carte, à dix unités du bas : son
+// corps fait 56 et son socle en dépasse 6.
+export const BOUTON_Y = HAUTEUR_LOGIQUE - BOUTON - BOUTON_SOUS - 12;
 export const BOUTON_X = 12;
 export const BOUTON_ECART = 8;
 export const BULLE = BOUTON;        // les bulles sont des touches comme les autres
@@ -80,6 +82,11 @@ export const BULLE_ANIMATION = 0.18; // secondes
 // grandi, la vignette non, et c'est bien ainsi : elle sert à ne pas se perdre,
 // pas à compter des cases.
 export const MINICARTE_PAS = 1;
+
+// Le compteur des bonbons finis, posé sur la carte : il lui faut son fond,
+// puisqu'il n'a plus de bandeau sous lui. Sa largeur suit le nombre — une
+// plaque taillée pour cinq chiffres serait vide la moitié du temps.
+export const COMPTEUR = { x: 12, y: 16, h: 34, marge: 8 };
 export const MINICARTE = {
   x: LARGEUR_LOGIQUE - 12 - COLONNES * MINICARTE_PAS,
   y: 10,
@@ -133,7 +140,9 @@ export function rectChoix(j) {
 // Bandeau du tutoriel : ce qu'il y a à faire, posé en haut de la fenêtre de
 // jeu. Une image, un mot, et le bouton qui passe le tutoriel — un secondaire,
 // à droite, comme la pause d'une machine.
-export const TUTORIEL_BANDEAU = { x: 12, y: GRILLE_Y + 8, l: 336, h: 48 };
+// Le bandeau du tutoriel passe sous la rangée du haut : la carte commence
+// maintenant au bord de l'écran, et il se serait posé sur le compteur.
+export const TUTORIEL_BANDEAU = { x: 12, y: 80, l: 336, h: 48 };
 
 export function rectPasserTuto() {
   return {

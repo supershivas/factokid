@@ -3,7 +3,7 @@
 
 import { PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE } from './design.js';
 import { creerVue } from './render/canvas.js';
-import { dessinerScene, bordureGrille } from './render/sprites.js';
+import { dessinerScene } from './render/sprites.js';
 import {
   majParticules, dessinerParticules, fumee, pose, destruction, vapeur,
 } from './render/particules.js';
@@ -166,7 +166,6 @@ demarrerBoucle(
     dessinerScene(ctx, jeu.monde, interfaceJeu.trace, dessinerParticules);
     const etape = etapeCourante(jeu.tutoriel);
     dessinerHalo(ctx, etape, jeu.tutoriel ? jeu.tutoriel.age : 0);
-    bordureGrille(ctx);
     dessinerBandeau(ctx, etape, avancement(jeu.tutoriel));
     dessinerHud(ctx, jeu.monde, fps, interfaceJeu);
   },

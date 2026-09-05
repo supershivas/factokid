@@ -2,7 +2,7 @@
 // élément. Icônes et chiffres ; les seuls mots sont là pour l'adulte.
 
 import {
-  PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, GRILLE_Y, HAUTEUR_VUE, CELLULE,
+  PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, COMPTEUR, CELLULE,
   TEXTE_GRAND, TEXTE_PETIT, TUILE_PX, BULLE, PANNEAU_TEXTE, PANNEAU_MARGE, BOUTON_PAUSE,
   poserImage,
   SURMODALE_TEXTE, BOUTON_ZOOM, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
@@ -13,7 +13,7 @@ import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { auPlusLoin } from '../camera.js';
 import { dessinerMenu } from './menu.js';
-import { dessinerMotCentre, dessinerMots, dessinerNombre } from './texte.js';
+import { dessinerMotCentre, dessinerMots, dessinerNombre, largeurNombre } from './texte.js';
 
 // L'image en grand d'une modale : ce dont elle parle. Elle se pose comme dans
 // une touche, à l'échelle entière — une matière de neuf pixels d'art étirée
@@ -29,16 +29,36 @@ function dessinerVignette(ctx, icone, x, y) {
   ctx.drawImage(image, x + marge, y + marge, taille, taille);
 }
 
+// Le compteur et sa plaque. La plaque suit le nombre : taillée pour cinq
+// chiffres, elle serait vide la moitié du temps.
+function dessinerCompteur(ctx, valeur) {
+  const l = COMPTEUR.marge + TAILLE_ITEM + 9 + largeurNombre(valeur, TEXTE_GRAND)
+    + COMPTEUR.marge;
+  ctx.fillStyle = PALETTE.noir;
+  ctx.fillRect(COMPTEUR.x, COMPTEUR.y, l, COMPTEUR.h);
+  ctx.strokeStyle = PALETTE.ardoise;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(COMPTEUR.x + 0.5, COMPTEUR.y + 0.5, l - 1, COMPTEUR.h - 1);
+  const x = COMPTEUR.x + COMPTEUR.marge;
+  ctx.drawImage(spriteItem('bonbon'), x, COMPTEUR.y + (COMPTEUR.h - TAILLE_ITEM) / 2,
+    TAILLE_ITEM, TAILLE_ITEM);
+  dessinerNombre(
+    ctx, valeur, x + TAILLE_ITEM + 9, COMPTEUR.y + (COMPTEUR.h - 21) / 2,
+    TEXTE_GRAND, PALETTE.creme,
+  );
+}
+
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   const livraison = monde.scene.machines.find((m) => m.def.entree);
 
   // Un seul compteur : les bonbons finis. Tout le reste se lit sur la grille,
   // dans les jauges des machines et dans ce qui circule.
-  ctx.drawImage(spriteItem('bonbon'), 12, 24, TAILLE_ITEM, TAILLE_ITEM);
-  dessinerNombre(
-    ctx, livraison ? livraison.consommes : 0,
-    12 + TAILLE_ITEM + 9, 21, TEXTE_GRAND, PALETTE.creme,
-  );
+  //
+  // Il est posé sur la carte, qui va maintenant d'un bord à l'autre : il lui
+  // faut donc son propre fond, comme la mini-carte a le sien. Un chiffre crème
+  // à même le sol se perdrait sur ce qui passe dessous — un morceau de sucre
+  // est de la même couleur que lui.
+  dessinerCompteur(ctx, livraison ? livraison.consommes : 0);
 
   // Le bouton pause, puis la carte du monde : où l'on est, et où l'on va.
   dessinerTouche(ctx, BOUTON_PAUSE, INTERFACE.outilPause, { enfonce: enfoncement('pause') });
@@ -52,11 +72,6 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   dessinerMiniCarte(ctx, monde);
 
   dessinerOutils(ctx, interfaceJeu);
-
-  // Séparations discrètes des bandeaux.
-  ctx.fillStyle = PALETTE.ardoise;
-  ctx.fillRect(12, GRILLE_Y - 10, LARGEUR_LOGIQUE - 24, 1);
-  ctx.fillRect(12, GRILLE_Y + HAUTEUR_VUE + 10, LARGEUR_LOGIQUE - 24, 1);
 
   // Le menu de construction passe au-dessus de la barre et du bandeau : rien
   // ne doit rester allumé derrière un choix ouvert.

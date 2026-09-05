@@ -139,6 +139,19 @@ simulation : déplacer la vue ne change rien à ce qui circule. Tout le jeu
 raisonne en cellules du monde ; seuls le rendu et l'entrée savent laquelle est
 visible.
 
+**La carte prend tout l'écran, et le reste vient par-dessus.** Il n'y a plus de
+bandeau haut ni de bandeau bas : le sol va d'un bord à l'autre, et le compteur,
+les touches, la mini-carte, le bandeau du tutoriel et les panneaux s'y posent
+en incrustation. Ce qu'on voit passe de 7 × 10 cellules à sept et demie sur
+treize et un tiers — le compte n'est plus rond, et c'est sans importance : la
+caméra est continue, seul le monde se compte en cellules.
+
+Ce qui se pose sur la carte porte son propre fond quand il en a besoin : le
+compteur a sa plaque comme la mini-carte a la sienne, et sa largeur suit le
+nombre. Un chiffre crème à même le sol se perdrait sur ce qui passe dessous —
+un morceau de sucre est de la même couleur que lui. Les touches, elles, n'ont
+besoin de rien : elles portent déjà leur corps et leur socle.
+
 **Le sol dit ce qu'il donne.** La carte est faite de biomes — plaines de sucre,
 terre, champs de fraises, champs de menthe — et chaque gisement porte la
 matière de son biome. On sait donc où aller chercher quoi rien qu'à la couleur
@@ -192,9 +205,9 @@ traverse deux écrans sans que le doigt se lève.
 
 **Un cran de recul, et un seul.** Une touche du second rang, à côté de la
 mini-carte, éloigne la vue : la cellule passe de 48 à 24 et la fenêtre montre
-14 × 20 cellules au lieu de 7 × 10 — les deux tiers du monde. On recule autour
-de ce qu'on regardait, et un second appui revient. Le zoom sert à voir de
-**loin, jamais de près** : le niveau où l'on bâtit est déjà le plus gros.
+15 × 26,7 cellules au lieu de 7,5 × 13,3. On recule autour de ce qu'on
+regardait, et un second appui revient. Le zoom sert à voir de **loin, jamais
+de près** : le niveau où l'on bâtit est déjà le plus gros.
 
 Il n'y a rien entre les deux, rien en dessous, et ce n'est pas un réglage :
 une image de pixel art ne se met à l'échelle qu'en nombre entier de fois. À
@@ -230,7 +243,7 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Pixel art natif | 24 × 24 par tuile |
 | Cellule de grille | 48 unités logiques |
 | Niveaux de zoom | cellule à 48 (bâtir) ou 24 (regarder), rien d'autre |
-| Fenêtre | 7 × 10 cellules, 14 × 20 en reculant |
+| Fenêtre | l'écran entier : 7,5 × 13,3 cellules, 15 × 26,7 en reculant |
 | Monde | 42 × 60 cellules, soit trente-six fenêtres |
 | Cible tactile minimale | 48 unités logiques |
 | Mise à l'échelle | entière uniquement (×1, ×2, ×3), jamais fractionnaire |
@@ -523,10 +536,12 @@ endroit. La bêta y ajoute ses trois essais et le tutoriel du premier contact.
 Ces ajouts sont décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
-Remesuré depuis, avec l'espacement à 27 et le cran de recul : dix-neuf longs
-tapis remplis, 200 items à l'échelle où l'on bâtit et 400 en reculant, image
-médiane 16,7 ms dans les deux cas — 60 fps, et la pire image à 20,4 ms. Le
-recul ne coûte donc rien, alors qu'il double ce qui est à l'écran.
+Remesuré depuis, avec l'espacement à 27, le cran de recul et la carte qui
+prend tout l'écran : dix-neuf longs tapis remplis, 200 items à l'échelle où
+l'on bâtit et 400 en reculant, image médiane 16,7 ms dans les deux cas —
+60 fps, et la pire image à 25,2 ms. Le recul ne coûte rien alors qu'il double
+ce qui est à l'écran, et le plein écran non plus, alors qu'il ajoute un tiers
+de cellules à dessiner.
 
 C'est mesuré dans un Chromium sans fenêtre, pas sur un téléphone : le chiffre
 est bon, la cible ne l'est pas encore. Il reste à le refaire sur l'appareil.
