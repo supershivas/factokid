@@ -20,7 +20,7 @@ import { spriteItem } from './render/sprites.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { creerTutoriel, majTutoriel, etapeCourante, avancement } from './tutoriel.js';
 import { SCENARIOS } from './data/scenarios.js';
-import { centrerCamera, fenetre, celluleVisible } from './camera.js';
+import { centrerCamera, fenetreSure, celluleVisible } from './camera.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
 import { brancherPointeur } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
@@ -131,12 +131,15 @@ demarrerBoucle(
     // rien, il dit seulement quelle case a bougé.
     if (fetee) {
       pose(GRILLE_X + fetee.cx * CELLULE + CELLULE / 2, GRILLE_Y + fetee.cy * CELLULE + CELLULE / 2);
-      // L'étape suivante peut être hors de la fenêtre : on y emmène le regard,
-      // sinon le halo battrait dans le vide. La caméra n'est que du rendu — la
-      // simulation ne sait pas ce qu'on regarde.
+      // L'étape suivante peut être hors de vue : on y emmène le regard, sinon
+      // le halo battrait dans le vide. C'est la zone sûre qui compte, pas la
+      // fenêtre — depuis que la carte prend tout l'écran, une cellule cachée
+      // sous la barre d'outils est bel et bien à l'écran, et bel et bien
+      // invisible. La caméra n'est que du rendu : la simulation ne sait pas ce
+      // qu'on regarde.
       const suite = etapeCourante(jeu.tutoriel);
       const ou = suite && suite.cibles[0];
-      if (ou && !celluleVisible(ou.cx, ou.cy, fenetre())) centrerCamera(ou.cx, ou.cy);
+      if (ou && !celluleVisible(ou.cx, ou.cy, fenetreSure())) centrerCamera(ou.cx, ou.cy);
     }
   },
   (fps, dt) => {

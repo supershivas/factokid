@@ -3,6 +3,7 @@
 
 import {
   PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, COMPTEUR, CELLULE,
+  VOILE, BANDEAU_HAUT, BANDEAU_BAS,
   TEXTE_GRAND, TEXTE_PETIT, TUILE_PX, BULLE, PANNEAU_TEXTE, PANNEAU_MARGE, BOUTON_PAUSE,
   poserImage,
   SURMODALE_TEXTE, BOUTON_ZOOM, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
@@ -13,7 +14,7 @@ import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { auPlusLoin } from '../camera.js';
 import { dessinerMenu } from './menu.js';
-import { dessinerMotCentre, dessinerMots, dessinerNombre, largeurNombre } from './texte.js';
+import { dessinerMotCentre, dessinerMots, dessinerNombre } from './texte.js';
 
 // L'image en grand d'une modale : ce dont elle parle. Elle se pose comme dans
 // une touche, à l'échelle entière — une matière de neuf pixels d'art étirée
@@ -29,16 +30,23 @@ function dessinerVignette(ctx, icone, x, y) {
   ctx.drawImage(image, x + marge, y + marge, taille, taille);
 }
 
-// Le compteur et sa plaque. La plaque suit le nombre : taillée pour cinq
-// chiffres, elle serait vide la moitié du temps.
-function dessinerCompteur(ctx, valeur) {
-  const l = COMPTEUR.marge + TAILLE_ITEM + 9 + largeurNombre(valeur, TEXTE_GRAND)
-    + COMPTEUR.marge;
+// Un voile du HUD : du noir posé sur la carte, pas un bandeau. Elle continue
+// en dessous et on la voit à travers ; c'est l'arête d'ardoise qui dit où
+// l'incrustation s'arrête, du côté qui donne sur le jeu.
+function voile(ctx, bande, arete) {
+  ctx.save();
+  ctx.globalAlpha = VOILE;
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(COMPTEUR.x, COMPTEUR.y, l, COMPTEUR.h);
-  ctx.strokeStyle = PALETTE.ardoise;
-  ctx.lineWidth = 1;
-  ctx.strokeRect(COMPTEUR.x + 0.5, COMPTEUR.y + 0.5, l - 1, COMPTEUR.h - 1);
+  ctx.fillRect(0, bande.y, LARGEUR_LOGIQUE, bande.h);
+  ctx.restore();
+  ctx.fillStyle = PALETTE.ardoise;
+  ctx.fillRect(0, arete, LARGEUR_LOGIQUE, 1);
+}
+
+// Le compteur : l'image du bonbon et le nombre, posés sur le voile du haut.
+// Il avait sa propre plaque tant qu'il flottait seul sur la carte ; le voile
+// la lui rend inutile, et deux fonds l'un sur l'autre se verraient.
+function dessinerCompteur(ctx, valeur) {
   const x = COMPTEUR.x + COMPTEUR.marge;
   ctx.drawImage(spriteItem('bonbon'), x, COMPTEUR.y + (COMPTEUR.h - TAILLE_ITEM) / 2,
     TAILLE_ITEM, TAILLE_ITEM);
@@ -50,6 +58,10 @@ function dessinerCompteur(ctx, valeur) {
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   const livraison = monde.scene.machines.find((m) => m.def.entree);
+
+  // Les deux voiles d'abord : tout ce qui suit se pose dessus.
+  voile(ctx, BANDEAU_HAUT, BANDEAU_HAUT.y + BANDEAU_HAUT.h);
+  voile(ctx, BANDEAU_BAS, BANDEAU_BAS.y);
 
   // Un seul compteur : les bonbons finis. Tout le reste se lit sur la grille,
   // dans les jauges des machines et dans ce qui circule.

@@ -146,11 +146,20 @@ en incrustation. Ce qu'on voit passe de 7 × 10 cellules à sept et demie sur
 treize et un tiers — le compte n'est plus rond, et c'est sans importance : la
 caméra est continue, seul le monde se compte en cellules.
 
-Ce qui se pose sur la carte porte son propre fond quand il en a besoin : le
-compteur a sa plaque comme la mini-carte a la sienne, et sa largeur suit le
-nombre. Un chiffre crème à même le sol se perdrait sur ce qui passe dessous —
-un morceau de sucre est de la même couleur que lui. Les touches, elles, n'ont
-besoin de rien : elles portent déjà leur corps et leur socle.
+**Le HUD a son fond : deux voiles**, un en haut, un en bas. Ce sont des voiles
+et non des bandeaux — du noir posé sur la carte, qui continue en dessous et se
+voit à travers. Chacun porte, du côté qui donne sur le jeu, la même arête
+d'ardoise que la mini-carte : c'est elle qui dit où l'incrustation s'arrête.
+Sans ce fond, un chiffre crème se perdait sur ce qui passait dessous — un
+morceau de sucre est exactement de sa couleur.
+
+**La zone sûre**, c'est la fenêtre moins ce que les deux voiles recouvrent.
+Une cellule qui tombe dessous est visible pour la géométrie et cachée pour
+l'œil : c'est à cette zone-là que le tutoriel amène son étape, pas à la
+fenêtre. Une cellule n'y est sûre que si elle y tient tout entière — à moitié
+sous un voile, elle est à moitié cachée, et c'est déjà trop pour un halo qui
+dit « touche ici ». Le rendu, lui, dessine toute la fenêtre : c'est le regard
+qu'on cadre, pas le dessin.
 
 **Le sol dit ce qu'il donne.** La carte est faite de biomes — plaines de sucre,
 terre, champs de fraises, champs de menthe — et chaque gisement porte la

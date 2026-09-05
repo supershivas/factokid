@@ -35,6 +35,22 @@ export const HAUTEUR_VUE = HAUTEUR_LOGIQUE;
 export const COLONNES_VUE = LARGEUR_VUE / CELLULE; // 7,5
 export const LIGNES_VUE = HAUTEUR_VUE / CELLULE;   // 13,33
 
+// Les deux voiles du HUD : ce qui se pose sur la carte a besoin d'un fond,
+// sinon ses signes se perdent sur ce qui passe dessous. Ce sont des voiles et
+// non des bandeaux — la carte continue en dessous, on la voit à travers, et
+// elle va toujours d'un bord à l'autre.
+//
+// Ils portent la même arête d'ardoise que la mini-carte : c'est elle qui dit
+// où l'incrustation s'arrête, et sans elle le voile n'a pas de bord.
+export const VOILE = 0.82;              // ce que le noir couvre du sol
+export const BANDEAU_HAUT = { y: 0, h: 78 };
+export const BANDEAU_BAS = { y: HAUTEUR_LOGIQUE - 84, h: 84 };
+
+// La zone sûre : ce que la fenêtre montre et que rien ne recouvre. Une cellule
+// qui tombe sous un voile est visible pour la géométrie et cachée pour l'œil —
+// c'est à cette zone-là que le tutoriel amène son étape, pas à la fenêtre.
+export const ZONE_SURE = { haut: BANDEAU_HAUT.h, bas: BANDEAU_BAS.h };
+
 export const CIBLE_TACTILE = 48;
 
 export const PALETTE = {

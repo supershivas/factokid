@@ -11,7 +11,7 @@
 
 import {
   CELLULE, PIXEL, COLONNES, LIGNES, LARGEUR_VUE, HAUTEUR_VUE,
-  GRILLE_X, GRILLE_Y, ZOOMS,
+  GRILLE_X, GRILLE_Y, ZOOMS, ZONE_SURE,
 } from './design.js';
 
 export const camera = { x: 0, y: 0, niveau: 0 };
@@ -111,6 +111,31 @@ export function fenetre() {
     cy0: Math.max(0, Math.floor(d.y / CELLULE)),
     cx1: Math.min(COLONNES - 1, Math.floor((d.x + v.l) / CELLULE)),
     cy1: Math.min(LIGNES - 1, Math.floor((d.y + v.h) / CELLULE)),
+  };
+}
+
+// Les cellules qu'on voit *vraiment* : la fenêtre moins ce que les voiles du
+// HUD recouvrent. Depuis que la carte prend tout l'écran, une cellule qui
+// tombe sous la barre d'outils est visible pour la géométrie et cachée pour
+// l'œil ; le tutoriel amenait donc son halo sous une touche sans recadrer.
+//
+// Une cellule n'est sûre que si elle y tient tout entière : à moitié sous un
+// voile, elle est à moitié cachée, et c'est déjà trop pour un halo qui dit
+// « touche ici ».
+//
+// Le rendu, lui, dessine toute la fenêtre : c'est le regard qu'on cadre, pas
+// le dessin.
+export function fenetreSure() {
+  const d = decalage();
+  const z = echelle();
+  const v = vue();
+  const haut = d.y + ZONE_SURE.haut / z;
+  const bas = d.y + v.h - ZONE_SURE.bas / z;
+  return {
+    cx0: Math.max(0, Math.floor(d.x / CELLULE)),
+    cx1: Math.min(COLONNES - 1, Math.floor((d.x + v.l) / CELLULE)),
+    cy0: Math.max(0, Math.ceil(haut / CELLULE)),
+    cy1: Math.min(LIGNES - 1, Math.floor(bas / CELLULE) - 1),
   };
 }
 
