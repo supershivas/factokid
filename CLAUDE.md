@@ -76,6 +76,15 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   tracé devant un extracteur au repos le prend au passage. Le tapis est coupé
   juste avant la cellule voisine : la machine déverse dans la suite, à côté de
   ce qui l'alimentait déjà. Rien n'est inséré au milieu d'une file.
+- **Ce qu'un tapis vise, il l'alimente**, quel que soit l'ordre des gestes :
+  une machine posée au bout d'un tapis prend ce qui y arrive, et un tapis
+  raccourci se raccorde à la machine qu'il vise désormais. C'est le pendant de
+  la règle ci-dessus, et sans lui un tapis pouvait avoir l'air branché sans
+  l'être — le rendu déduit la jonction de la géométrie, la simulation ne la
+  posait qu'au moment du tracé. Un doigt qui dépasse, puis retire ses tuiles
+  en trop, doit être branché : c'est ce qu'il voit. Une machine seulement, et
+  seulement s'il lui reste une place : se raccorder tout seul ne détruit
+  jamais rien.
 - **Le héros n'existe plus.** On pose un extracteur sur un gisement et on le
   relie : c'est tout ce qu'il y a à y faire.
 - **Tout bâtiment se met en pause**, depuis son panneau d'appui long. Il cesse

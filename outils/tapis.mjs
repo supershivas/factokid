@@ -187,7 +187,70 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   veut(scie.sorties.length === 1, 'la scierie ne sort que par un tapis');
 }
 
-// ————— 6. martelage : on construit et on détruit au hasard, en vérifiant
+// ————— 6. un tapis raccourci se raccorde à ce qu'il vise
+//
+// Le tracé passe devant une machine sans s'y arrêter — un doigt qui a dépassé —
+// puis on retire les tuiles en trop. Le bout se retrouve à viser la machine :
+// le rendu dessine la jonction, puisqu'elle se déduit de la géométrie. Mais la
+// coupe remettait la cible à zéro sans jamais regarder ce que le nouveau bout
+// touchait, et le tapis ne livrait rien. Il avait l'air branché et ne l'était
+// pas.
+{
+  const s = creerScene();
+  const mine = ajouterMachine(s, 'extracteur', 1, 5, { item: 'sucre' });
+  const four = ajouterMachine(s, 'chaufferie', 5, 5);
+  // On descend au lieu d'entrer : le tapis longe la machine et continue.
+  const t = poserConvoyeur(
+    s,
+    [{ cx: 2, cy: 5 }, { cx: 3, cy: 5 }, { cx: 4, cy: 5 }, { cx: 4, cy: 6 }, { cx: 4, cy: 7 }],
+    mine, null,
+  );
+  veut(t.cible === null, 'le tapis dépassé ne vise rien');
+
+  couperConvoyeur(s, t, 4, 7);
+  couperConvoyeur(s, convoyeurEn(s, 4, 6), 4, 6);
+  verifier(s, 'tapis raccourci devant une machine');
+
+  const reste = convoyeurEn(s, 4, 5);
+  veut(cle(reste.celluleSortie) === '5,5', 'le bout vise bien la machine');
+  veut(reste.cible === four, 'le tapis raccourci se raccorde à la machine qu’il vise');
+
+  // Et il livre pour de bon.
+  if (peutAccepter(reste)) pousser(reste, 'sucre');
+  for (let k = 0; k < 400; k++) majScene(s, 1 / 60);
+  veut(four.stocks.sucre > 0 || four.produits > 0, 'le tapis raccourci livre vraiment');
+}
+
+// ————— 7. une machine posée au bout d'un tapis prend ce qui y arrive
+//
+// Le même défaut par l'autre bout : on trace d'abord, on pose la machine
+// ensuite. Le tapis la visait déjà — le rendu dessinait la flèche — mais rien
+// ne regardait, à la pose, ce qui pointait vers elle.
+{
+  const s = creerScene();
+  const mine = ajouterMachine(s, 'extracteur', 1, 5, { item: 'sucre' });
+  const t = poserConvoyeur(s, [{ cx: 2, cy: 5 }, { cx: 3, cy: 5 }, { cx: 4, cy: 5 }], mine, null);
+  veut(t.cible === null && cle(t.celluleSortie) === '5,5', 'le tapis vise une case vide');
+
+  const four = ajouterMachine(s, 'chaufferie', 5, 5);
+  verifier(s, 'machine posée au bout d’un tapis');
+  veut(t.cible === four, 'la machine posée prend le tapis qui la vise');
+
+  if (peutAccepter(t)) pousser(t, 'sucre');
+  for (let k = 0; k < 400; k++) majScene(s, 1 / 60);
+  veut(four.stocks.sucre > 0 || four.produits > 0, 'et elle reçoit vraiment');
+
+  // Ce qui ne la vise pas ne s'y raccorde pas : un tapis qui passe à côté
+  // reste un tapis qui passe à côté.
+  const autre = ajouterMachine(s, 'extracteur', 1, 8, { item: 'sucre' });
+  const long = poserConvoyeur(
+    s, [{ cx: 2, cy: 8 }, { cx: 3, cy: 8 }, { cx: 4, cy: 8 }, { cx: 5, cy: 8 }], autre, null,
+  );
+  ajouterMachine(s, 'confiserie', 5, 7);
+  veut(long.cible === null, 'un tapis qui longe une machine ne s’y raccorde pas');
+}
+
+// ————— 8. martelage : on construit et on détruit au hasard, en vérifiant
 // tous les invariants après chaque geste.
 {
   // Un générateur reproductible et correctement mélangé : les bits de poids

@@ -20,6 +20,7 @@ export function ajouterMachine(scene, type, cx, cy, options) {
   const machine = creerMachine(type, cx, cy, options);
   scene.machines.push(machine);
   poser(scene.grille, cx, cy, { genre: 'machine', machine });
+  raccorderCeQuiVise(scene, machine);
   return machine;
 }
 
@@ -89,6 +90,63 @@ export function couperConvoyeur(scene, convoyeur, cx, cy) {
   detacherCible(convoyeur);
   reconstruire(convoyeur, convoyeur.chemin.slice(0, -1), null);
   elaguerSorties(convoyeur);
+  raccorderLeBout(scene, convoyeur);
+}
+
+// Ce tapis vise-t-il cette cellule ? C'est la même question des deux côtés :
+// un tapis qu'on raccourcit et une machine qu'on pose devant un tapis. Le
+// rendu, lui, la pose déjà — il déduit la jonction de la géométrie, et c'est
+// pour ça qu'un tapis non branché avait quand même l'air de l'être.
+function vise(convoyeur, cx, cy) {
+  const bout = convoyeur.celluleSortie;
+  return Boolean(bout) && bout.cx === cx && bout.cy === cy;
+}
+
+// Une machine peut-elle prendre ce tapis de plus ? On ne libère jamais de
+// place : raccorder tout seul ne doit rien détruire.
+function peutPrendre(machine, convoyeur) {
+  if (!machine || machine === convoyeur.source) return false;
+  if (convoyeur.cible || convoyeur.sorties.length > 0) return false;
+  return machine.entrees.length < maxEntrees(machine);
+}
+
+// Une machine posée au bout d'un tapis prend ce qui y arrive. C'est le
+// pendant de la règle inverse — un extracteur posé devant un tapis s'y
+// raccorde tout seul — et sans lui, poser une machine devant un tapis qui la
+// visait déjà donnait le même tapis branché pour l'œil et mort pour elle.
+function raccorderCeQuiVise(scene, machine) {
+  if (maxEntrees(machine) === 0) return;
+  const voisines = [
+    { cx: machine.cx, cy: machine.cy - 1 }, { cx: machine.cx + 1, cy: machine.cy },
+    { cx: machine.cx, cy: machine.cy + 1 }, { cx: machine.cx - 1, cy: machine.cy },
+  ];
+  for (const c of voisines) {
+    const convoyeur = convoyeurEn(scene, c.cx, c.cy);
+    if (!convoyeur || !vise(convoyeur, machine.cx, machine.cy)) continue;
+    if (!peutPrendre(machine, convoyeur)) continue;
+    machine.entrees.push(convoyeur);
+    reconstruire(convoyeur, convoyeur.chemin, machine);
+  }
+}
+
+// Un tapis raccourci se raccorde à la machine qu'il vise désormais.
+//
+// Sans ça il en avait seulement l'air : le rendu déduit la jonction de la
+// géométrie, et dessinait donc la flèche vers la machine, mais la coupe
+// remettait la cible à zéro sans jamais regarder ce que le nouveau bout
+// touchait. Un doigt qui avait dépassé, puis retiré ses tuiles en trop, se
+// retrouvait devant un tapis branché pour l'œil et mort pour la machine.
+//
+// Une machine seulement, et seulement s'il y reste une place : raccorder un
+// tapis à un autre coupe le second, et libérer une place en détruit un —
+// détruire une tuile ne doit jamais remanier ce qui est à côté.
+function raccorderLeBout(scene, convoyeur) {
+  const bout = convoyeur.celluleSortie;
+  if (!bout) return;
+  const machine = machineEn(scene, bout.cx, bout.cy);
+  if (!peutPrendre(machine, convoyeur)) return;
+  machine.entrees.push(convoyeur);
+  reconstruire(convoyeur, convoyeur.chemin, machine);
 }
 
 // Reprendre un tracé interrompu : on ajoute des cellules au bout, sans perdre
