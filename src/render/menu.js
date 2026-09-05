@@ -5,15 +5,16 @@
 // comme un bouton plus important, et aucun ne l'est plus qu'un autre.
 
 import {
-  PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, CELLULE, TEXTE_PETIT, rectMenu,
+  PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, CELLULE, TEXTE_PETIT, TEXTE_GRAND,
+  COLLECTION, rectMenu, rectCollection,
 } from '../design.js';
 import { RECETTES } from '../data/recipes.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
-import { ICONES, INTERFACE, spriteItem, spriteNomme } from './sprites.js';
-import { dessinerPilule } from './plaque.js';
+import { ICONES, INTERFACE, spriteItem, spriteItemEteint, spriteNomme } from './sprites.js';
+import { dessinerPilule, dessinerTouche, SOMBRE, PART_ITEM } from './plaque.js';
 import { enfoncement } from './bouton.js';
-import { dessinerMot, dessinerMotCentre } from './texte.js';
+import { dessinerMot, dessinerMotCentre, dessinerNombre, largeurNombre } from './texte.js';
 
 // L'item est dessiné sur 9 pixels d'art : ×3 le porte à 27, échelle entière.
 const ITEM_RECETTE = 27;
@@ -40,14 +41,73 @@ function bouton(ctx, r, icone, nom, cle) {
   dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + dy + r.h / 2, TEXTE_PETIT, PALETTE.noir);
 }
 
-export function dessinerMenu(ctx, interfaceJeu) {
+export function dessinerMenu(ctx, monde, interfaceJeu) {
   if (!interfaceJeu.menuPause) return;
   voile(ctx);
   if (interfaceJeu.menuPause === 'recettes') { dessinerRecettes(ctx); return; }
+  if (interfaceJeu.menuPause === 'collection') { dessinerCollection(ctx, monde); return; }
   for (let j = 0; j < interfaceJeu.boutonsMenu.length; j++) {
     const b = interfaceJeu.boutonsMenu[j];
     bouton(ctx, rectMenu(j), b.icone, b.nom, 'menu:' + j);
   }
+}
+
+// Le livre des matières : les huit, dans l'ordre de la table. Celles qu'on a
+// tenues une fois sont en couleur, les autres gardent leur silhouette éteinte.
+// On reconnaît qu'il y a quelque chose là sans savoir encore quoi, et le jour
+// où on l'obtient c'est la couleur qui arrive.
+//
+// Chacune est une touche : la toucher explique d'où la matière vient et où
+// elle va, par-dessus le livre, sans le refermer.
+function dessinerCollection(ctx, monde) {
+  const items = Object.values(ITEMS);
+  const trouvees = items.filter((i) => monde && monde.decouvertes[i.id]).length;
+  compte(ctx, trouvees, items.length);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const connue = Boolean(monde && monde.decouvertes[item.id]);
+    const r = rectCollection(i);
+    dessinerTouche(ctx, r, connue ? spriteItem(item.id) : spriteItemEteint(item.id), {
+      teinte: SOMBRE,
+      // Toutes au repos : l'enfoncement ne veut dire qu'une chose dans ce
+      // jeu, et c'est « choisi ». Ce qui distingue une matière trouvée d'une
+      // autre, c'est sa couleur — comme partout ailleurs.
+      enfonce: enfoncement('collection:' + i),
+      part: PART_ITEM,
+      // Ce qu'on n'a pas trouvé s'efface un peu : la rangée reste lisible en
+      // entier, et ce qu'on a se détache.
+      alpha: connue ? 1 : 0.45,
+    });
+    dessinerMotCentre(
+      ctx, item.nom, r.x + (r.l - largeurMotSimple(item.nom)) / 2,
+      r.y + r.h + BAS_DU_NOM, TEXTE_PETIT, connue ? PALETTE.creme : PALETTE.ardoise,
+    );
+  }
+}
+
+// Le nom tient sous la touche : on le pose au pixel, centré à la main, parce
+// que `dessinerMotCentre` centre en hauteur et non en largeur.
+const AVANCE_LETTRE = 6;
+const BAS_DU_NOM = 16;
+const largeurMotSimple = (mot) => mot.length * AVANCE_LETTRE - 1;
+
+// Combien sur combien. Le nombre trouvé est en crème, le total en ardoise :
+// c'est la seule façon de dire « il t'en manque » sans une phrase.
+function compte(ctx, trouvees, total) {
+  const barre = 10;
+  const l = largeurNombre(trouvees, TEXTE_GRAND) + barre + largeurNombre(total, TEXTE_GRAND);
+  const x = (LARGEUR_LOGIQUE - l) / 2;
+  const y = COLLECTION.y - 72;
+  dessinerNombre(ctx, trouvees, x, y, TEXTE_GRAND, PALETTE.creme);
+  ctx.fillStyle = PALETTE.ardoise;
+  for (let i = 0; i < 7; i++) {
+    ctx.fillRect(x + largeurNombre(trouvees, TEXTE_GRAND) + 5 - i, y + 3 + i * 3, 3, 3);
+  }
+  dessinerNombre(
+    ctx, total, x + largeurNombre(trouvees, TEXTE_GRAND) + barre, y,
+    TEXTE_GRAND, PALETTE.ardoise,
+  );
 }
 
 // Une recette par ligne : ce qui entre, la machine qui la fait, ce qui sort.

@@ -89,10 +89,14 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   // ne doit rester allumé derrière un choix ouvert.
   dessinerRangees(ctx, interfaceJeu);
   dessinerPanneau(ctx, interfaceJeu);
-  dessinerSurmodale(ctx, interfaceJeu);
 
   // Le menu pause passe par-dessus tout, y compris la barre d'outils.
-  dessinerMenu(ctx, interfaceJeu);
+  dessinerMenu(ctx, monde, interfaceJeu);
+
+  // La surmodale passe par-dessus le menu pause aussi : le livre des matières
+  // en ouvre une, et elle doit se poser sur lui sans le refermer — c'est ce
+  // qu'elle fait déjà sur un panneau.
+  dessinerSurmodale(ctx, interfaceJeu);
 }
 
 // La surmodale : ce qu'un mot souligné explique. Elle se pose au-dessus du

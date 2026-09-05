@@ -33,6 +33,10 @@ export function creerMachine(type, cx, cy, { item } = {}) {
     tour: 0,       // pour verser à tour de rôle
     produits: 0,
     consommes: 0,
+    // La dernière matière sortie, que le monde relève puis efface : c'est
+    // ainsi qu'il sait ce que le joueur a déjà fabriqué, sans que la machine
+    // ait à connaître le monde.
+    sorti: null,
     bloquee: false,
     bloqueeDepuis: 0,
     pause: false,   // une machine en pause ne travaille plus, et ne crie plus
@@ -134,6 +138,7 @@ function verserAuTour(machine, dt) {
     const item = items[(machine.tour + n) % items.length];
     if (machine.stocks[item] <= 0) continue;
     if (!verser(machine, item)) continue;
+    machine.sorti = item;
     machine.stocks[item]--;
     machine.tour = (machine.tour + n + 1) % items.length;
     machine.produits++;
@@ -202,6 +207,7 @@ export function majMachine(machine, dt) {
     }
     for (const [item, n] of Object.entries(machine.recette.entrees)) machine.stocks[item] -= n;
     pousser(machine.sorties[0], machine.recette.sortie);
+    machine.sorti = machine.recette.sortie;
     machine.produits++;
     machine.consommes++;
     machine.horloge -= machine.periode;

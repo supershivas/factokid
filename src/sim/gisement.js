@@ -59,6 +59,9 @@ export function majGisements(monde, dt) {
     machine.creuse = machine.stocks[g.item] < machine.def.capacite;
     if (machine.horlogeMine < periode) continue;
     if (!deposerBrut(machine, g.item)) { machine.horlogeMine = periode; continue; }
+    // Une matière tirée du sol est une matière découverte : le livre s'ouvre
+    // sur elle avant même qu'un tapis l'emporte.
+    monde.decouvertes[g.item] = true;
     machine.horlogeMine = 0;
     g.present = false;
     g.horloge = 0;

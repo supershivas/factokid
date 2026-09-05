@@ -372,6 +372,18 @@ function damier(rect, n, cote, ecart, couleur) {
 }
 
 const zoomLoin = toile(TUILE_PX, (rect) => damier(rect, 4, 4, 2, PALETTE.creme));
+
+// Le livre des matières : trois cases pleines et une vide, en bas à droite.
+// C'est la collection elle-même qu'on dessine — ce qu'on a, et ce qui manque.
+const menuCollection = toile(TUILE_PX, (rect) => {
+  for (const [x, y] of [[2, 2], [13, 2], [2, 13]]) rect(x, y, 9, 9, PALETTE.noir);
+  // La quatrième manque encore : elle n'a que son contour, et c'est la plaque
+  // qu'on voit au travers.
+  rect(13, 13, 9, 2, PALETTE.noir);
+  rect(13, 20, 9, 2, PALETTE.noir);
+  rect(13, 13, 2, 9, PALETTE.noir);
+  rect(20, 13, 2, 9, PALETTE.noir);
+});
 const zoomPres = toile(TUILE_PX, (rect) => damier(rect, 2, 9, 2, PALETTE.creme));
 
 // La main qui tire le monde, écrite en silhouette : un caractère par pixel,
@@ -485,7 +497,7 @@ export const INTERFACE = {
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse, bulleScierie,
   bullePause, bulleReprise,
   outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
-  menuFermer, zoomLoin, zoomPres,
+  menuFermer, zoomLoin, zoomPres, menuCollection,
 };
 
 // Une icône peut venir de l'interface, des machines ou des items : on la
@@ -514,6 +526,18 @@ for (const item of Object.values(ITEMS)) {
   });
 }
 export function spriteItem(id) { return spritesItems[id]; }
+
+// La même forme, éteinte : la silhouette d'une matière qu'on n'a pas encore
+// tenue. Elle garde son noir et son dessin, et perd sa couleur — on reconnaît
+// qu'il y a quelque chose là sans savoir encore quoi, et le jour où on
+// l'obtient c'est la couleur qui arrive.
+const silhouettes = {};
+for (const item of Object.values(ITEMS)) {
+  silhouettes[item.id] = toile(TAILLE_ITEM_PX, (rect) => {
+    formes[item.forme](rect, PALETTE.ardoise, true);
+  });
+}
+export function spriteItemEteint(id) { return silhouettes[id]; }
 export { TAILLE_ITEM };
 
 // --- orientation des convoyeurs ------------------------------------------

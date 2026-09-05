@@ -10,7 +10,7 @@ import {
   BOUTON_PAUSE, BOUTON_ZOOM, PANNEAU_TEXTE, SURMODALE, SURMODALE_TEXTE, TEXTE_PETIT,
   boitePanneau, boiteSurmodale,
   rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
-  rectFermer, rectSecondaire, rectPasserTuto, dansRect,
+  rectFermer, rectSecondaire, rectPasserTuto, rectCollection, dansRect,
 } from '../design.js';
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { analyserTexte, disposerMots } from '../render/texte.js';
@@ -58,7 +58,7 @@ export function brancherPointeur(canvas, vue, jeu) {
       actif: false, source: null, chemin: [], reprise: null, branche: null,
       origine: null, contact: null,
     },
-    menuPause: null,             // null, 'menu' ou 'recettes'
+    menuPause: null,             // null, 'menu', 'recettes' ou 'collection'
     boutonsMenu: [],
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
@@ -414,6 +414,12 @@ export function brancherPointeur(canvas, vue, jeu) {
     const boutons = [
       { icone: 'menuReprise', nom: 'reprendre', action: () => { etat.menuPause = null; } },
       { icone: 'bonbon', nom: 'recettes', action: () => { etat.menuPause = 'recettes'; } },
+      // Le livre des matières : ce qu'on a déjà tenu entre les mains.
+      {
+        icone: 'menuCollection',
+        nom: 'matières',
+        action: () => { etat.menuPause = 'collection'; },
+      },
       {
         icone: 'outilPause',
         nom: toutEnPause() ? 'tout relancer' : 'tout arrêter',
@@ -468,6 +474,20 @@ export function brancherPointeur(canvas, vue, jeu) {
   function menuPauseTouche(p) {
     if (!etat.menuPause) return false;
     if (etat.menuPause === 'recettes') { etat.menuPause = 'menu'; return true; }
+    // Le livre : une matière trouvée s'explique d'un doigt, par-dessus lui.
+    // Tout le reste referme le livre.
+    if (etat.menuPause === 'collection') {
+      const items = Object.keys(ITEMS);
+      for (let i = 0; i < items.length; i++) {
+        if (!dansRect(rectCollection(i), p.x, p.y)) continue;
+        if (!monde().decouvertes[items[i]]) return true;
+        presser('collection:' + i);
+        expliquer(items[i]);
+        return true;
+      }
+      etat.menuPause = 'menu';
+      return true;
+    }
     for (let j = 0; j < etat.boutonsMenu.length; j++) {
       if (!dansRect(rectMenu(j), p.x, p.y)) continue;
       presser('menu:' + j);
@@ -659,8 +679,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     e.preventDefault();
     appuiLongFait = false;
     if (choixTouche(p)) { relacher(); return; }
-    if (menuPauseTouche(p)) { relacher(); return; }
+    // La surmodale passe avant le menu pause : le livre des matières en ouvre
+    // une, elle se pose dessus, et c'est donc elle qu'on touche d'abord.
     if (surmodaleTouchee(p)) { relacher(); return; }
+    if (menuPauseTouche(p)) { relacher(); return; }
     if (panneauTouche(p)) { relacher(); return; }
     if (interfaceTouchee(p)) { relacher(); return; }
 

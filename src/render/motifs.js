@@ -122,13 +122,19 @@ export const MOTIFS = {
 };
 
 // Un motif devient un peintre : la couleur de la matière est le seul réglage.
+//
+// `uni` peint tout d'une seule couleur, le contour excepté : c'est la
+// silhouette d'une matière qu'on n'a pas encore tenue. Sans lui, le calice
+// vert d'une fraise restait vert et la trahissait avant qu'on l'ait trouvée.
 function peindreMotif(motif) {
-  return (rect, couleur) => {
+  return (rect, couleur, uni = false) => {
     for (let y = 0; y < motif.length; y++) {
       for (let x = 0; x < motif[y].length; x++) {
         const signe = motif[y][x];
-        if (signe === 'n') rect(x, y, 1, 1, PALETTE.noir);
-        else if (signe === 'c') rect(x, y, 1, 1, couleur);
+        if (signe === '.') continue;
+        if (signe === 'n') { rect(x, y, 1, 1, PALETTE.noir); continue; }
+        if (uni) { rect(x, y, 1, 1, couleur); continue; }
+        if (signe === 'c') rect(x, y, 1, 1, couleur);
         else if (signe === 'b') rect(x, y, 1, 1, PALETTE.creme);
         // Un signe de plus, pour ce qu'une matière porte en propre : le
         // calice vert d'une fraise.

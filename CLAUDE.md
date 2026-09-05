@@ -96,6 +96,15 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   disparaît tout seul de la grille, même un tapis que plus rien n'alimente.
 - **Un seul compteur à l'écran** : les bonbons finis. Le reste se lit sur la
   grille, dans les jauges des machines et dans ce qui circule.
+- **Le livre des matières.** Une page du menu pause montre les huit matières :
+  celles qu'on a tenues une fois sont en couleur, les autres gardent leur
+  silhouette éteinte — on voit qu'il y a quelque chose là sans savoir encore
+  quoi, et le jour où on l'obtient c'est la couleur qui arrive. Un compte dit
+  combien sur combien. Chacune est une touche : la toucher ouvre la surmodale
+  qui existe déjà, par-dessus le livre et sans le refermer. Une matière entre
+  au livre au moment où une machine la verse, ou au moment où un extracteur la
+  tire du sol. C'est de l'état de partie : une nouvelle partie repart d'un
+  livre vide.
 - **Appui court, appui long.** Un appui court fait la fonction principale de
   l'élément touché — un gisement propose son extracteur, un trieur ouvre son
   filtre. Un appui long ouvre les informations et les réglages. Le panneau

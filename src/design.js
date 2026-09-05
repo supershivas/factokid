@@ -169,6 +169,23 @@ export function rectPasserTuto() {
   };
 }
 
+// Le livre des matières : huit touches sombres, quatre par rangée, chacune
+// portant une matière et son nom. Ce sont des touches comme les autres — on
+// les touche pour se faire expliquer ce qu'on a trouvé.
+export const COLLECTION = { colonnes: 4, ecart: 20, nom: 16, y: 276 };
+
+export function rectCollection(i) {
+  const l = COLLECTION.colonnes * BOUTON + (COLLECTION.colonnes - 1) * COLLECTION.ecart;
+  const x0 = (LARGEUR_LOGIQUE - l) / 2;
+  const rangee = Math.floor(i / COLLECTION.colonnes);
+  return {
+    x: x0 + (i % COLLECTION.colonnes) * (BOUTON + COLLECTION.ecart),
+    y: COLLECTION.y + rangee * (BOUTON + BOUTON_SOUS + COLLECTION.nom + COLLECTION.ecart),
+    l: BOUTON,
+    h: BOUTON,
+  };
+}
+
 // Un bouchon ne se signale qu'après avoir duré : sinon l'écran clignote au
 // moindre à-coup.
 export const ALERTE_DELAI = 1.2; // secondes

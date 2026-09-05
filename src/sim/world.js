@@ -22,6 +22,10 @@ export function creerMonde(disposition = DEPART, graine = 1) {
   const monde = {
     scene: creerScene(),
     regions: carte.regions,
+    // Ce que le joueur a déjà tenu entre les mains, une fois : le livre des
+    // matières s'en sert, et rien d'autre. C'est de l'état de partie — une
+    // nouvelle partie repart d'un livre vide.
+    decouvertes: {},
     gisements: creerGisements(carte),
   };
 
@@ -46,6 +50,18 @@ export function creerMonde(disposition = DEPART, graine = 1) {
 export function majMonde(monde, dt) {
   majGisements(monde, dt);
   majScene(monde.scene, dt);
+  noterDecouvertes(monde);
+}
+
+// Ce qui vient de sortir d'une machine entre au livre. La machine dit ce
+// qu'elle a versé, le monde le relève et efface : elle n'a jamais besoin de
+// connaître le monde, et le livre n'a jamais besoin de fouiller les tapis.
+function noterDecouvertes(monde) {
+  for (const machine of monde.scene.machines) {
+    if (!machine.sorti) continue;
+    monde.decouvertes[machine.sorti] = true;
+    machine.sorti = null;
+  }
 }
 
 export function nombreItems(monde) {
