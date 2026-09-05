@@ -44,17 +44,33 @@ export const NUANCES = [0.08, 0.11, 0.14];
 // changement sans le heurter.
 export const FONDU = 2;
 
-// Chaque région tire le sol à elle : une cellule appartient à la région la plus
-// proche, et se teinte des deux plus proches quand elles se disputent.
-// Ajouter une région, c'est ajouter une entrée ici — rien d'autre.
-export const REGIONS = [
-  { cx: 10, cy: 15, biome: 'terre' },   // la clairière où l'usine commence
-  { cx: 3, cy: 6, biome: 'sucre' },
-  { cx: 10, cy: 5, biome: 'fraise' },
-  { cx: 17, cy: 7, biome: 'fraise' },
-  { cx: 19, cy: 15, biome: 'menthe' },
-  { cx: 17, cy: 24, biome: 'terre' },
-  { cx: 10, cy: 26, biome: 'menthe' },
-  { cx: 3, cy: 24, biome: 'sucre' },
-  { cx: 1, cy: 15, biome: 'sucre' },
-];
+// Chaque région tire le sol à elle : une cellule appartient à la région la
+// plus proche, et se teinte des deux plus proches quand elles se disputent.
+//
+// Les régions ne sont plus écrites une par une : le monde fait trente-six
+// fenêtres, et les poser à la main revenait à dessiner la même carte pour
+// tout le monde, à jamais. Elles sont tirées au sort à la création de la
+// partie (voir sim/carte.js) — sauf celle du milieu, qui ne bouge pas.
+//
+// La clairière est la seule chose que la carte n'invente pas : c'est là que le
+// tutoriel se joue et que l'usine de départ est posée. Elle est de terre, elle
+// est au centre, et ses quatre gisements sont dans data/monde.js.
+export const REGION_CENTRALE = { biome: 'terre' };
+
+// Combien de régions sont tirées, et à quelle distance minimale les unes des
+// autres. Trop serrées, les biomes se hachent et le sol ne dit plus rien de
+// loin ; trop lâches, on marche dix écrans dans la même couleur.
+export const REGIONS_TIREES = 26;
+export const ECART_REGIONS = 6; // en cellules
+
+// Autour de la clairière, on ne tire rien : ses quatre gisements doivent
+// rester les plus proches, sinon le premier écran ne raconte plus rien.
+export const RAYON_CLAIRIERE = 7; // en cellules
+
+// Les gisements ne sont pas semés un par un mais par bouquets : un arbre seul
+// au milieu de rien n'est pas une forêt, et c'est un bosquet qu'on veut
+// trouver au bout d'un tapis. Un bouquet tient dans son rayon, et porte la
+// matière du biome où tombe son cœur.
+export const BOUQUETS = 46;
+export const PAR_BOUQUET = [2, 5];  // combien de gisements, bornes comprises
+export const RAYON_BOUQUET = 2;     // en cellules

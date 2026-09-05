@@ -8,11 +8,22 @@
 import { DEPART } from '../data/depart.js';
 import { creerScene, ajouterMachine, poserConvoyeur, majScene, itemsDeScene } from './scene.js';
 import { creerGisements, majGisements, gisementEn, poserExtracteur } from './gisement.js';
+import { creerCarte } from './carte.js';
 
 // `disposition` dit ce qui est déjà posé au premier instant : l'usine qui
-// tourne, ou la carte nue. C'est le scénario choisi qui l'apporte.
-export function creerMonde(disposition = DEPART) {
-  const monde = { scene: creerScene(), gisements: creerGisements() };
+// tourne, ou la carte nue. C'est le scénario choisi qui l'apporte, avec la
+// graine de sa carte : deux parties de même graine ont le même sol et les
+// mêmes gisements, et la clairière du milieu ne change jamais.
+//
+// Le monde garde ses régions : le rendu en tire la teinte de chaque cellule,
+// et il n'y a donc qu'une carte, pas une pour la simulation et une pour l'œil.
+export function creerMonde(disposition = DEPART, graine = 1) {
+  const carte = creerCarte(graine);
+  const monde = {
+    scene: creerScene(),
+    regions: carte.regions,
+    gisements: creerGisements(carte),
+  };
 
   for (const e of disposition.extracteurs) poserExtracteur(monde, e.cx, e.cy);
 

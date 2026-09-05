@@ -4,9 +4,14 @@
 // Une cellule appartient à la région la plus proche. Quand deux régions se la
 // disputent, sa teinte est le mélange des deux : c'est tout ce qu'un passage
 // demande, il n'y a aucune tuile de raccord à dessiner.
+//
+// Les régions sont celles de la partie en cours, tirées à sa création : le
+// rendu ne les invente pas, il les reçoit par `poserRegions()` — sinon le sol
+// d'une carte resterait affiché sur la suivante.
 
 import { PALETTE, TUILE_PX, COLONNES, LIGNES } from '../design.js';
-import { BIOMES, REGIONS, NUANCES, FONDU } from '../data/biomes.js';
+import { BIOMES, NUANCES } from '../data/biomes.js';
+import { voisinage } from '../sim/carte.js';
 
 // --- teintes ---------------------------------------------------------------
 
@@ -81,25 +86,20 @@ function nuanceDe(cx, cy) {
   return (px * 5 + py * 3 + ((px * py) % 3)) % 3;
 }
 
-// Les deux régions les plus proches, et la part de la seconde.
-function voisinage(cx, cy) {
-  let premiere = null;
-  let seconde = null;
-  for (const r of REGIONS) {
-    const d = Math.abs(r.cx - cx) + Math.abs(r.cy - cy);
-    if (!premiere || d < premiere.d) { seconde = premiere; premiere = { r, d }; continue; }
-    if (!seconde || d < seconde.d) seconde = { r, d };
-  }
-  // À égale distance, moitié-moitié ; au-delà du fondu, la première seule.
-  const ecart = (seconde.d - premiere.d) / (2 * FONDU);
-  return { premiere: premiere.r, seconde: seconde.r, part: Math.max(0, 0.5 - ecart) };
-}
-
 const sols = new Array(COLONNES * LIGNES).fill(null);
 const teintes = new Array(COLONNES * LIGNES).fill(null);
+let regions = [];
+
+// Les régions de la partie qui commence. Tout ce qui était peint appartenait à
+// la précédente : on l'oublie.
+export function poserRegions(nouvelles) {
+  regions = nouvelles;
+  sols.fill(null);
+  teintes.fill(null);
+}
 
 function preparer(cx, cy) {
-  const { premiere, seconde, part } = voisinage(cx, cy);
+  const { premiere, seconde, part } = voisinage(regions, cx, cy);
   const a = BIOMES[premiere.biome];
   const b = BIOMES[seconde.biome];
   const n = nuanceDe(cx, cy);

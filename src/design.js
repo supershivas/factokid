@@ -15,11 +15,17 @@ export const PIXEL = CELLULE / TUILE_PX; // 2 unités logiques par pixel d'art
 export const COLONNES_VUE = 7;
 export const LIGNES_VUE = 10;
 
-// Le monde : neuf fenêtres. La grille est plus grande que l'écran, et la
-// caméra s'y promène. C'est la seule différence entre la fenêtre et le monde —
-// tout le reste du jeu raisonne en cellules, sans savoir laquelle est visible.
-export const COLONNES = 21;
-export const LIGNES = 30;
+// Le monde : trente-six fenêtres. Il en faisait neuf ; la distance est la
+// ressource, et neuf fenêtres se traversent trop vite pour que ce soit vrai
+// longtemps. La grille est plus grande que l'écran, et la caméra s'y promène.
+// C'est la seule différence entre la fenêtre et le monde — tout le reste du
+// jeu raisonne en cellules, sans savoir laquelle est visible.
+export const COLONNES = 42;
+export const LIGNES = 60;
+
+// Le cœur du monde : la clairière de départ, au milieu. C'est la seule chose
+// que la carte engendrée n'invente pas.
+export const CENTRE = { cx: 21, cy: 30 };
 
 export const GRILLE_X = (LARGEUR_LOGIQUE - COLONNES_VUE * CELLULE) / 2; // 12
 export const GRILLE_Y = 80;
@@ -68,9 +74,12 @@ export const BULLE_ECART = 12;  // la doublure d'une rangée ne touche pas la su
 export const BULLE_ANIMATION = 0.18; // secondes
 
 // Bandeau haut : le compteur à gauche, le bouton pause, la mini-carte à droite.
-// La mini-carte montre le monde entier à deux unités par cellule : 42 × 60
-// pour 21 × 30 cellules, ce qui tient dans les 80 unités du bandeau.
-export const MINICARTE_PAS = 2;
+// La mini-carte montre le monde entier à une unité par cellule : 42 × 60 pour
+// 42 × 60 cellules, ce qui tient dans les 80 unités du bandeau. Elle en
+// occupait deux quand le monde était quatre fois plus petit — la carte a
+// grandi, la vignette non, et c'est bien ainsi : elle sert à ne pas se perdre,
+// pas à compter des cases.
+export const MINICARTE_PAS = 1;
 export const MINICARTE = {
   x: LARGEUR_LOGIQUE - 12 - COLONNES * MINICARTE_PAS,
   y: 10,

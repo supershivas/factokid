@@ -4,13 +4,15 @@
 // construit au même endroit. Un extracteur posé sur un gisement le récolte
 // tout seul ; il reste à le relier à ce qu'on veut nourrir.
 
-import { GISEMENTS, EXTRACTEUR, REPOUSSE_TICKS } from '../data/monde.js';
+import { EXTRACTEUR, REPOUSSE_TICKS } from '../data/monde.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { ajouterMachine, retirerMachine, raccorderAuVoisinage } from './scene.js';
 import { deposerBrut } from './machine.js';
 
-export function creerGisements() {
-  return GISEMENTS.map((g) => ({
+// Les gisements de la carte tirée : elle dit où et quoi, on n'ajoute ici que
+// ce qui vit — présent ou non, la repousse en cours, l'extracteur posé dessus.
+export function creerGisements(carte) {
+  return carte.gisements.map((g) => ({
     cx: g.cx, cy: g.cy, item: g.item, present: true, horloge: 0, extracteur: null,
   }));
 }

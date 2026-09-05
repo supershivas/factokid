@@ -11,6 +11,8 @@ import { marquerPose, majPoses } from './render/pose.js';
 import { presser, relacher, majAppuis } from './render/bouton.js';
 import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
+import { poserRegions } from './render/biome.js';
+import { oublierMiniCarte } from './render/minicarte.js';
 import { dessinerChoix } from './render/choix.js';
 import { dessinerHalo, dessinerBandeau } from './render/tutoriel.js';
 import { creerDemarrage, avancerDemarrage, dessinerDemarrage } from './render/demarrage.js';
@@ -38,7 +40,14 @@ const jeu = {
   tutoriel: null,
   choisir(id) {
     const scenario = SCENARIOS.find((s) => s.id === id) || SCENARIOS[0];
-    jeu.monde = creerMonde(scenario.disposition);
+    // Une graine nulle veut dire « tire-la » : le bac à sable a une carte
+    // neuve à chaque fois, les deux autres gardent la leur.
+    const graine = scenario.graine === null ? (Date.now() & 0x7fffffff) : scenario.graine;
+    jeu.monde = creerMonde(scenario.disposition, graine);
+    // Le sol appartient à la partie qui commence : le rendu oublie celui de la
+    // précédente et repeint à partir de ses régions.
+    poserRegions(jeu.monde.regions);
+    oublierMiniCarte();
     jeu.tutoriel = scenario.tutoriel ? creerTutoriel() : null;
     centrerCamera(scenario.disposition.regard.cx, scenario.disposition.regard.cy);
     // L'écran des essais se referme, même quand l'essai est choisi d'ailleurs

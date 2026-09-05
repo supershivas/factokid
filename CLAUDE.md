@@ -18,8 +18,9 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   production hors ligne. **Seule exception : le menu pause**, où le temps
   s'arrête parce que le joueur l'a demandé.
 - **Une mini-carte, toujours visible**, dans le bandeau haut : le monde entier
-  à deux unités par cellule, avec le cadre de la fenêtre. La toucher y emmène
-  la vue — un geste, pas deux.
+  à une unité par cellule, avec le cadre de la fenêtre. La toucher y emmène
+  la vue — un geste, pas deux. Elle en occupait deux quand le monde était
+  quatre fois plus petit : la carte a grandi, la vignette non.
 - **Grille avec convoyeurs.** Les objets transportés sont discrets et visibles :
   ils défilent un par un et s'accumulent quand l'aval est saturé.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.
@@ -119,8 +120,10 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 ### Une seule carte, plus grande que l'écran
 
 Il n'y a plus d'écran d'usine ni de carte de minage : **une seule grille**, où
-l'on mine et où l'on construit au même endroit. Elle fait neuf fenêtres —
-21 × 30 cellules pour une fenêtre de 7 × 10 — et la caméra s'y promène.
+l'on mine et où l'on construit au même endroit. Elle fait trente-six fenêtres
+— 42 × 60 cellules pour une fenêtre de 7 × 10 — et la caméra s'y promène. Elle
+en faisait neuf : la distance est la ressource, et neuf fenêtres se traversent
+trop vite pour que ce soit vrai longtemps.
 
 C'est le seul système que la carte générale ajoute, et il ne touche pas à la
 simulation : déplacer la vue ne change rien à ce qui circule. Tout le jeu
@@ -133,6 +136,21 @@ matière de son biome. On sait donc où aller chercher quoi rien qu'à la couleu
 du sol, de loin, sans savoir lire. Seule la clairière de départ a un peu de
 tout : c'est ce qui permet de faire un bonbon avant d'avoir traversé quoi que
 ce soit.
+
+**La carte est tirée au sort, sauf son cœur.** Régions et gisements sont
+engendrés à la création de la partie, depuis une graine (`sim/carte.js`) :
+écrire à la main les cent gisements de trente-six fenêtres revenait à dessiner
+la même carte pour tout le monde, à jamais. Les gisements sont semés par
+**bouquets** — un arbre seul n'est pas une forêt, et c'est un bosquet qu'on
+veut trouver au bout d'un tapis — et chaque bouquet porte la matière du biome
+où tombe son cœur.
+
+**La clairière, elle, ne change jamais** : sa région est de terre, elle est au
+centre du monde, ses quatre gisements sont écrits dans `data/monde.js`, et
+rien n'est tiré dans son rayon. C'est ce qui permet au tutoriel de nommer des
+cellules précises et à l'usine de départ d'être posée d'avance — la carte
+change autour d'eux, jamais sous eux. Un scénario porte sa graine : fixe pour
+le tutoriel et l'usine qui tourne, tirée pour le bac à sable.
 
 Un biome est une **couleur posée sur le noir à une transparence très basse**,
 en trois nuances. Le passage d'un biome à l'autre n'est que le mélange des deux
@@ -193,7 +211,7 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Cellule de grille | 48 unités logiques |
 | Niveaux de zoom | cellule à 48 (bâtir) ou 24 (regarder), rien d'autre |
 | Fenêtre | 7 × 10 cellules, 14 × 20 en reculant |
-| Monde | 21 × 30 cellules, soit neuf fenêtres |
+| Monde | 42 × 60 cellules, soit trente-six fenêtres |
 | Cible tactile minimale | 48 unités logiques |
 | Mise à l'échelle | entière uniquement (×1, ×2, ×3), jamais fractionnaire |
 | Rendu | `image-rendering: pixelated`, pas d'interpolation |
@@ -401,11 +419,12 @@ src/
     belt.js         files compressées, déplacement des items
     machine.js      production, consommation, stocks
     gisement.js     gisements, extraction, repousse
+    carte.js        régions et gisements tirés au sort, à la graine
     world.js        état de la partie en cours
   data/
     items.js        table des items
     machines.js     table des machines
-    monde.js        gisements du monde
+    monde.js        les quatre gisements de la clairière, cadences d'extraction
     biomes.js       biomes, régions, fondu
     depart.js       dispositions de départ : usine qui tourne, carte nue
     scenarios.js    les trois essais de la bêta

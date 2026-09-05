@@ -16,6 +16,12 @@ const P = MINICARTE_PAS;
 // toutes sur une image d'une cellule par pixel, puis affichée à l'échelle.
 let fond = null;
 
+// Le fond est celui d'une carte : quand une autre commence, il ne vaut plus
+// rien. main.js le dit au moment où le monde est bâti.
+export function oublierMiniCarte() {
+  fond = null;
+}
+
 function preparerFond() {
   const c = document.createElement('canvas');
   c.width = COLONNES;
