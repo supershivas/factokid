@@ -9,7 +9,7 @@ import {
   COLLECTION, rectMenu, rectCollection,
 } from '../design.js';
 import { RECETTES } from '../data/recipes.js';
-import { ITEMS } from '../data/items.js';
+import { ITEMS, BONBONS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
 import { ICONES, INTERFACE, spriteItem, spriteItemEteint, spriteNomme } from './sprites.js';
 import { dessinerPilule, dessinerTouche, SOMBRE, PART_ITEM } from './plaque.js';
@@ -23,6 +23,9 @@ const ITEM_RECETTE = 27;
 // la machine elle-même, jamais son nom seul.
 const MACHINE_DE = {};
 for (const def of Object.values(MACHINES)) {
+  // Une machine sait parfois plusieurs recettes : la plieuse en sait trois, et
+  // c'est elle qui figure sur les trois lignes.
+  for (const id of def.recettes || []) MACHINE_DE[id] = def.id;
   if (def.recette) MACHINE_DE[def.recette] = def.id;
 }
 
@@ -64,6 +67,12 @@ function dessinerCollection(ctx, monde) {
   const trouvees = items.filter((i) => monde && monde.decouvertes[i.id]).length;
   compte(ctx, trouvees, items.length);
 
+  // La vitrine : ce que la livraison a reçu, bonbon par bonbon. Il n'y a
+  // qu'un compteur à l'écran — le total des bonbons finis — et c'est ici, au
+  // livre, que le détail se lit.
+  const livraison = monde && monde.scene.machines.find((m) => m.def.entrees);
+  const recus = (livraison && livraison.recus) || {};
+
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     const connue = Boolean(monde && monde.decouvertes[item.id]);
@@ -79,6 +88,16 @@ function dessinerCollection(ctx, monde) {
       // entier, et ce qu'on a se détache.
       alpha: connue ? 1 : 0.45,
     });
+    // Un bonbon livré porte son compte à la place de son nom : c'est ce qu'on
+    // vient voir, et le nom est juste au-dessus, sur sa forme.
+    const n = recus[item.id];
+    if (BONBONS.includes(item.id) && n > 0) {
+      dessinerNombre(
+        ctx, n, r.x + (r.l - largeurNombre(n, TEXTE_PETIT)) / 2,
+        r.y + r.h + BAS_DU_NOM - 4, TEXTE_PETIT, PALETTE.jaune,
+      );
+      continue;
+    }
     dessinerMotCentre(
       ctx, item.nom, r.x + (r.l - largeurMotSimple(item.nom)) / 2,
       r.y + r.h + BAS_DU_NOM, TEXTE_PETIT, connue ? PALETTE.creme : PALETTE.ardoise,

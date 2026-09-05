@@ -25,7 +25,7 @@ const EPREUVES = {
     return Boolean(m && m.type === etape.machine);
   },
   lien: (monde, etape) => relie(monde, etape.de, etape.a),
-  livre: (monde) => monde.scene.machines.some((m) => m.def.entree && m.consommes > 0),
+  livre: (monde) => monde.scene.machines.some((m) => m.def.entrees && m.consommes > 0),
 };
 
 // Des tapis mènent-ils d'une machine à l'autre ? On part de ses sorties et on

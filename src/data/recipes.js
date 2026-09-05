@@ -34,4 +34,20 @@ export const RECETTES = {
     sortie: 'bonbon',
     ticksParItem: 22, // 0,37 s
   },
+  // Les deux autres bonbons : mêmes matières, autre objet. C'est la plieuse
+  // qui choisit lequel elle emballe, depuis son panneau, comme un trieur
+  // choisit sa matière. Les entrées sont les mêmes pour les trois : changer
+  // d'avis ne jette donc jamais un stock, et un enfant peut changer d'avis.
+  coeur: {
+    id: 'coeur',
+    entrees: { pastille: 1, papier: 1 },
+    sortie: 'coeur',
+    ticksParItem: 22,
+  },
+  berlingot: {
+    id: 'berlingot',
+    entrees: { pastille: 1, papier: 1 },
+    sortie: 'berlingot',
+    ticksParItem: 22,
+  },
 };

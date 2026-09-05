@@ -1,3 +1,5 @@
+import { BONBONS } from './items.js';
+
 // Table des machines et du convoyeur. Aucune logique ici.
 // Toute constante de gameplay vit dans ce dossier.
 //
@@ -42,7 +44,12 @@ export const MACHINES = {
     description: 'plie le {papier} autour de la {pastille}',
     nom: 'plieuse',
     a: 'à la ',
-    recette: 'bonbon',
+    // Elle sait faire trois bonbons des mêmes deux matières, et c'est le
+    // joueur qui choisit lequel, depuis son panneau — comme un trieur choisit
+    // sa matière. Les trois recettes ont les mêmes entrées : changer d'avis ne
+    // jette donc jamais un stock.
+    recettes: ['bonbon', 'coeur', 'berlingot'],
+    recette: 'bonbon',  // celle qu'elle emballe au sortir de sa caisse
     vapeur: true,       // souffle en sortant son bonbon
     capacite: 8,
   },
@@ -51,7 +58,9 @@ export const MACHINES = {
     description: 'reçoit les {bonbon|bonbons} finis',
     nom: 'livraison',
     a: 'à la ',
-    entree: 'bonbon',
+    // Elle prend les trois bonbons, et compte chacun à part : c'est elle la
+    // vitrine, et le livre lit ce qu'elle a reçu.
+    entrees: BONBONS,
     ticksParItem: 60,
     capacite: 8,
   },

@@ -66,7 +66,7 @@ for (let i = 0; i < GESTES.length; i++) {
   if (!passee) echecs++;
 }
 
-const livraison = monde.scene.machines.find((m) => m.def.entree);
+const livraison = monde.scene.machines.find((m) => m.def.entrees);
 console.log('\nbonbons livrés :', livraison.consommes);
 console.log('tutoriel fini :', tuto.etape >= TUTORIEL.length);
 if (livraison.consommes === 0) { echecs++; console.log('  ✗ l’usine ne livre pas'); }

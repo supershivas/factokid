@@ -119,6 +119,36 @@ export const MOTIFS = {
     '.nnnnnnn.',
     '.........',
   ],
+
+  // Le cœur : deux bosses et une pointe. Une sucette avait été essayée deux
+  // fois — tête large, elle valait une fraise à 95 % ; tête étroite sur un
+  // long bâton, elle valait une bûche à 93 %. L'outil de lisibilité l'a dit
+  // les deux fois. Le cœur, lui, n'a la forme de rien d'autre.
+  coeur: [
+    '.nnn.nnn.',
+    'ncccncccn',
+    'ncccccccn',
+    'ncccccccn',
+    '.ncccccn.',
+    '..ncccn..',
+    '...ncn...',
+    '...nnn...',
+    '.........',
+  ],
+
+  // Le berlingot : une pyramide posée sur sa base. Rien d'autre dans le jeu
+  // n'est triangulaire, et c'est tout ce qu'il faut pour le reconnaître.
+  berlingot: [
+    '.........',
+    '....n....',
+    '...ncn...',
+    '..ncbcn..',
+    '.ncbbbcn.',
+    'ncbbbbbcn',
+    'nnnnnnnnn',
+    '.........',
+    '.........',
+  ],
 };
 
 // Un motif devient un peintre : la couleur de la matière est le seul réglage.

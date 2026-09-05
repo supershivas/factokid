@@ -64,6 +64,11 @@ const LETTRES = {
   // La cédille descend sous le c : elle fait partie de la lettre, pas des
   // accents posés au-dessus.
   'ç': [_, _, '.111.', '1...1', '1....', '1...1', '.111.', '..1..', '.11..'],
+  // La ligature du cœur. Deux panses collées dans cinq pixels : la première
+  // n'a que sa gauche, la seconde tient entière. C'est le seul mot du jeu qui
+  // en a besoin, et une ligature ne se remplace pas par « oe » quand tout le
+  // reste est écrit juste.
+  'œ': [_, _, '.1.11', '1.1.1', '1.111', '1.1..', '.1.11'],
   "'": ['..1..', '..1..', _, _, _, _, _],
   ',': [_, _, _, _, _, _, '..1..', '.1...'],
   '.': [_, _, _, _, _, _, '..1..'],

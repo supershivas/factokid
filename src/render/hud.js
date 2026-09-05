@@ -57,7 +57,7 @@ function dessinerCompteur(ctx, valeur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const livraison = monde.scene.machines.find((m) => m.def.entree);
+  const livraison = monde.scene.machines.find((m) => m.def.entrees);
 
   // Les deux voiles d'abord : tout ce qui suit se pose dessus.
   voile(ctx, BANDEAU_HAUT, BANDEAU_HAUT.y + BANDEAU_HAUT.h);

@@ -45,6 +45,19 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   menthe font la pastille ; la pastille et le papier font le bonbon. Les
   quatre matières brutes — sucre, bois, fraise, menthe — sortent de gisements
   posés sur la grande carte, et les gisements de bois sont des arbres.
+- **Il y a trois bonbons, pas un** : une papillote, un cœur, un berlingot. Ils
+  se font des mêmes deux matières et se distinguent **par leur forme seule** —
+  c'est la forme qui nomme une chose ici, et une collection de trois objets
+  identiques n'en est pas une. **La plieuse choisit lequel elle emballe**,
+  depuis son panneau, comme un trieur choisit sa matière : la même rangée de
+  touches, et ce qu'on y montre est toujours la matière qui sortira. Les trois
+  recettes ont les mêmes entrées, donc changer d'avis ne jette jamais un stock
+  — un enfant peut changer d'avis. Ils ne coûtent pour l'instant pas plus l'un
+  que l'autre : leur donner chacun son fruit demanderait un troisième tapis
+  jusqu'à la plieuse, et donc de réécrire le tutoriel.
+- **La livraison les reçoit tous les trois** et les compte séparément : c'est
+  la vitrine. L'écran garde son unique compteur — le total — et c'est au livre
+  des matières que le détail se lit, sous chaque bonbon.
 - **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
   confiserie et plieuse sont des éléments constructibles comme le convoyeur :
   on les pose sur une cellule libre, et l'outil destruction les retire. La

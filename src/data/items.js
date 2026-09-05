@@ -22,4 +22,14 @@ export const ITEMS = {
   caramel: { id: 'caramel', nom: 'caramel', forme: 'barre', couleur: 'jaune', le: 'le', du: 'du' },
   pastille: { id: 'pastille', nom: 'pastille', forme: 'rond', couleur: 'orange', le: 'la', du: 'de la' },
   bonbon: { id: 'bonbon', nom: 'bonbon', forme: 'bonbon', couleur: 'orange', le: 'le', du: 'du' },
+  // Trois bonbons, pas un. Ils se fabriquent des mêmes matières et se
+  // distinguent par leur forme seule — une papillote, une sucette, un
+  // berlingot — parce que c'est la forme qui nomme une chose dans ce jeu, et
+  // qu'une collection de trois objets identiques n'en est pas une.
+  coeur: { id: 'coeur', nom: 'cœur', forme: 'coeur', couleur: 'rouge', le: 'le', du: 'du' },
+  berlingot: { id: 'berlingot', nom: 'berlingot', forme: 'berlingot', couleur: 'vert', le: 'le', du: 'du' },
 };
+
+// Ce que la livraison reçoit : c'est aussi ce que la vitrine compte, et ce que
+// la plieuse sait emballer.
+export const BONBONS = ['bonbon', 'coeur', 'berlingot'];

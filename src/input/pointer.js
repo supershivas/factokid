@@ -29,7 +29,7 @@ import {
 } from '../sim/scene.js';
 import { gisementEn, poserExtracteur, retirerExtracteur } from '../sim/gisement.js';
 import { camera, deplacerCamera, centrerCamera, versMonde, zoomer } from '../camera.js';
-import { aUneSortie, attendus, maxEntrees } from '../sim/machine.js';
+import { aUneSortie, attendus, maxEntrees, choisirRecette } from '../sim/machine.js';
 
 const APPUI_LONG = 0.42 * 1000; // millisecondes
 const SEUIL_GLISSE = 6;         // unités logiques au-delà desquelles c'est un tracé
@@ -225,8 +225,11 @@ export function brancherPointeur(canvas, vue, jeu) {
   // pousse.
   function provenance(item) {
     const recette = Object.values(RECETTES).find((r) => r.sortie === item);
-    const fabricant = recette
-      ? Object.values(MACHINES).find((m) => m.recette === recette.id) : null;
+    // Une machine sait parfois plusieurs recettes — la plieuse en sait trois.
+    // C'est toujours elle qui fabrique, quelle que soit celle qu'elle emballe.
+    const fabricant = recette ? Object.values(MACHINES).find(
+      (m) => m.recette === recette.id || (m.recettes && m.recettes.includes(recette.id)),
+    ) : null;
     if (fabricant) return 'sort de la {' + fabricant.id + '}';
     const biome = biomeDe(item);
     // « se trouve », et non « se récolte » : la phrase du gisement parle déjà
@@ -236,9 +239,11 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   // Les machines qui attendent une matière : c'est là qu'elle part.
   function emploisDe(item) {
-    return Object.values(MACHINES).filter(
-      (m) => (m.recette && RECETTES[m.recette].entrees[item]) || m.entree === item,
-    );
+    return Object.values(MACHINES).filter((m) => {
+      const parRecette = m.recettes || (m.recette ? [m.recette] : []);
+      if (parRecette.some((id) => RECETTES[id].entrees[item])) return true;
+      return Boolean(m.entrees && m.entrees.includes(item));
+    });
   }
 
   // Où elle va. Chaque machine porte sa propre façon d'être abordée — « à la
@@ -341,14 +346,28 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   // Les réglages d'une machine, en bas du panneau. La pause n'en est plus :
   // elle est passée au second rang, à droite du nom. Un trieur laisse choisir
-  // la matière qu'il range ; les autres n'ont rien à régler.
+  // la matière qu'il range, une plieuse le bonbon qu'elle emballe ; les autres
+  // n'ont rien à régler.
+  //
+  // Les deux choix sont la même rangée de touches : ce qu'on choisit est
+  // toujours une matière, et c'est elle qu'on montre — la matière rangée, ou
+  // le bonbon qui sortira.
   function optionsMachine(machine) {
-    if (!machine.def.tri) return [];
-    return machine.def.triables.map((item) => ({
-      item,
-      choisie: item === machine.matiereTriee,
-      action: () => { machine.matiereTriee = item; ouvrirPanneau(machine, null); },
-    }));
+    if (machine.def.tri) {
+      return machine.def.triables.map((item) => ({
+        item,
+        choisie: item === machine.matiereTriee,
+        action: () => { machine.matiereTriee = item; ouvrirPanneau(machine, null); },
+      }));
+    }
+    if (machine.def.recettes) {
+      return machine.def.recettes.map((id) => ({
+        item: RECETTES[id].sortie,
+        choisie: machine.recette && machine.recette.id === id,
+        action: () => { choisirRecette(machine, id); ouvrirPanneau(machine, null); },
+      }));
+    }
+    return [];
   }
 
   // Un mot souligné touché : on rend sa clé.

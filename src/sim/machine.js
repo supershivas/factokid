@@ -33,6 +33,8 @@ export function creerMachine(type, cx, cy, { item } = {}) {
     tour: 0,       // pour verser à tour de rôle
     produits: 0,
     consommes: 0,
+    // Ce qu'une livraison a reçu, matière par matière : la vitrine du livre.
+    recus: {},
     // La dernière matière sortie, que le monde relève puis efface : c'est
     // ainsi qu'il sait ce que le joueur a déjà fabriqué, sans que la machine
     // ait à connaître le monde.
@@ -50,7 +52,9 @@ export function attendus(machine) {
   const { def, recette } = machine;
   if (recette) return Object.keys(recette.entrees).map((item) => ({ item, capacite: def.capacite }));
   if (def.tri) return []; // un trieur prend tout : voir accepte()
-  if (def.entree) return [{ item: def.entree, capacite: def.capacite }];
+  // Une livraison attend plusieurs matières : les trois bonbons. Une seule
+  // rangée de jauge par matière, comme pour une recette.
+  if (def.entrees) return def.entrees.map((item) => ({ item, capacite: def.capacite }));
   return [];
 }
 
@@ -86,6 +90,15 @@ export function jauges(machine) {
 
 export function aUneSortie(machine) {
   return Boolean(machine.def.tri || machine.def.mine || machine.recette);
+}
+
+// Change la recette d'une machine qui en sait plusieurs. Les recettes d'une
+// même machine ont les mêmes entrées : le stock ne bouge donc pas, et changer
+// d'avis ne jette rien. Le rythme, lui, suit la recette choisie.
+export function choisirRecette(machine, id) {
+  if (!machine.def.recettes || !machine.def.recettes.includes(id)) return;
+  machine.recette = RECETTES[id];
+  machine.periode = machine.recette.ticksParItem / TICKS_PAR_SECONDE;
 }
 
 // Combien de convoyeurs peuvent partir de cette machine.
@@ -214,17 +227,30 @@ export function majMachine(machine, dt) {
     return;
   }
 
-  if (machine.def.entree) {
-    const stock = machine.stocks[machine.def.entree];
-    machine.bloquee = stock >= machine.def.capacite;
-    if (stock === 0) {
+  // La livraison : elle prend les trois bonbons et les compte séparément —
+  // c'est cette vitrine que le livre montre. `consommes` reste le total, et
+  // c'est lui qu'affiche le seul compteur de l'écran.
+  if (machine.def.entrees) {
+    const attend = machine.def.entrees;
+    const total = attend.reduce((n, item) => n + machine.stocks[item], 0);
+    machine.bloquee = attend.every((item) => machine.stocks[item] >= machine.def.capacite);
+    if (total === 0) {
       machine.horloge = Math.min(machine.horloge, machine.periode);
       return;
     }
     machine.horloge += dt;
     if (machine.horloge < machine.periode) return;
-    machine.stocks[machine.def.entree]--;
-    machine.consommes++;
-    machine.horloge -= machine.periode;
+    // À tour de rôle, pour qu'un bonbon n'affame pas les autres.
+    for (let n = 0; n < attend.length; n++) {
+      const item = attend[(machine.tour + n) % attend.length];
+      if (machine.stocks[item] <= 0) continue;
+      machine.stocks[item]--;
+      machine.recus[item] = (machine.recus[item] || 0) + 1;
+      machine.tour = (machine.tour + n + 1) % attend.length;
+      machine.consommes++;
+      machine.horloge -= machine.periode;
+      return;
+    }
+    machine.horloge = machine.periode;
   }
 }
