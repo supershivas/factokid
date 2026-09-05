@@ -12,10 +12,10 @@ export const DEPART = {
   regard: { cx: 10, cy: 15 },
 
   extracteurs: [
-    { cx: 4, cy: 12 },   // sucre
-    { cx: 8, cy: 11 },   // fraise
-    { cx: 11, cy: 14 },  // menthe
-    { cx: 12, cy: 16 },  // bois
+    { cx: 2, cy: 12 },   // sucre
+    { cx: 8, cy: 8 },    // fraise
+    { cx: 14, cy: 14 },  // menthe
+    { cx: 12, cy: 20 },  // bois
   ],
 
   machines: [
@@ -31,28 +31,42 @@ export const DEPART = {
   // `source` et `cible` : soit un index de machine, soit une cellule
   // d'extracteur, désignée par ses coordonnées.
   convoyeurs: [
-    { extracteur: { cx: 4, cy: 12 }, cible: 0, chemin: [{ cx: 5, cy: 12 }] },
+    {
+      extracteur: { cx: 2, cy: 12 },
+      cible: 0,
+      chemin: [{ cx: 3, cy: 12 }, { cx: 4, cy: 12 }, { cx: 5, cy: 12 }],
+    },
     {
       source: 0,
       cible: 1,
       chemin: [{ cx: 6, cy: 13 }, { cx: 6, cy: 14 }, { cx: 7, cy: 14 }],
     },
     {
-      extracteur: { cx: 8, cy: 11 },
+      extracteur: { cx: 8, cy: 8 },
       cible: 1,
-      chemin: [{ cx: 8, cy: 12 }, { cx: 8, cy: 13 }],
+      chemin: [
+        { cx: 8, cy: 9 }, { cx: 8, cy: 10 }, { cx: 8, cy: 11 },
+        { cx: 8, cy: 12 }, { cx: 8, cy: 13 },
+      ],
     },
     {
-      extracteur: { cx: 11, cy: 14 },
+      extracteur: { cx: 14, cy: 14 },
       cible: 1,
-      chemin: [{ cx: 10, cy: 14 }, { cx: 9, cy: 14 }],
+      chemin: [
+        { cx: 13, cy: 14 }, { cx: 12, cy: 14 }, { cx: 11, cy: 14 },
+        { cx: 10, cy: 14 }, { cx: 9, cy: 14 },
+      ],
     },
     {
       source: 1,
       cible: 2,
       chemin: [{ cx: 8, cy: 15 }, { cx: 9, cy: 15 }, { cx: 9, cy: 16 }],
     },
-    { extracteur: { cx: 12, cy: 16 }, cible: 4, chemin: [{ cx: 12, cy: 17 }] },
+    {
+      extracteur: { cx: 12, cy: 20 },
+      cible: 4,
+      chemin: [{ cx: 12, cy: 19 }, { cx: 12, cy: 18 }, { cx: 12, cy: 17 }],
+    },
     { source: 4, cible: 2, chemin: [{ cx: 11, cy: 16 }] },
     { source: 2, cible: 3, chemin: [{ cx: 10, cy: 17 }] },
   ],
@@ -60,10 +74,9 @@ export const DEPART = {
 
 // La carte nue : rien de construit, seule la livraison attend ses bonbons.
 // C'est le départ du bac à sable et celui de la première partie ; le regard
-// s'ouvre plus à l'ouest, là où le sucre et la fraise se touchent, pour que la
-// première chaîne tienne dans une fenêtre.
+// s'ouvre plus à l'ouest, du côté du premier gisement de sucre.
 export const DEPART_NU = {
-  regard: { cx: 6, cy: 13 },
+  regard: { cx: 5, cy: 13 },
   extracteurs: [],
   machines: [
     { type: 'livraison', cx: 10, cy: 18 },

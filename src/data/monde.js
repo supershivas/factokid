@@ -30,11 +30,18 @@ export const REPOUSSE_TICKS = 90; // 1,5 s à 60 Hz
 // Les quatre premiers font exception : ils sont dans la clairière de départ,
 // qui a un peu de tout. C'est ce qui permet de fabriquer un bonbon avant
 // d'avoir traversé quoi que ce soit.
+//
+// Ils ont été écartés de leurs machines : ils étaient à une ou deux cases, et
+// un tapis de deux cases se vide en une seconde — l'usine de départ avait
+// toujours l'air vide, quelle que soit la cadence. Ils sont maintenant à trois
+// ou cinq, et ce sont seize cases de tapis qui portent la matière brute au
+// lieu de six. C'est la même règle que partout ailleurs : la distance est la
+// ressource, et c'est elle qui remplit les tapis.
 export const GISEMENTS = [
-{ cx: 4, cy: 12, item: 'sucre' },
-  { cx: 8, cy: 11, item: 'fraise' },
-  { cx: 11, cy: 14, item: 'menthe' },
-  { cx: 12, cy: 16, item: 'bois' },
+  { cx: 2, cy: 12, item: 'sucre' },
+  { cx: 8, cy: 8, item: 'fraise' },
+  { cx: 14, cy: 14, item: 'menthe' },
+  { cx: 12, cy: 20, item: 'bois' },
   { cx: 3, cy: 16, item: 'sucre' },
   { cx: 13, cy: 11, item: 'bois' },
   { cx: 6, cy: 19, item: 'bois' },

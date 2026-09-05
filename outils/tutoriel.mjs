@@ -20,31 +20,35 @@ const monde = creerMonde(DEPART_NU);
 const tuto = creerTutoriel();
 let echecs = 0;
 
-// Les gestes du joueur, dans l'ordre du tutoriel.
-const GESTES = [
-  () => poserExtracteur(monde, 4, 12),
-  () => ajouterMachine(monde.scene, 'chaufferie', 6, 12, {}),
-  () => tapis([[5, 12]], { cx: 4, cy: 12 }, { cx: 6, cy: 12 }),
-  () => ajouterMachine(monde.scene, 'confiserie', 8, 14, {}),
-  () => tapis([[6, 13], [6, 14], [7, 14]], { cx: 6, cy: 12 }, { cx: 8, cy: 14 }),
-  () => poserExtracteur(monde, 8, 11),
-  () => tapis([[8, 12], [8, 13]], { cx: 8, cy: 11 }, { cx: 8, cy: 14 }),
-  () => poserExtracteur(monde, 11, 14),
-  () => tapis([[10, 14], [9, 14]], { cx: 11, cy: 14 }, { cx: 8, cy: 14 }),
-  () => ajouterMachine(monde.scene, 'plieuse', 10, 16, {}),
-  () => tapis([[8, 15], [9, 15], [9, 16]], { cx: 8, cy: 14 }, { cx: 10, cy: 16 }),
-  () => poserExtracteur(monde, 12, 16),
-  () => ajouterMachine(monde.scene, 'scierie', 11, 17, {}),
-  () => tapis([[12, 17]], { cx: 12, cy: 16 }, { cx: 11, cy: 17 }),
-  () => tapis([[11, 16]], { cx: 11, cy: 17 }, { cx: 10, cy: 16 }),
-  () => tapis([[10, 17]], { cx: 10, cy: 16 }, { cx: 10, cy: 18 }),
-  () => { for (let i = 0; i < 60 * 90; i++) majMonde(monde, 1 / 60); },
-];
+// Les gestes du joueur, tirés de la table elle-même : l'outil ne recopie plus
+// les coordonnées à côté d'elle. Elles y étaient en double, et le jour où la
+// table a bougé c'est l'outil qui est tombé — pas le tutoriel.
+//
+// Ce qu'il vérifie reste entier : que chaque étape soit jouable dans l'ordre,
+// qu'un geste en fasse avancer exactement une, et qu'au bout l'usine livre.
+// Une table incohérente échoue toujours ici, puisque ce sont ses propres
+// cellules qu'on joue.
+const GESTES = TUTORIEL.map((etape) => {
+  if (etape.epreuve === 'extracteur') {
+    return () => poserExtracteur(monde, etape.cible.cx, etape.cible.cy);
+  }
+  if (etape.epreuve === 'machine') {
+    return () => ajouterMachine(monde.scene, etape.machine, etape.cible.cx, etape.cible.cy, {});
+  }
+  if (etape.epreuve === 'lien') return () => tapis(etape);
+  // La dernière : on laisse tourner, et on regarde si un bonbon arrive.
+  return () => { for (let i = 0; i < 60 * 90; i++) majMonde(monde, 1 / 60); };
+});
 
-function tapis(cellules, de, a) {
-  const source = machineEn(monde.scene, de.cx, de.cy);
-  const cible = machineEn(monde.scene, a.cx, a.cy);
-  return poserConvoyeur(monde.scene, cellules.map(([cx, cy]) => ({ cx, cy })), source, cible);
+// Le chemin d'un tapis : les cellules que l'étape montre et qui ne portent pas
+// déjà une machine. Les deux bouts en portent une — ce sont elles qu'on relie.
+function tapis(etape) {
+  const source = machineEn(monde.scene, etape.de.cx, etape.de.cy);
+  const cible = machineEn(monde.scene, etape.a.cx, etape.a.cy);
+  const chemin = etape.cibles
+    .filter((c) => !machineEn(monde.scene, c.cx, c.cy))
+    .map((c) => ({ cx: c.cx, cy: c.cy }));
+  return poserConvoyeur(monde.scene, chemin, source, cible);
 }
 
 for (let i = 0; i < GESTES.length; i++) {
