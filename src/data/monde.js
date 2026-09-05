@@ -7,11 +7,16 @@
 //
 // Les dimensions du monde vivent dans le design system, avec la fenêtre.
 
+// Un extracteur creuse, le gisement disparaît, il repousse : ce qui sort du
+// sol tient donc aux deux durées ensemble, et non à la seule extraction. Elles
+// ont été divisées par deux — une matière toutes les 2,75 s au lieu de 5,5 —
+// pour que ça grouille sur les tapis. Ne diviser que l'extraction n'aurait
+// gagné qu'un cinquième : c'est l'attente qui pesait le plus.
 export const EXTRACTEUR = {
-  ticksParItem: 150, // 2,5 s par matière
+  ticksParItem: 75, // 1,25 s par matière
 };
 
-export const REPOUSSE_TICKS = 180; // 3 s à 60 Hz
+export const REPOUSSE_TICKS = 90; // 1,5 s à 60 Hz
 
 // Le papier ne se ramasse plus : ce sont des arbres qui poussent là, et la
 // scierie en fait du papier.
