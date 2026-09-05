@@ -161,6 +161,13 @@ sous un voile, elle est à moitié cachée, et c'est déjà trop pour un halo qu
 dit « touche ici ». Le rendu, lui, dessine toute la fenêtre : c'est le regard
 qu'on cadre, pas le dessin.
 
+**La caméra déborde du monde**, en haut et en bas, exactement de la hauteur
+des voiles. Sans ce débord elle bute sur le bord du monde avant d'en avoir
+sorti sa première et sa dernière rangée : cent soixante-huit cellules
+restaient à l'écran sans jamais se laisser regarder. Pas un pouce de plus — le
+vide autour du monde n'est pas un endroit où aller. `outils/lisibilite.mjs`
+tient la règle : toute cellule du monde doit pouvoir venir dans la zone sûre.
+
 **Le sol dit ce qu'il donne.** La carte est faite de biomes — plaines de sucre,
 terre, champs de fraises, champs de menthe — et chaque gisement porte la
 matière de son biome. On sait donc où aller chercher quoi rien qu'à la couleur

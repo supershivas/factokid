@@ -8,7 +8,6 @@ import { PALETTE, MINICARTE, MINICARTE_PAS, CELLULE, COLONNES, LIGNES } from '..
 import { ITEMS } from '../data/items.js';
 import { camera, vue } from '../camera.js';
 import { teinteSol } from './biome.js';
-import { LARGEUR_VUE, HAUTEUR_VUE } from '../design.js';
 
 const P = MINICARTE_PAS;
 
@@ -63,13 +62,20 @@ export function dessinerMiniCarte(ctx, monde) {
     ctx.fillRect(MINICARTE.x + m.cx * P, MINICARTE.y + m.cy * P, P, P);
   }
 
-  // Le cadre de la fenêtre : où l'on regarde, dans tout ça.
+  // Le cadre de la fenêtre : où l'on regarde, dans tout ça. La caméra déborde
+  // du monde en haut et en bas — c'est ce qui permet d'aller regarder sa
+  // première et sa dernière rangée — mais le cadre, lui, reste dans la carte :
+  // il dit ce qu'on voit *du monde*, et il n'y a rien à montrer au-delà.
+  const v = vue();
+  const x0 = Math.max(0, Math.min(COLONNES, camera.x / CELLULE));
+  const y0 = Math.max(0, Math.min(LIGNES, camera.y / CELLULE));
+  const x1 = Math.max(0, Math.min(COLONNES, (camera.x + v.l) / CELLULE));
+  const y1 = Math.max(0, Math.min(LIGNES, (camera.y + v.h) / CELLULE));
   ctx.strokeStyle = PALETTE.creme;
   ctx.strokeRect(
-    MINICARTE.x + Math.round(camera.x / CELLULE * P) + 0.5,
-    MINICARTE.y + Math.round(camera.y / CELLULE * P) + 0.5,
-    // Le cadre grandit quand on recule : c'est bien plus de monde qu'on voit.
-    (vue().l / CELLULE) * P, (vue().h / CELLULE) * P,
+    MINICARTE.x + Math.round(x0 * P) + 0.5,
+    MINICARTE.y + Math.round(y0 * P) + 0.5,
+    Math.round((x1 - x0) * P), Math.round((y1 - y0) * P),
   );
 }
 

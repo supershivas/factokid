@@ -33,24 +33,44 @@ export function vue() {
   return { l: LARGEUR_VUE / z, h: HAUTEUR_VUE / z };
 }
 
-const borne = (v, max) => Math.max(0, Math.min(max, v));
-const maxX = () => Math.max(0, COLONNES * CELLULE - vue().l);
-const maxY = () => Math.max(0, LIGNES * CELLULE - vue().h);
+// Jusqu'où la caméra peut aller. Elle déborde du monde en haut et en bas,
+// exactement de la hauteur des voiles : sans ce débord, la première et la
+// dernière rangée de cellules restent sous une incrustation quoi qu'on fasse —
+// la caméra bute sur le bord du monde avant de les en avoir sorties, et cent
+// soixante-huit cellules sont à l'écran sans jamais se laisser regarder.
+//
+// Pas un pouce de plus : le vide autour du monde n'est pas un endroit où aller.
+// À gauche et à droite, rien à ajouter — tout ce qui recouvre la carte tient
+// dans les deux voiles, et c'est donc en hauteur seulement que ça manquait.
+function bornes() {
+  const z = echelle();
+  const v = vue();
+  return {
+    x0: 0,
+    x1: Math.max(0, COLONNES * CELLULE - v.l),
+    y0: -ZONE_SURE.haut / z,
+    y1: Math.max(0, LIGNES * CELLULE - v.h) + ZONE_SURE.bas / z,
+  };
+}
+
+const entre = (v, min, max) => Math.max(min, Math.min(max, v));
 
 // Le doigt tire le monde : il parle en unités d'écran, la caméra vit en unités
 // du monde. Reculé, le même geste couvre deux fois plus de terrain — c'est ce
 // qu'on attend, puisqu'on voit deux fois plus loin.
 export function deplacerCamera(dx, dy) {
   const z = echelle();
-  camera.x = borne(camera.x + dx / z, maxX());
-  camera.y = borne(camera.y + dy / z, maxY());
+  const b = bornes();
+  camera.x = entre(camera.x + dx / z, b.x0, b.x1);
+  camera.y = entre(camera.y + dy / z, b.y0, b.y1);
 }
 
 // Centre la fenêtre sur une cellule, autant que les bords le permettent.
 export function centrerCamera(cx, cy) {
   const v = vue();
-  camera.x = borne((cx + 0.5) * CELLULE - v.l / 2, maxX());
-  camera.y = borne((cy + 0.5) * CELLULE - v.h / 2, maxY());
+  const b = bornes();
+  camera.x = entre((cx + 0.5) * CELLULE - v.l / 2, b.x0, b.x1);
+  camera.y = entre((cy + 0.5) * CELLULE - v.h / 2, b.y0, b.y1);
 }
 
 // Reculer d'un cran, et revenir au premier après le dernier. Ce qu'on avait au
@@ -62,8 +82,9 @@ export function zoomer() {
   const cy = camera.y + avant.h / 2;
   camera.niveau = (camera.niveau + 1) % ZOOMS.length;
   const apres = vue();
-  camera.x = borne(cx - apres.l / 2, maxX());
-  camera.y = borne(cy - apres.h / 2, maxY());
+  const b = bornes();
+  camera.x = entre(cx - apres.l / 2, b.x0, b.x1);
+  camera.y = entre(cy - apres.h / 2, b.y0, b.y1);
 }
 
 // Le décalage appliqué au rendu : arrondi au pixel d'art, pour que le monde

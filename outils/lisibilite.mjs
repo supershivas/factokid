@@ -15,7 +15,8 @@
 // Chaque paire de couleurs est déclarée ici avec ce qu'elle doit tenir : c'est
 // une table, elle grossit avec le jeu.
 
-import { PALETTE, PIXEL, TUILE_PX, CELLULE, poserImage } from '../src/design.js';
+import { PALETTE, PIXEL, TUILE_PX, CELLULE, COLONNES, LIGNES, poserImage } from '../src/design.js';
+import { centrerCamera, fenetreSure, celluleVisible } from '../src/camera.js';
 import { MOTIFS } from '../src/render/motifs.js';
 import { ITEMS } from '../src/data/items.js';
 
@@ -193,6 +194,30 @@ for (const p of POSES.filter((x) => x.natif === 9 && x.rond !== false)) {
   const dit = `${p.quoi} — coin à ${coin.toFixed(1)}, rayon ${rayon}`;
   if (coin > rayon) echec(dit + ' — la matière sort du rond');
   else ok(dit);
+}
+
+// --- ce qu'on peut amener sous les yeux -------------------------------------
+
+// Depuis que la carte prend tout l'écran, deux voiles la recouvrent en haut et
+// en bas. Une cellule qui tombe dessous est à l'écran et invisible : il faut
+// donc pouvoir l'en sortir. Aux bords du monde, la caméra bute avant d'y être
+// arrivée — la première et la dernière rangée restaient sous une incrustation
+// quoi qu'on fasse.
+//
+// La règle : toute cellule du monde doit pouvoir venir dans la zone sûre.
+console.log('\ntoute cellule peut venir dans la zone sûre');
+{
+  const coins = [];
+  for (const cx of [0, 1, COLONNES - 2, COLONNES - 1]) {
+    for (const cy of [0, 1, LIGNES - 2, LIGNES - 1]) coins.push({ cx, cy });
+  }
+  const perdues = [];
+  for (const c of coins) {
+    centrerCamera(c.cx, c.cy);
+    if (!celluleVisible(c.cx, c.cy, fenetreSure())) perdues.push(c.cx + ',' + c.cy);
+  }
+  if (perdues.length > 0) echec(`hors d'atteinte : ${perdues.join(' ')}`);
+  else ok('les seize cellules des quatre coins se laissent regarder');
 }
 
 console.log(echecs === 0 ? '\n✓ tout se lit' : `\n✗ ${echecs} problème(s) de lisibilité`);
