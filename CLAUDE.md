@@ -278,6 +278,14 @@ mini-carte, éloigne la vue : la cellule passe de 48 à 24 et la fenêtre montre
 regardait, et un second appui revient. Le zoom sert à voir de **loin, jamais
 de près** : le niveau où l'on bâtit est déjà le plus gros.
 
+**La pince y mène aussi** : écarter les doigts rapproche, les rapprocher
+éloigne. Elle ne fait que choisir l'un des deux crans — il n'y a rien entre
+les deux, donc rien à suivre en continu : on attend que l'écart ait changé
+d'un quart, et on y va d'un coup. Deux doigts règlent ce qu'on regarde et
+jamais le monde : un tracé commencé à un doigt est défait quand le second se
+pose. Sans ce geste c'est le navigateur qui répondait — iOS ignore
+`user-scalable=no` depuis dix ans, et une pince y faisait grossir la page.
+
 Il n'y a rien entre les deux, rien en dessous, et ce n'est pas un réglage :
 une image de pixel art ne se met à l'échelle qu'en nombre entier de fois. À
 48, un pixel d'art vaut deux unités logiques ; à 24, il en vaut une, et il n'y
