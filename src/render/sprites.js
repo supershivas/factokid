@@ -312,6 +312,22 @@ function traitCroix(rect, couleur, marge = 3, ecart = 1) {
 
 const outilConstruction = toile(TUILE_PX, (rect) => traitPlus(rect, PALETTE.noir));
 
+// Le convoyeur a sa touche à lui, au premier rang : c'est neuf gestes sur dix,
+// et il coûtait aussi cher qu'une plieuse — ouvrir le menu, viser sa rangée,
+// la toucher. Son signe est le tapis vu de dessus, en noir : la plaque est
+// claire, et une plaque claire porte des signes sombres.
+const outilConvoyeur = toile(TUILE_PX, (rect) => {
+  rect(2, 7, 20, 2, PALETTE.noir);
+  rect(2, 15, 20, 2, PALETTE.noir);
+  // Trois chevrons qui disent le sens, comme sur le tapis posé.
+  for (let x = 4; x < 20; x += 6) {
+    for (let i = 0; i < 3; i++) {
+      rect(x + i, 10 + i, 1, 1, PALETTE.noir);
+      rect(x + i, 14 - i, 1, 1, PALETTE.noir);
+    }
+  }
+});
+
 // Sur la plaque claire, le rouge tranche largement (5,2 : 1) : la croix peut
 // donc être rouge pleine, sans trait de renfort. La forme la distingue déjà du
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
@@ -496,7 +512,8 @@ export const INTERFACE = {
   bulleFond, bulleConvoyeur, bulleExtracteur,
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse, bulleScierie,
   bullePause, bulleReprise,
-  outilConstruction, outilDestruction, outilMain, outilPause, menuReprise, menuEssais,
+  outilConstruction, outilConvoyeur, outilDestruction, outilMain, outilPause,
+  menuReprise, menuEssais,
   menuFermer, zoomLoin, zoomPres, menuCollection,
 };
 

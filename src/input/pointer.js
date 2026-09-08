@@ -122,11 +122,8 @@ export function brancherPointeur(canvas, vue, jeu) {
         }
         etat.outil = o.id;
         if (o.id === 'construction') {
-          // Le convoyeur est ce qu'on pose le plus souvent : il est prêt.
-          etat.constructible = 'convoyeur';
           // Les bulles sortent du bouton qu'on vient de toucher, pas du
-          // premier de la barre : depuis que la main s'est ajoutée devant,
-          // « construction » n'est plus à la place zéro.
+          // premier de la barre : la main est devant, le convoyeur aussi.
           ouvrirMenu(bullesConstructibles(), indexOutil(o.id));
         } else fermerMenu();
         majBoutons();
@@ -155,9 +152,9 @@ export function brancherPointeur(canvas, vue, jeu) {
     animMenu = viser('menu', 0, animMenu);
   }
 
-  // Le menu montre tous les éléments constructibles. Depuis qu'il n'y a plus
-  // qu'une carte, tout se pose partout : plus rien n'est grisé. L'extracteur
-  // demande seulement un gisement sous lui.
+  // Le menu ne montre plus que les bâtiments : le convoyeur a sa propre
+  // touche. Depuis qu'il n'y a plus qu'une carte, tout se pose partout — plus
+  // rien n'est grisé, et l'extracteur demande seulement un gisement sous lui.
   function bullesConstructibles() {
     return CONSTRUCTIBLES.map((c) => ({
       icone: c.icone,
@@ -752,6 +749,10 @@ export function brancherPointeur(canvas, vue, jeu) {
       const choisi = CONSTRUCTIBLES.find((x) => x.id === etat.constructible);
       if (choisi && choisi.machine) { batirMachine(c, choisi.machine); return; }
     }
+
+    // Le tracé est le geste du convoyeur, et de lui seul. En main on regarde,
+    // en construction on pose : ni l'un ni l'autre ne tire un tapis.
+    if (etat.outil !== 'convoyeur') return;
 
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
     if (convoyeur) {

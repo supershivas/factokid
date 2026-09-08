@@ -240,9 +240,15 @@ géographie, pas d'un multiplicateur. C'est ce que le téléporteur annulait, et
 c'est pourquoi il a disparu. Il pourra revenir bien plus tard, en déblocage de
 fin, pour relier deux points éloignés.
 
-**La main déplace, le doigt construit.** Un troisième outil dans la barre, et
-c'est celui du repos : on regarde le monde avant de le changer. En main, le
-doigt tire le monde ; en construction, il trace. Pendant un tracé,
+**Quatre touches dans la barre : main, convoyeur, construction, destruction.**
+La main est celle du repos — on regarde le monde avant de le changer, et le
+doigt y tire le monde. **Le convoyeur a la sienne**, au premier rang : c'est
+neuf gestes sur dix, et il coûtait aussi cher qu'une plieuse — ouvrir le menu,
+viser sa rangée, la toucher. Les six bâtiments restent derrière
+« construction », qui n'ouvre plus un menu que pour eux.
+
+**Le tracé est le geste du convoyeur, et de lui seul.** En main on regarde, en
+construction on pose : ni l'un ni l'autre ne tire un tapis. Pendant un tracé,
 arriver au bord de la fenêtre fait défiler tout seul, pour qu'un convoyeur
 traverse deux écrans sans que le doigt se lève.
 
