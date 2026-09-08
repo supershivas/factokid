@@ -91,7 +91,11 @@ export function distances(convoyeur) {
   let depuisSortie = 0;
   for (const item of convoyeur.items) {
     depuisSortie += item.ecart;
-    liste.push({ type: item.type, entree: convoyeur.longueur - depuisSortie });
+    // `par` est la cellule d'où l'item est entré ; `entree` sa distance depuis
+    // le début. Deux choses distinctes qui portaient presque le même nom.
+    liste.push({
+      type: item.type, par: item.entree, entree: convoyeur.longueur - depuisSortie,
+    });
   }
   return liste;
 }
@@ -104,7 +108,7 @@ export function reposerItems(convoyeur, liste) {
   for (const d of liste) {
     if (d.entree > convoyeur.longueur) continue;
     const sortie = convoyeur.longueur - d.entree;
-    convoyeur.items.push({ type: d.type, ecart: sortie - precedente });
+    convoyeur.items.push({ type: d.type, ecart: sortie - precedente, entree: d.par });
     precedente = sortie;
   }
   convoyeur.queue = precedente;
@@ -180,12 +184,17 @@ export function peutAccepter(convoyeur) {
   return convoyeur.queue <= convoyeur.longueur - ESPACEMENT;
 }
 
-export function pousser(convoyeur, type) {
+// `depuis` est ce qui verse : la machine ou le tapis d'où l'item arrive. Un
+// tapis peut être alimenté par plusieurs côtés à la fois — c'est ce que fait
+// une fusion — et sa géométrie n'a qu'une entrée. L'item retient donc la
+// sienne, sinon il apparaissait au bord d'à côté : il sautait d'un tapis à
+// l'autre, d'un trois-quarts de cellule, sans jamais passer entre les deux.
+export function pousser(convoyeur, type, depuis) {
   if (!peutAccepter(convoyeur)) return false;
   const ecart = convoyeur.items.length === 0
     ? convoyeur.longueur
     : convoyeur.longueur - convoyeur.queue;
-  convoyeur.items.push({ type, ecart });
+  convoyeur.items.push({ type, ecart, entree: celluleDe(depuis) });
   convoyeur.queue = convoyeur.longueur;
   return true;
 }
@@ -216,13 +225,20 @@ export function avancer(convoyeur, dt, livrer) {
 }
 
 // Position logique d'une distance mesurée depuis l'entrée du convoyeur.
-export function pointA(convoyeur, distanceEntree) {
+//
+// `par` dit par quelle cellule l'item est entré, quand ce n'est pas celle que
+// la géométrie retient — un tapis nourri des deux côtés n'a qu'une entrée
+// dessinée, et il en a deux dans les faits. Seule la première demi-cellule en
+// dépend : après, tout le monde suit le même chemin.
+export function pointA(convoyeur, distanceEntree, par) {
   const pts = convoyeur.points;
   const n = convoyeur.chemin.length;
   const demi = CELLULE / 2;
   let a, b, t;
   if (distanceEntree <= demi) {
-    a = pts[0]; b = pts[1]; t = distanceEntree / demi;
+    a = par && adjacentes(par, convoyeur.chemin[0]) ? bord(par, convoyeur.chemin[0]) : pts[0];
+    b = pts[1];
+    t = distanceEntree / demi;
   } else {
     const d = distanceEntree - demi;
     const k = Math.floor(d / CELLULE);
@@ -235,12 +251,21 @@ export function pointA(convoyeur, distanceEntree) {
   return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
+// Le point où deux cellules se touchent : le milieu de leurs centres.
+function bord(a, b) {
+  const ca = centreCellule(a.cx, a.cy);
+  const cb = centreCellule(b.cx, b.cy);
+  return { x: (ca.x + cb.x) / 2, y: (ca.y + cb.y) / 2 };
+}
+
 // Parcourt les items de la tête vers la queue, en fournissant leur position.
 export function parcourirItems(convoyeur, visiter) {
   let depuisSortie = 0;
   for (let i = 0; i < convoyeur.items.length; i++) {
     depuisSortie += convoyeur.items[i].ecart;
-    const p = pointA(convoyeur, convoyeur.longueur - depuisSortie);
+    const p = pointA(
+      convoyeur, convoyeur.longueur - depuisSortie, convoyeur.items[i].entree,
+    );
     visiter(convoyeur.items[i], p);
   }
 }

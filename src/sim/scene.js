@@ -449,7 +449,7 @@ function livrerDepuis(convoyeur, type) {
     const suivante = dests[(convoyeur.tour + k) % n];
     const pris = estMachine(suivante)
       ? deposer(suivante, type)
-      : peutAccepter(suivante) && pousser(suivante, type);
+      : peutAccepter(suivante) && pousser(suivante, type, convoyeur);
     if (!pris) continue;
     convoyeur.tour = (convoyeur.tour + k + 1) % n;
     // Le bout vise maintenant la destination du prochain item : celui-ci part

@@ -15,6 +15,7 @@ import {
   retirerMachine, majScene, convoyeurEn,
 } from '../src/sim/scene.js';
 import { pointA, parcourirItems, pousser, peutAccepter, destinations } from '../src/sim/belt.js';
+import { centreCellule } from '../src/sim/grid.js';
 import { lire } from '../src/sim/grid.js';
 import { CELLULE } from '../src/design.js';
 import { MACHINES } from '../src/data/machines.js';
@@ -250,7 +251,38 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   veut(long.cible === null, 'un tapis qui longe une machine ne s’y raccorde pas');
 }
 
-// ————— 8. martelage : on construit et on détruit au hasard, en vérifiant
+// ————— 8. un item entre par le côté d'où il vient
+//
+// Un tapis nourri des deux côtés — c'est ce que fait une fusion — n'a qu'une
+// entrée dans sa géométrie. Les items poussés par l'autre source apparaissaient
+// donc au bord d'à côté : ils sautaient d'un tapis à l'autre, d'un
+// trois-quarts de cellule, sans jamais passer entre les deux.
+{
+  const s = creerScene();
+  const a = ajouterMachine(s, 'extracteur', 1, 4, { item: 'sucre' });
+  const b = ajouterMachine(s, 'extracteur', 5, 8, { item: 'sucre' });
+  const bout = ajouterMachine(s, 'livraison', 9, 4);
+  const hote = poserConvoyeur(s, ligne(2, 4, 7, 1, 0), a, bout);
+  raccorderConvoyeur(s, ligne(5, 7, 3, 0, -1), b, hote, { cx: 5, cy: 4 });
+  const suite = convoyeurEn(s, 5, 4);
+  veut(suite.sources.length === 2, 'la suite est nourrie des deux côtés');
+
+  const premiere = suite.chemin[0];
+  for (const source of suite.sources) {
+    suite.items.length = 0;
+    suite.queue = 0;
+    pousser(suite, 'sucre', source);
+    let ou = null;
+    parcourirItems(suite, (item, p) => { ou = p; });
+    const dernier = source.chemin[source.chemin.length - 1];
+    const ca = centreCellule(dernier.cx, dernier.cy);
+    const cb = centreCellule(premiere.cx, premiere.cy);
+    const ecart = Math.hypot(ou.x - (ca.x + cb.x) / 2, ou.y - (ca.y + cb.y) / 2);
+    veut(ecart < 0.5, `l'item entre par ${cle(dernier)}, là d'où il vient`);
+  }
+}
+
+// ————— 9. martelage : on construit et on détruit au hasard, en vérifiant
 // tous les invariants après chaque geste.
 {
   // Un générateur reproductible et correctement mélangé : les bits de poids

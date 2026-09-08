@@ -132,7 +132,7 @@ function verser(machine, item) {
   for (const convoyeur of machine.sorties) {
     if (convoyeur.matiere && convoyeur.matiere !== item) continue;
     if (!peutAccepter(convoyeur)) continue;
-    pousser(convoyeur, item);
+    pousser(convoyeur, item, machine);
     return true;
   }
   return false;
