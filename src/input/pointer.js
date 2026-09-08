@@ -440,8 +440,9 @@ export function brancherPointeur(canvas, vue, jeu) {
       },
       {
         icone: 'outilPause',
+        // La brume : ce qui s'endort. Ni une validation, ni un renoncement.
         nom: toutEnPause() ? 'tout relancer' : 'tout arrêter',
-        couleur: 'orange',
+        couleur: 'brume',
         action: () => {
           const pause = !toutEnPause();
           for (const m of scene().machines) m.pause = pause;
@@ -452,8 +453,10 @@ export function brancherPointeur(canvas, vue, jeu) {
       // recharger la page.
       {
         icone: 'menuEssais',
+        // L'orange de ce qui referme : abandonner la partie en cours est le
+        // geste le plus lourd du menu, et c'est le seul qui jette quelque chose.
         nom: 'changer d\'essai',
-        couleur: 'brume',
+        couleur: 'orange',
         action: () => {
           etat.menuPause = null;
           etat.panneau = null;
