@@ -53,22 +53,65 @@ export const ZONE_SURE = { haut: BANDEAU_HAUT.h, bas: BANDEAU_BAS.h };
 
 export const CIBLE_TACTILE = 48;
 
+// La palette : seize couleurs, et pas dix-sept.
+//
+// Elle en portait huit, et ces huit-là n'étaient pas huit couleurs choisies :
+// c'étaient huit des seize de Sweetie 16, prises une sur deux. Les huit autres
+// existaient donc déjà en creux, s'accordent par construction, et sont
+// exactement celles qui manquaient — deux nuits pour les ombres, deux clartés
+// pour les reflets, trois teintes de plus pour varier. Passer à seize ne fait
+// entrer aucune couleur étrangère : c'est la même famille, finie.
+//
+// La règle ne change pas pour autant : ajouter une dix-septième couleur
+// demande mon accord, et chaque type d'item reste identifiable par sa forme
+// seule. La couleur confirme, elle ne porte jamais seule le sens.
 export const PALETTE = {
-  noir:    '#1a1c2c',
-  ardoise: '#566c86',
-  creme:   '#f4f4f4',
-  rouge:   '#b13e53',
-  orange:  '#ef7d57',
-  jaune:   '#ffcd75',
-  vert:    '#38b764',
-  bleu:    '#41a6f6',
+  noir:     '#1a1c2c',
+  prune:    '#5d275d',
+  rouge:    '#b13e53',
+  orange:   '#ef7d57',
+  jaune:    '#ffcd75',
+  anis:     '#a7f070',
+  vert:     '#38b764',
+  sarcelle: '#257179',
+  nuit:     '#29366f',
+  outremer: '#3b5dc9',
+  bleu:     '#41a6f6',
+  cyan:     '#73eff7',
+  creme:    '#f4f4f4',
+  brume:    '#94b0c2',
+  ardoise:  '#566c86',
+  profond:  '#333c57',
 };
 
 // Index de palette utilisés par les matrices de pixels (0 = transparent).
-export const INDEX_PALETTE = [
-  null, PALETTE.noir, PALETTE.ardoise, PALETTE.creme, PALETTE.rouge,
-  PALETTE.orange, PALETTE.jaune, PALETTE.vert, PALETTE.bleu,
-];
+export const INDEX_PALETTE = [null, ...Object.values(PALETTE)];
+
+// Les trois faces d'une même couleur : sa clarté, son corps, son ombre.
+//
+// C'est ce qu'il faut pour bomber une touche — un reflet en haut, un creux en
+// bas — et rien n'y est calculé : chaque face est une autre couleur de la
+// palette. Sweetie 16 est faite de rampes, et une couleur y a presque toujours
+// sa voisine plus claire et sa voisine plus sombre. Un dégradé du jeu ne
+// mélange donc jamais rien : il empile trois couleurs déclarées.
+export const FACES = {
+  creme:    { clair: 'creme',    corps: 'creme',    sombre: 'brume'    },
+  brume:    { clair: 'creme',    corps: 'brume',    sombre: 'ardoise'  },
+  ardoise:  { clair: 'brume',    corps: 'ardoise',  sombre: 'profond'  },
+  profond:  { clair: 'ardoise',  corps: 'profond',  sombre: 'noir'     },
+  rouge:    { clair: 'orange',   corps: 'rouge',    sombre: 'prune'    },
+  orange:   { clair: 'jaune',    corps: 'orange',   sombre: 'rouge'    },
+  jaune:    { clair: 'creme',    corps: 'jaune',    sombre: 'orange'   },
+  anis:     { clair: 'creme',    corps: 'anis',     sombre: 'vert'     },
+  vert:     { clair: 'anis',     corps: 'vert',     sombre: 'sarcelle' },
+  sarcelle: { clair: 'vert',     corps: 'sarcelle', sombre: 'nuit'     },
+  cyan:     { clair: 'creme',    corps: 'cyan',     sombre: 'bleu'     },
+  bleu:     { clair: 'cyan',     corps: 'bleu',     sombre: 'outremer' },
+  outremer: { clair: 'bleu',     corps: 'outremer', sombre: 'nuit'     },
+  nuit:     { clair: 'outremer', corps: 'nuit',     sombre: 'noir'     },
+  prune:    { clair: 'rouge',    corps: 'prune',    sombre: 'noir'     },
+  noir:     { clair: 'profond',  corps: 'noir',     sombre: 'noir'     },
+};
 
 // Barre d'outils : des touches rondes, et les bulles des éléments
 // constructibles qui sortent au-dessus du bouton construction.
