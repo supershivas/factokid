@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dix directions pour les touches</title>
+<style>
+  /* Sweetie 16 — les huit du jeu, et les huit qui restent. */
+  :root {
+    --noir:#1a1c2c; --prune:#5d275d; --rouge:#b13e53; --orange:#ef7d57;
+    --jaune:#ffcd75; --anis:#a7f070; --vert:#38b764; --sarcelle:#257179;
+    --nuit:#29366f; --outremer:#3b5dc9; --bleu:#41a6f6; --cyan:#73eff7;
+    --creme:#f4f4f4; --brume:#94b0c2; --ardoise:#566c86; --profond:#333c57;
+  }
+  /* Pas de Tailwind ici : le CDN ne répond pas depuis l'atelier, et la mise
+     en page de cette page tient en trente lignes. Un CDN au chargement est
+     de toute façon ce que la stack interdit. */
+  html,body{margin:0;background:#0e0f1a;color:var(--creme);
+            font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:15px;margin:0 0 2px;color:var(--jaune)}
+  a{color:var(--bleu)}
+  .enveloppe{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+  .note{color:var(--brume);max-width:70ch;margin:0 0 8px}
+  .grille{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));margin-top:22px}
+  .carte{background:#141626;border:1px solid #262a42;border-radius:14px;padding:14px 14px 12px}
+  .cout{color:var(--ardoise);font-size:12px;margin:10px 0 0}
+
+  /* Le sol du jeu, pour juger les touches là où elles vivent. */
+  .sol{border-radius:10px;padding:18px 14px;display:flex;gap:14px;justify-content:center;
+       background:
+         radial-gradient(circle at 18% 30%, rgba(239,125,87,.05) 0 1px, transparent 1px),
+         radial-gradient(circle at 62% 70%, rgba(239,125,87,.05) 0 1px, transparent 1px),
+         radial-gradient(circle at 84% 22%, rgba(56,183,100,.05) 0 1px, transparent 1px),
+         linear-gradient(160deg,#221a1d,#161a22 60%,#141a18);
+       background-size:44px 44px,58px 58px,70px 70px,100% 100%}
+
+  /* --- la touche, tronc commun --------------------------------------- */
+  .t{width:60px;height:60px;border:0;padding:0;cursor:pointer;position:relative;
+     display:grid;place-items:center;background:none;color:inherit;
+     -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .t svg{width:34px;height:34px;display:block;position:relative;z-index:2}
+  .t .corps{position:absolute;inset:0;z-index:1;transition:
+     transform .09s cubic-bezier(.3,0,.6,1), box-shadow .09s ease, background .09s ease,
+     border-color .09s ease, filter .09s ease}
+  .t svg{transition:transform .09s cubic-bezier(.3,0,.6,1), filter .09s ease}
+  .accent-1{--a:var(--brume)} .accent-2{--a:var(--jaune)}
+  .accent-3{--a:var(--anis)}  .accent-4{--a:var(--rouge)}
+
+  /* 1 · galet ---------------------------------------------------------- */
+  .d1 .corps{background:var(--creme);border-radius:22px;
+             box-shadow:0 6px 0 -1px var(--profond),0 10px 18px rgba(0,0,0,.45)}
+  .d1 svg{color:var(--noir)}
+  .d1.bas .corps,.d1.actif .corps{transform:translateY(5px);
+             box-shadow:0 1px 0 -1px var(--profond),0 3px 8px rgba(0,0,0,.5)}
+  .d1.bas svg,.d1.actif svg{transform:translateY(5px)}
+
+  /* 2 · bonbon --------------------------------------------------------- */
+  .d2 .corps{border-radius:999px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--a) 82%,white),var(--a) 52%,
+               color-mix(in srgb,var(--a) 78%,var(--noir)));
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.25),
+               0 8px 16px color-mix(in srgb,var(--a) 35%,transparent)}
+  .d2 svg{color:var(--noir)}
+  .d2.bas .corps,.d2.actif .corps{transform:translateY(4px) scale(.97);
+    box-shadow:inset 0 -2px 0 rgba(255,255,255,.4),inset 0 3px 8px rgba(0,0,0,.3),
+               0 2px 6px color-mix(in srgb,var(--a) 30%,transparent)}
+  .d2.bas svg,.d2.actif svg{transform:translateY(4px)}
+
+  /* 3 · jeton ---------------------------------------------------------- */
+  .d3{padding-bottom:7px}
+  .d3::after{content:"";position:absolute;left:0;right:0;top:7px;height:53px;
+             border-radius:999px;background:var(--profond)}
+  .d3 .corps{background:var(--creme);border-radius:999px;height:53px;top:0;bottom:auto}
+  .d3 svg{color:var(--noir);margin-top:-7px}
+  .d3.bas .corps,.d3.actif .corps{transform:translateY(7px)}
+  .d3.bas svg,.d3.actif svg{transform:translateY(7px)}
+
+  /* 4 · anneau --------------------------------------------------------- */
+  .d4 .corps{border-radius:999px;background:transparent;
+             border:3px solid var(--a);box-shadow:0 0 0 0 transparent}
+  .d4 svg{color:var(--a)}
+  .d4.bas .corps,.d4.actif .corps{background:var(--a)}
+  .d4.bas svg,.d4.actif svg{color:var(--noir)}
+
+  /* 5 · verre ---------------------------------------------------------- */
+  .d5 .corps{border-radius:20px;background:rgba(244,244,244,.10);
+             border:1px solid rgba(244,244,244,.22);backdrop-filter:blur(7px) saturate(1.3);
+             box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 8px 20px rgba(0,0,0,.35)}
+  .d5 svg{color:var(--creme)}
+  .d5.bas .corps,.d5.actif .corps{background:rgba(244,244,244,.22);
+             border-color:rgba(244,244,244,.5);transform:translateY(3px)}
+  .d5.bas svg,.d5.actif svg{transform:translateY(3px)}
+
+  /* 6 · relief --------------------------------------------------------- */
+  .d6 .corps{border-radius:18px;background:#1e2233;
+             box-shadow:-4px -4px 8px rgba(148,176,194,.13),5px 5px 12px rgba(0,0,0,.6)}
+  .d6 svg{color:var(--brume)}
+  .d6.bas .corps,.d6.actif .corps{background:#191d2c;
+             box-shadow:inset -3px -3px 7px rgba(148,176,194,.10),inset 4px 4px 9px rgba(0,0,0,.65)}
+  .d6.bas svg,.d6.actif svg{color:var(--a)}
+
+  /* 7 · gelée ---------------------------------------------------------- */
+  .d7 .corps{border-radius:999px;background:var(--a);
+             box-shadow:0 4px 0 color-mix(in srgb,var(--a) 55%,var(--noir))}
+  .d7 svg{color:var(--noir)}
+  .d7.bas .corps,.d7.actif .corps{transform:translateY(4px);box-shadow:0 0 0 var(--a)}
+  .d7.bas svg,.d7.actif svg{transform:translateY(4px)}
+
+  /* 8 · étiquette ------------------------------------------------------ */
+  .d8 .corps{border-radius:16px;background:var(--a);
+             box-shadow:0 5px 0 color-mix(in srgb,var(--a) 45%,var(--noir)),0 9px 14px rgba(0,0,0,.4)}
+  .d8 .corps::after{content:"";position:absolute;inset:5px;border-radius:11px;
+             border:2px dashed rgba(26,28,44,.45)}
+  .d8 svg{color:var(--noir)}
+  .d8.bas .corps,.d8.actif .corps{transform:translateY(4px) rotate(-2deg);
+             box-shadow:0 1px 0 color-mix(in srgb,var(--a) 45%,var(--noir)),0 3px 7px rgba(0,0,0,.45)}
+  .d8.bas svg,.d8.actif svg{transform:translateY(4px) rotate(-2deg)}
+
+  /* 9 · néon ----------------------------------------------------------- */
+  .d9 .corps{border-radius:999px;background:#121524;border:2px solid var(--a);
+             box-shadow:0 0 10px color-mix(in srgb,var(--a) 40%,transparent),
+                        inset 0 0 10px color-mix(in srgb,var(--a) 18%,transparent)}
+  .d9 svg{color:var(--a);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--a) 60%,transparent))}
+  .d9.bas .corps,.d9.actif .corps{background:color-mix(in srgb,var(--a) 22%,#121524);
+             box-shadow:0 0 22px color-mix(in srgb,var(--a) 75%,transparent),
+                        inset 0 0 14px color-mix(in srgb,var(--a) 30%,transparent)}
+  .d9.bas svg,.d9.actif svg{filter:drop-shadow(0 0 9px var(--a))}
+
+  /* 10 · papier découpé ------------------------------------------------ */
+  .d10 .corps{border-radius:14px;background:var(--creme);
+              box-shadow:6px 6px 0 var(--a),6px 6px 0 1px var(--noir)}
+  .d10 svg{color:var(--noir)}
+  .d10.bas .corps,.d10.actif .corps{transform:translate(5px,5px);
+              box-shadow:1px 1px 0 var(--a),1px 1px 0 1px var(--noir)}
+  .d10.bas svg,.d10.actif svg{transform:translate(5px,5px)}
+
+  /* --- la palette ------------------------------------------------------ */
+  .palette{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  .ton{width:82px}
+  .ton i{display:block;height:38px;border-radius:8px;border:1px solid rgba(0,0,0,.4)}
+  .ton b{display:block;font-size:11px;font-weight:600;margin-top:4px}
+  .ton span{display:block;font-size:10px;color:var(--ardoise)}
+  .ton.neuf b::after{content:" ·neuf";color:var(--anis)}
+</style>
+</head>
+<body>
+<div class="enveloppe">
+  <h1>Dix directions pour les touches</h1>
+  <p class="note">
+    Page vierge : rien ici ne vient du jeu. Les touches sont du DOM, leurs
+    formes des courbes, leurs ombres du CSS, leurs ressorts Motion. On assume
+    de quitter le pixel art <em>pour les touches seulement</em> — le monde,
+    lui, reste peint au pixel.
+    <a href="./boutons.html">← l'ancien chantier, en pixels</a> ·
+    <a href="./index.html">l'atelier</a>
+  </p>
+
+  <h2>La palette : elle est déjà écrite, il en manque la moitié</h2>
+  <p class="note">
+    Les huit couleurs du jeu ne sont pas huit couleurs : ce sont les huit
+    premières de <b>Sweetie&nbsp;16</b>, prises une sur deux. Les huit autres
+    existent, s'accordent par construction, et ce sont exactement celles qui
+    manquaient — deux nuits pour les ombres, deux clartés pour les reflets,
+    trois teintes de plus pour varier. Passer de huit à seize ne fait donc
+    entrer aucune couleur étrangère.
+  </p>
+  <div class="palette" id="palette"></div>
+
+  <div class="grille" id="directions"></div>
+</div>
+
+<template id="icones">
+  <svg viewBox="0 0 24 24" fill="none" data-i="main"
+       stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 12V5.6a1.6 1.6 0 0 1 3.2 0V11"/>
+    <path d="M11.2 11V4.8a1.6 1.6 0 0 1 3.2 0V11"/>
+    <path d="M14.4 11.4V6.4a1.6 1.6 0 0 1 3.2 0V15c0 3.3-2.4 5.6-5.6 5.6-3 0-4.4-1.4-5.6-3.4l-2.2-3.7a1.6 1.6 0 0 1 2.6-1.9L8 13.4"/>
+  </svg>
+  <svg viewBox="0 0 24 24" fill="none" data-i="convoyeur"
+       stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 7.5h19M2.5 16.5h19"/>
+    <path d="M7 9.4 9.8 12 7 14.6M12.4 9.4 15.2 12l-2.8 2.6"/>
+  </svg>
+  <svg viewBox="0 0 24 24" fill="none" data-i="plus"
+       stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+    <path d="M12 5v14M5 12h14"/>
+  </svg>
+  <svg viewBox="0 0 24 24" fill="none" data-i="croix"
+       stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+    <path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>
+  </svg>
+</template>
+
+<script type="module">
+import { animate } from '../vendor/framer-motion-dom.js';
+
+// --- la palette ------------------------------------------------------------
+const SWEETIE = [
+  ['noir', '#1a1c2c', true], ['prune', '#5d275d', false],
+  ['rouge', '#b13e53', true], ['orange', '#ef7d57', true],
+  ['jaune', '#ffcd75', true], ['anis', '#a7f070', false],
+  ['vert', '#38b764', true], ['sarcelle', '#257179', false],
+  ['nuit', '#29366f', false], ['outremer', '#3b5dc9', false],
+  ['bleu', '#41a6f6', true], ['cyan', '#73eff7', false],
+  ['creme', '#f4f4f4', true], ['brume', '#94b0c2', false],
+  ['ardoise', '#566c86', true], ['profond', '#333c57', false],
+];
+const palette = document.getElementById('palette');
+for (const [nom, hex, enUsage] of SWEETIE) {
+  const d = document.createElement('div');
+  d.className = 'ton' + (enUsage ? '' : ' neuf');
+  d.innerHTML = `<i style="background:${hex}"></i><b>${nom}</b><span>${hex}</span>`;
+  palette.append(d);
+}
+
+// --- les dix directions ----------------------------------------------------
+//
+// `ressort` dit ce que la touche rend au doigt qui la lâche. Trois façons, pas
+// dix : c'est le relâchement qui se juge, et trois réponses suffisent à couvrir
+// le sujet — rendre, claquer, ou ne rien rendre du tout.
+const DIRECTIONS = [
+  {
+    n: 1, nom: 'Galet', ressort: 'rendre',
+    these: 'Une pierre plate posée sur son ombre. Rien à comprendre.',
+    cout: 'Deux ombres, un rayon. Le plus proche de ce qu’on a, en plus doux.',
+  },
+  {
+    n: 2, nom: 'Bonbon', ressort: 'rendre',
+    these: 'Verni, bombé, une ombre de sa propre couleur. C’est une usine à bonbons.',
+    cout: 'Un dégradé et deux ombres internes par couleur. La palette porte le sens.',
+  },
+  {
+    n: 3, nom: 'Jeton', ressort: 'claquer',
+    these: 'Le socle d’aujourd’hui, redessiné en courbes. Seul le corps voyage.',
+    cout: 'Presque rien : c’est la règle actuelle, sans les escaliers du pixel.',
+  },
+  {
+    n: 4, nom: 'Anneau', ressort: 'sec',
+    these: 'Pas de corps, un cercle. Appuyer le remplit — la sélection devient un plein.',
+    cout: 'Le plus léger de tous, et le plus sobre. Sans doute trop pour un enfant.',
+  },
+  {
+    n: 5, nom: 'Verre', ressort: 'rendre',
+    these: 'La carte se voit à travers. C’est l’incrustation prise au mot.',
+    cout: 'backdrop-filter : coûteux sur un vieux téléphone, à mesurer.',
+  },
+  {
+    n: 6, nom: 'Relief', ressort: 'sec',
+    these: 'Une touche moulée dans le fond. Appuyer la creuse pour de bon.',
+    cout: 'Deux ombres opposées. Magnifique sur un fond uni, mou sur la carte.',
+  },
+  {
+    n: 7, nom: 'Gelée', ressort: 'gelee',
+    these: 'Aucune ombre : c’est le mouvement qui fait le bouton. Elle s’écrase et rebondit.',
+    cout: 'Tout est dans Motion. Le plus vivant, et le plus risqué à répéter.',
+  },
+  {
+    n: 8, nom: 'Étiquette', ressort: 'claquer',
+    these: 'Un écusson cousu. Il s’enfonce de travers, comme un vrai bouton mal vissé.',
+    cout: 'Un liseré pointillé et deux degrés de rotation. Très enfant, peu sérieux.',
+  },
+  {
+    n: 9, nom: 'Néon', ressort: 'sec',
+    these: 'Corps sombre, signe qui brille. Appuyer allume.',
+    cout: 'Des lueurs partout : superbe de nuit, invisible sur un sol clair.',
+  },
+  {
+    n: 10, nom: 'Papier découpé', ressort: 'claquer',
+    these: 'Une ombre portée nette, sans flou. Appuyer la fait rentrer sous la touche.',
+    cout: 'Une seule ombre dure. Franc, lisible, et sans aucun dégradé.',
+  },
+];
+
+const icones = document.getElementById('icones').content;
+const svgDe = (nom) => icones.querySelector(`[data-i="${nom}"]`).cloneNode(true);
+const ICONES = ['main', 'convoyeur', 'plus', 'croix'];
+
+const hote = document.getElementById('directions');
+for (const d of DIRECTIONS) {
+  const carte = document.createElement('section');
+  carte.className = 'carte';
+  const barre = document.createElement('div');
+  barre.className = 'sol';
+  for (let i = 0; i < ICONES.length; i++) {
+    const b = document.createElement('button');
+    // La première reste au fond : c'est l'outil en cours, et la sélection du
+    // jeu est un enfoncement. On juge les deux états côte à côte.
+    b.className = `t d${d.n} accent-${i + 1}` + (i === 0 ? ' actif' : '');
+    b.dataset.ressort = d.ressort;
+    b.innerHTML = '<span class="corps"></span>';
+    b.append(svgDe(ICONES[i]));
+    barre.append(b);
+  }
+  carte.innerHTML = `<h2>${d.n} · ${d.nom}</h2><p class="note">${d.these}</p>`;
+  carte.append(barre);
+  const cout = document.createElement('p');
+  cout.className = 'cout';
+  cout.textContent = d.cout;
+  carte.append(cout);
+  hote.append(carte);
+}
+
+// --- l'appui ---------------------------------------------------------------
+//
+// Le CSS tient l'état « au fond » ; Motion tient le retour. Une transition CSS
+// ne sait pas dépasser sa cible, et c'est exactement ce qu'on veut sentir.
+const RESSORTS = {
+  rendre: { scale: [0.96, 1.05, 1] },
+  claquer: { scale: [0.94, 1.08, 0.99, 1] },
+  gelee: { scaleX: [1.16, 0.94, 1.04, 1], scaleY: [0.84, 1.06, 0.97, 1] },
+  sec: null,
+};
+
+for (const b of document.querySelectorAll('.t')) {
+  const bas = () => b.classList.add('bas');
+  const haut = () => {
+    if (!b.classList.contains('bas')) return;
+    b.classList.remove('bas');
+    const cible = RESSORTS[b.dataset.ressort];
+    if (cible) animate(b, cible, { duration: 0.44, ease: [0.22, 1, 0.3, 1] });
+  };
+  b.addEventListener('pointerdown', bas);
+  b.addEventListener('pointerup', haut);
+  b.addEventListener('pointerleave', haut);
+  b.addEventListener('pointercancel', haut);
+}
+</script>
+</body>
+</html>
