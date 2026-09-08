@@ -24,6 +24,9 @@ import { centrerCamera, fenetreSure, celluleVisible } from './camera.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
 import { brancherPointeur } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
+import { creerVeille } from './maj.js';
+import { VERSION } from './data/version.js';
+import { majToast, dessinerToast } from './render/toast.js';
 
 const canvas = document.getElementById('jeu');
 const vue = creerVue(canvas);
@@ -64,9 +67,22 @@ const jeu = {
 const interfaceJeu = brancherPointeur(canvas, vue, jeu);
 const ctx = vue.ctx;
 
+// La veille des mises à jour. Elle vit avec le rendu et non avec la
+// simulation : elle doit continuer de regarder quand le jeu est en pause, et
+// même quand aucun monde n'existe encore.
+const majVeille = creerVeille(jeu);
+
 // Sonde de test : laisse les outils lire l'état sans passer par le rendu.
 // Rien dans le jeu ne la lit.
-globalThis.sonde = { jeu, interface: interfaceJeu, choisir: (id) => jeu.choisir(id) };
+globalThis.sonde = {
+  jeu,
+  interface: interfaceJeu,
+  choisir: (id) => jeu.choisir(id),
+  version: () => VERSION,
+  // Regarder tout de suite, sans attendre l'intervalle : c'est ainsi que
+  // outils éprouve la mise à jour.
+  veille: () => majVeille(1e9),
+};
 
 // Ce qui vient d'être construit lance sa gerbe d'étoiles, ce qui vient d'être
 // détruit part en éclats. Le geste est dans
@@ -152,10 +168,12 @@ demarrerBoucle(
     // qu'une fois le monde bâti.
     effetsDeConstruction();
     majAppuis(dt);
+    majVeille(dt);
+    majToast(dt);
 
     // Pas encore d'essai choisi : l'écran des essais tient l'écran, et rien
     // d'autre n'existe.
-    if (!jeu.monde) { dessinerChoix(ctx, interfaceJeu); return; }
+    if (!jeu.monde) { dessinerChoix(ctx, interfaceJeu); dessinerToast(ctx); return; }
 
     vapeurDesMachines();
     fumeeDesMines(dt);
@@ -171,5 +189,8 @@ demarrerBoucle(
     dessinerHalo(ctx, etape, jeu.tutoriel ? jeu.tutoriel.age : 0);
     dessinerBandeau(ctx, etape, avancement(jeu.tutoriel));
     dessinerHud(ctx, jeu.monde, fps, interfaceJeu);
+    // Le bandeau passe au-dessus de tout, menu pause compris : c'est une
+    // nouvelle, et elle ne se cache derrière rien.
+    dessinerToast(ctx);
   },
 );
