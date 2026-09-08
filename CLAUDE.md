@@ -132,6 +132,17 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   sur la carte. **Le convoyeur, lui, ne rend pas la main** : on en trace dix de
   suite, c'est tout l'intérêt du geste. Tant qu'un bâtiment est choisi, le
   doigt ne trace rien — le tracé reste le geste du convoyeur.
+- **Le jeu se met à jour tout seul.** Il porte un numéro de version —
+  majeur.mineur.correctif, à partir de 1.0.0 — qui se lit en bas du menu pause,
+  en petit : il ne s'adresse pas à l'enfant qui joue mais à l'adulte qui
+  rapporte un problème. Une veille regarde le serveur toutes les quatre-vingt-
+  dix secondes et à chaque retour sur l'onglet, et un bandeau annonce ce qui
+  change. C'est un système de plus, assumé : sans lui, un téléphone qui a
+  ouvert la page une fois garde la version d'hier.
+  **Jamais sous les doigts du joueur** : il n'y a pas encore de sauvegarde, donc
+  la mise à jour ne s'applique que quand personne ne joue — sur l'écran des
+  essais, ou dès que l'onglet passe à l'arrière-plan. Le jour où la partie se
+  sauvegarde, cette prudence n'aura plus lieu d'être.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
@@ -558,6 +569,7 @@ src/
   main.js           point d'entrée, sélection du conteneur
   camera.js         quelle partie du monde la fenêtre montre, et à quelle échelle
   tutoriel.js       où en est le premier contact
+  maj.js            la veille : le jeu se recharge quand le serveur a mieux
   loop.js           boucle à pas fixe
   anim.js           ressorts d'interface (Motion)
   sim/
@@ -576,6 +588,7 @@ src/
     depart.js       dispositions de départ : usine qui tourne, carte nue
     scenarios.js    les trois essais de la bêta
     tutoriel.js     étapes du premier contact
+    version.js      le numéro de version, et rien d'autre
     outils.js       outils et éléments constructibles
     recipes.js      table des recettes
     progression.js  paliers de déblocage, courbe
@@ -586,6 +599,7 @@ src/
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
+    toast.js        le bandeau qui annonce et s'en va
     texte.js        fonte bitmap 5 × 7, texte explicable
     motifs.js       les matières en pixels d'art, table pure
     plaque.js       les touches : forme, épaisseur, enfoncement
