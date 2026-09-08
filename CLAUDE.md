@@ -97,9 +97,16 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   la règle ci-dessus, et sans lui un tapis pouvait avoir l'air branché sans
   l'être — le rendu déduit la jonction de la géométrie, la simulation ne la
   posait qu'au moment du tracé. Un doigt qui dépasse, puis retire ses tuiles
-  en trop, doit être branché : c'est ce qu'il voit. Une machine seulement, et
-  seulement s'il lui reste une place : se raccorder tout seul ne détruit
-  jamais rien.
+  en trop, doit être branché : c'est ce qu'il voit. **Cela vaut aussi d'un
+  tapis à un autre** : « venir buter dessus suffit » ne tenait qu'au tracé, et
+  seulement quand le doigt atteignait la cellule de l'hôte — un doigt qui
+  s'arrête une case avant, un hôte tracé après l'amont, un tapis raccourci
+  jusqu'à buter donnaient trois images identiques à l'écran et trois tapis
+  pleins et muets. Se raccorder tout seul ne détruit toujours rien : à une
+  machine seulement s'il lui reste une place, à un tapis en le coupant au point
+  de jonction — la coupure sépare, elle n'insère pas. Deux gardes, parce que la
+  règle agit sans qu'on le lui demande : un tapis qui a déjà où aller n'est
+  jamais détourné, et jamais un tapis ne se nourrit de lui-même.
 - **Le héros n'existe plus.** On pose un extracteur sur un gisement et on le
   relie : c'est tout ce qu'il y a à y faire.
 - **Tout bâtiment se met en pause**, depuis son panneau d'appui long. Il cesse
