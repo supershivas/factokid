@@ -30,6 +30,26 @@ export const ITEMS = {
   berlingot: { id: 'berlingot', nom: 'berlingot', forme: 'berlingot', couleur: 'vert', le: 'le', du: 'du' },
 };
 
-// Ce que la livraison reçoit : c'est aussi ce que la vitrine compte, et ce que
-// la plieuse sait emballer.
+// Les trois bonbons : c'est ce que la vitrine compte à part, et ce que la
+// plieuse sait emballer.
 export const BONBONS = ['bonbon', 'coeur', 'berlingot'];
+
+// Ce que la livraison accepte, et ce que ça vaut.
+//
+// Elle ne prenait que les bonbons finis, et la plus petite chaîne qui
+// rapportait quelque chose faisait donc quatre extracteurs et quatre machines :
+// huit poses avant le premier retour. Elle prend maintenant le caramel et la
+// pastille aussi, pour bien moins. Extracteur → chaufferie → livraison : trois
+// éléments, et ça rapporte. C'est le noyau du jeu, et le bonbon devient ce
+// qu'on fait pour gagner plus, pas le péage d'entrée.
+//
+// L'écart est franc — un contre trois contre dix — parce que c'est lui qui dit
+// qu'il vaut mieux aller au bout de la chaîne. Deux caramels de plus ne
+// remplaceront jamais un bonbon.
+export const LIVRABLES = {
+  caramel: 1,
+  pastille: 3,
+  bonbon: 10,
+  coeur: 10,
+  berlingot: 10,
+};

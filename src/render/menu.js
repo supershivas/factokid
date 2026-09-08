@@ -9,7 +9,7 @@ import {
   COLLECTION, rectMenu, rectCollection,
 } from '../design.js';
 import { RECETTES } from '../data/recipes.js';
-import { ITEMS, BONBONS } from '../data/items.js';
+import { ITEMS, LIVRABLES } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
 import { VERSION } from '../data/version.js';
 import { ICONES, INTERFACE, spriteItem, spriteItemEteint, spriteNomme } from './sprites.js';
@@ -114,7 +114,7 @@ function dessinerCollection(ctx, monde) {
     // Un bonbon livré porte son compte à la place de son nom : c'est ce qu'on
     // vient voir, et le nom est juste au-dessus, sur sa forme.
     const n = recus[item.id];
-    if (BONBONS.includes(item.id) && n > 0) {
+    if (LIVRABLES[item.id] && n > 0) {
       dessinerNombre(
         ctx, n, r.x + (r.l - largeurNombre(n, TEXTE_PETIT)) / 2,
         r.y + r.h + BAS_DU_NOM - 4, TEXTE_PETIT, PALETTE.jaune,

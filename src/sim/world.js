@@ -26,6 +26,10 @@ export function creerMonde(disposition = DEPART, graine = 1) {
     // matières s'en sert, et rien d'autre. C'est de l'état de partie — une
     // nouvelle partie repart d'un livre vide.
     decouvertes: {},
+    // La caisse : ce que la livraison a payé. C'est le seul compteur de
+    // l'écran, et il ne compte plus des bonbons mais ce qu'ils valent — la
+    // livraison achète aussi le caramel et la pastille, pour bien moins.
+    caisse: 0,
     gisements: creerGisements(carte),
   };
 
@@ -51,6 +55,18 @@ export function majMonde(monde, dt) {
   majGisements(monde, dt);
   majScene(monde.scene, dt);
   noterDecouvertes(monde);
+  releverCaisse(monde);
+}
+
+// Ce que la livraison a payé depuis la dernière image. La machine met de côté,
+// le monde relève et efface : elle n'a jamais besoin de connaître la caisse,
+// comme elle n'a jamais besoin de connaître le livre.
+function releverCaisse(monde) {
+  for (const machine of monde.scene.machines) {
+    if (!machine.verse) continue;
+    monde.caisse += machine.verse;
+    machine.verse = 0;
+  }
 }
 
 // Ce qui vient de sortir d'une machine entre au livre. La machine dit ce

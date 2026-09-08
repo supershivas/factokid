@@ -58,20 +58,20 @@ function dessinerCompteur(ctx, valeur) {
 }
 
 export function dessinerHud(ctx, monde, fps, interfaceJeu) {
-  const livraison = monde.scene.machines.find((m) => m.def.entrees);
-
   // Les deux voiles d'abord : tout ce qui suit se pose dessus.
   voile(ctx, BANDEAU_HAUT, BANDEAU_HAUT.y + BANDEAU_HAUT.h);
   voile(ctx, BANDEAU_BAS, BANDEAU_BAS.y);
 
-  // Un seul compteur : les bonbons finis. Tout le reste se lit sur la grille,
+  // Un seul compteur : la caisse. Elle ne compte plus des bonbons mais ce
+  // qu'ils valent — la livraison achète aussi le caramel et la pastille, pour
+  // bien moins. Tout le reste se lit sur la grille,
   // dans les jauges des machines et dans ce qui circule.
   //
   // Il est posé sur la carte, qui va maintenant d'un bord à l'autre : il lui
   // faut donc son propre fond, comme la mini-carte a le sien. Un chiffre crème
   // à même le sol se perdrait sur ce qui passe dessous — un morceau de sucre
   // est de la même couleur que lui.
-  dessinerCompteur(ctx, livraison ? livraison.consommes : 0);
+  dessinerCompteur(ctx, monde.caisse);
 
   // Le bouton pause, puis la carte du monde : où l'on est, et où l'on va.
   dessinerTouche(ctx, BOUTON_PAUSE, 'outilPause', {

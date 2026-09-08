@@ -1,4 +1,4 @@
-import { BONBONS } from './items.js';
+import { LIVRABLES } from './items.js';
 
 // Table des machines et du convoyeur. Aucune logique ici.
 // Toute constante de gameplay vit dans ce dossier.
@@ -55,12 +55,13 @@ export const MACHINES = {
   },
   livraison: {
     id: 'livraison',
-    description: 'reçoit les {bonbon|bonbons} finis',
+    description: 'achète le {caramel}, la {pastille} et les {bonbon|bonbons}',
     nom: 'livraison',
     a: 'à la ',
-    // Elle prend les trois bonbons, et compte chacun à part : c'est elle la
-    // vitrine, et le livre lit ce qu'elle a reçu.
-    entrees: BONBONS,
+    // Elle prend ce que la table des livrables nomme, et compte chaque chose à
+    // part : c'est elle la vitrine, et le livre lit ce qu'elle a reçu. Ce que
+    // ça vaut est dans la table, pas ici.
+    entrees: Object.keys(LIVRABLES),
     ticksParItem: 60,
     capacite: 8,
   },

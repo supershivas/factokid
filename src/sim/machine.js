@@ -8,6 +8,7 @@
 
 import { MACHINES, TICKS_PAR_SECONDE } from '../data/machines.js';
 import { RECETTES } from '../data/recipes.js';
+import { LIVRABLES } from '../data/items.js';
 import { pousser, peutAccepter } from './belt.js';
 
 // `item` dit la matière du gisement qu'un extracteur occupe : c'est ce qu'il
@@ -33,6 +34,7 @@ export function creerMachine(type, cx, cy, { item } = {}) {
     tour: 0,       // pour verser à tour de rôle
     produits: 0,
     consommes: 0,
+    verse: 0,     // ce que la livraison a payé et que le monde n'a pas encore pris
     // Ce qu'une livraison a reçu, matière par matière : la vitrine du livre.
     recus: {},
     // La dernière matière sortie, que le monde relève puis efface : c'est
@@ -260,6 +262,9 @@ export function majMachine(machine, dt) {
       machine.recus[item] = (machine.recus[item] || 0) + 1;
       machine.tour = (machine.tour + n + 1) % attend.length;
       machine.consommes++;
+      // Ce qu'elle vient de payer, en attente que le monde le relève : la
+      // machine ne connaît pas la caisse, comme elle ne connaît pas le livre.
+      machine.verse += LIVRABLES[item] || 0;
       machine.horloge -= machine.periode;
       return;
     }
