@@ -57,7 +57,9 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   jusqu'à la plieuse, et donc de réécrire le tutoriel.
 - **La livraison les reçoit tous les trois** et les compte séparément : c'est
   la vitrine. L'écran garde son unique compteur — le total — et c'est au livre
-  des matières que le détail se lit, sous chaque bonbon.
+  des matières que le détail se lit, sous chaque bonbon. Elle en accepte
+  **quatre tapis** et non trois : une machine réserve un côté à sa sortie, et
+  la livraison ne sort nulle part.
 - **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
   confiserie et plieuse sont des éléments constructibles comme le convoyeur :
   on les pose sur une cellule libre, et l'outil destruction les retire. La

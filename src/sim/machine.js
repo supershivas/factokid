@@ -78,7 +78,10 @@ const COTES = 4;
 export function maxEntrees(machine) {
   // Ce qui n'accepte rien — un extracteur — n'a pas d'entrée du tout.
   if (!machine.def.tri && attendus(machine).length === 0) return 0;
-  return COTES - maxSorties(machine);
+  // Ce qui ne sort rien garde ses quatre côtés : la livraison ne repart nulle
+  // part, et rien ne justifiait qu'elle réserve un côté à un tapis qu'elle
+  // n'aura jamais.
+  return COTES - (aUneSortie(machine) ? maxSorties(machine) : 0);
 }
 
 // Ce que la machine stocke, donc ce que le rendu doit montrer.
