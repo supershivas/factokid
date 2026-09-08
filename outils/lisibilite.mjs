@@ -15,7 +15,7 @@
 // Chaque paire de couleurs est déclarée ici avec ce qu'elle doit tenir : c'est
 // une table, elle grossit avec le jeu.
 
-import { PALETTE, PIXEL, TUILE_PX, CELLULE, COLONNES, LIGNES, poserImage } from '../src/design.js';
+import { PALETTE, TAPIS, PIXEL, TUILE_PX, CELLULE, COLONNES, LIGNES, poserImage } from '../src/design.js';
 import { centrerCamera, fenetreSure, celluleVisible } from '../src/camera.js';
 import { MOTIFS } from '../src/render/motifs.js';
 import { ITEMS } from '../src/data/items.js';
@@ -69,11 +69,16 @@ const PAIRES = [
   { quoi: 'le socle outremer sous la touche du convoyeur', devant: 'outremer', derriere: 'noir', seuil: 1.5 },
   { quoi: 'le socle sarcelle sous la touche de construction', devant: 'sarcelle', derriere: 'noir', seuil: 1.5 },
   { quoi: 'le contour noir d’une touche sur le fond', devant: 'noir', derriere: 'ardoise', seuil: 3 },
-  // Ce qui détache une matière du tapis, ce n'est pas sa couleur — quatre des
-  // huit ne peuvent pas trancher sur l'ardoise sans sortir de la palette —
-  // mais le noir qui la cerne. C'est donc lui qu'on mesure ici, et la section
-  // suivante dit lesquelles ne tiennent que par là.
-  { quoi: 'le contour d’une matière sur la bande du tapis', devant: 'noir', derriere: 'ardoise', seuil: 3 },
+  // Ce qui détache une matière du tapis, ce n'est pas sa couleur — aucune des
+  // huit ne tranche vraiment sur le bleu — mais le noir qui la cerne. C'est
+  // donc lui qu'on mesure ici, et la section suivante dit lesquelles ne
+  // tiennent que par là.
+  //
+  // C'est aussi ce qui a choisi la couleur du tapis : le noir tranche à
+  // 6,43 : 1 sur le bleu contre 2,88 : 1 sur l'outremer, qui échouerait ici.
+  { quoi: 'le contour d’une matière sur la bande du tapis', devant: 'noir', derriere: TAPIS.bande, seuil: 3 },
+  { quoi: 'le chevron sur la bande du tapis', devant: TAPIS.chevron, derriere: TAPIS.bande, seuil: 3 },
+  { quoi: 'le cran de cyan sur le bord noir du tapis', devant: TAPIS.crans, derriere: 'noir', seuil: 3 },
   { quoi: 'le contour d’une matière sur le sol le plus clair', devant: 'noir', derriere: 'creme', seuil: 3 },
 ];
 
@@ -85,14 +90,14 @@ for (const p of PAIRES) {
   else ok(dit);
 }
 
-// Ce que chaque matière doit au tapis. Le rouge et le vert ne peuvent pas
-// trancher sur l'ardoise sans sortir de la palette : c'est le contour noir qui
-// les détache, et leur forme qui les nomme. On mesure donc, et on dit celles
+// Ce que chaque matière doit au tapis. Depuis que la bande est bleue, presque
+// aucune ne tranche dessus : c'est le contour noir qui les détache, et leur
+// forme qui les nomme. On mesure donc, et on dit celles
 // qui ne tiennent que par leur contour — ce n'est pas une faute, c'est une
 // chose à savoir quand on redessine.
 console.log('\nles matières sur la bande du tapis');
 for (const item of Object.values(ITEMS)) {
-  const r = contraste(PALETTE[item.couleur], PALETTE.ardoise);
+  const r = contraste(PALETTE[item.couleur], PALETTE[TAPIS.bande]);
   const dit = `${item.nom} (${item.couleur}) — ${r.toFixed(2)} : 1`;
   if (r < 1.5) console.log('  ! ' + dit + ' — ne tient que par son contour');
   else ok(dit);

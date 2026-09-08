@@ -6,7 +6,7 @@
 // circule serait mentir à l'enfant, alors que la bulle « !!! » lui dit
 // justement le contraire.
 
-import { PALETTE, CELLULE, PIXEL } from '../design.js';
+import { PALETTE, TAPIS, CELLULE, PIXEL } from '../design.js';
 import { MACHINES } from '../data/machines.js';
 import { pointA } from '../sim/belt.js';
 
@@ -56,5 +56,5 @@ export function dessinerChevrons(ctx, convoyeur, sprite) {
   ctx.globalAlpha = 1;
 }
 
-export const COULEUR_CHEVRON = PALETTE.bleu;
-export const COULEUR_CRETE = PALETTE.creme;
+export const COULEUR_CHEVRON = PALETTE[TAPIS.chevron];
+export const COULEUR_CRETE = PALETTE[TAPIS.crete];

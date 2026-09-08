@@ -3,7 +3,7 @@
 // puis affichées à l'échelle entière PIXEL (3 unités logiques par pixel).
 
 import {
-  PALETTE, TUILE_PX, PIXEL, CELLULE, ALERTE_DELAI,
+  PALETTE, TAPIS, TUILE_PX, PIXEL, CELLULE, ALERTE_DELAI,
 } from '../design.js';
 import { cadrerMonde, fenetre, celluleVisible } from '../camera.js';
 import { tuileSol } from './biome.js';
@@ -60,18 +60,24 @@ function decale(rect, ox, oy) {
 // dans la bande. Le milieu appartient aux chevrons, qui bougent ; le bord, lui,
 // ne bouge pas — les deux motifs ne se brouillent donc jamais.
 function cransHorizontaux(rect, y, x0 = 2, x1 = 24) {
-  for (let x = x0; x < x1; x += 6) rect(x, y, 3, 1, PALETTE.ardoise);
+  for (let x = x0; x < x1; x += 6) rect(x, y, 3, 1, CRANS);
 }
 
 function cransVerticaux(rect, x, y0 = 2, y1 = 24) {
-  for (let y = y0; y < y1; y += 6) rect(x, y, 1, 3, PALETTE.ardoise);
+  for (let y = y0; y < y1; y += 6) rect(x, y, 1, 3, CRANS);
 }
+
+// Les deux couleurs du tapis, nommées une fois : la bande et ses crans. Elles
+// viennent du design system — le tapis est bleu électrique, et son bord
+// s'allume d'un cran de cyan.
+const BANDE = PALETTE[TAPIS.bande];
+const CRANS = PALETTE[TAPIS.crans];
 
 // Convoyeur droit : flux vers l'est.
 // La bande occupe les rangées 6 à 17 ; ses deux bords noirs, 4-5 et 18-19.
 const convoyeurDroit = toile(TUILE_PX, (rect) => {
   rect(0, 4, 24, 2, PALETTE.noir);
-  rect(0, 6, 24, 12, PALETTE.ardoise);
+  rect(0, 6, 24, 12, BANDE);
   rect(0, 18, 24, 2, PALETTE.noir);
   cransHorizontaux(rect, 4);
   cransHorizontaux(rect, 19);
@@ -83,8 +89,8 @@ const convoyeurDroit = toile(TUILE_PX, (rect) => {
 const convoyeurVirage = toile(TUILE_PX, (rect) => {
   rect(0, 4, 20, 16, PALETTE.noir);
   rect(4, 4, 16, 20, PALETTE.noir);
-  rect(0, 6, 18, 12, PALETTE.ardoise);
-  rect(6, 6, 12, 18, PALETTE.ardoise);
+  rect(0, 6, 18, 12, BANDE);
+  rect(6, 6, 12, 18, BANDE);
   // Bord extérieur : le haut, puis la descente à droite. Bord intérieur : le
   // court morceau en bas à gauche.
   cransHorizontaux(rect, 4, 2, 18);
@@ -122,8 +128,8 @@ export const spriteChevron = (vif) => (vif ? chevronVif : chevronOrdinaire);
 const convoyeurT = toile(TUILE_PX, (rect) => {
   rect(0, 4, 24, 16, PALETTE.noir);
   rect(4, 4, 16, 20, PALETTE.noir);
-  rect(0, 6, 24, 12, PALETTE.ardoise);
-  rect(6, 6, 12, 18, PALETTE.ardoise);
+  rect(0, 6, 24, 12, BANDE);
+  rect(6, 6, 12, 18, BANDE);
   cransHorizontaux(rect, 4);
   cransHorizontaux(rect, 19, 0, 4);
   cransHorizontaux(rect, 19, 20, 24);
@@ -135,8 +141,8 @@ const convoyeurT = toile(TUILE_PX, (rect) => {
 const convoyeurCroix = toile(TUILE_PX, (rect) => {
   rect(0, 4, 24, 16, PALETTE.noir);
   rect(4, 0, 16, 24, PALETTE.noir);
-  rect(0, 6, 24, 12, PALETTE.ardoise);
-  rect(6, 0, 12, 24, PALETTE.ardoise);
+  rect(0, 6, 24, 12, BANDE);
+  rect(6, 0, 12, 24, BANDE);
   for (const y of [4, 19]) { cransHorizontaux(rect, y, 0, 4); cransHorizontaux(rect, y, 20, 24); }
   for (const x of [4, 19]) { cransVerticaux(rect, x, 0, 4); cransVerticaux(rect, x, 20, 24); }
 });

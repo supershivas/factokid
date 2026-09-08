@@ -53,6 +53,28 @@ export const ZONE_SURE = { haut: BANDEAU_HAUT.h, bas: BANDEAU_BAS.h };
 
 export const CIBLE_TACTILE = 48;
 
+// Le tapis est bleu électrique.
+//
+// Il était ardoise, de la couleur des machines inertes : le convoyeur est ce
+// qu'on trace neuf fois sur dix, et il avait la couleur de ce qui ne fait
+// rien. Il prend donc la sienne, et sa touche de la barre porte la même — on
+// voit du premier coup d'œil ce que le bouton bleu pose.
+//
+// La bande est en plein bleu et non en outremer, et c'est mesuré : ce qui
+// détache une matière du tapis n'est pas sa couleur mais le noir qui la cerne.
+// Ce noir tranche à 6,43 : 1 sur le bleu, contre 2,88 : 1 sur l'outremer —
+// sous le seuil. Le tapis le plus lisible est donc aussi le plus vif.
+//
+// Les chevrons passent au nuit : ils étaient bleus, et la bande l'est
+// devenue. La crête de lumière qui les traverse reste crème — c'est le saut
+// du nuit au crème qui la fait voir, pas son contraste avec la bande.
+export const TAPIS = {
+  bande: 'bleu',
+  crans: 'cyan',
+  chevron: 'nuit',
+  crete: 'creme',
+};
+
 // La palette : seize couleurs, et pas dix-sept.
 //
 // Elle en portait huit, et ces huit-là n'étaient pas huit couleurs choisies :
