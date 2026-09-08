@@ -10,7 +10,7 @@
 // d'une carte resterait affiché sur la suivante.
 
 import { PALETTE, TUILE_PX, COLONNES, LIGNES } from '../design.js';
-import { BIOMES, NUANCES } from '../data/biomes.js';
+import { BIOMES, NUANCES, TEXTURE } from '../data/biomes.js';
 import { voisinage, bruit, bruitLisse } from '../sim/carte.js';
 
 // --- teintes ---------------------------------------------------------------
@@ -159,9 +159,7 @@ function preparer(cx, cy) {
   // La texture est celle du biome qui domine : elle bascule d'un coup là où la
   // couleur, elle, passe en continu.
   const dominant = part < 0.5 ? a : b;
-  // La texture monte d'un cran au-dessus de la nuance la plus claire : assez
-  // pour se voir, pas assez pour tirer l'œil au-dessus des items.
-  const dessus = teinte(dominant.couleur, NUANCES[2] + 0.07);
+  const dessus = teinte(dominant.couleur, NUANCES[2] + TEXTURE);
   const i = cy * COLONNES + cx;
   teintes[i] = fond;
   sols[i] = tuile(fond, dessus, dominant.motif, varianteDe(cx, cy));

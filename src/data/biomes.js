@@ -36,9 +36,21 @@ export const MATIERE_DE = {
   sucre: 'sucre', terre: 'bois', fraise: 'fraise', menthe: 'menthe',
 };
 
-// Les trois nuances, en transparence sur le noir. Elles restent basses : le sol
-// ne doit jamais monter au niveau des items, qui sont saturés.
-export const NUANCES = [0.08, 0.11, 0.14];
+// Les trois nuances, en transparence sur le noir.
+//
+// Elles ont doublé : à huit pour cent le sol était presque noir, on voyait les
+// biomes de loin sans voir leur couleur. C'est la direction « deux fois plus »
+// du labo (labo/sols.html), et c'est bien un simple réglage — la recette est la
+// même, les nombres seuls changent.
+//
+// Elles restent basses malgré tout : le sol ne monte jamais au niveau des
+// items, qui sont saturés. La pire paire mesurée reste la fraise dans les
+// plaines de sucre, qui tient par sa couleur.
+export const NUANCES = [0.16, 0.22, 0.28];
+
+// Ce que la texture monte au-dessus de la nuance la plus claire : assez pour
+// se voir, pas assez pour tirer l'œil au-dessus des items.
+export const TEXTURE = 0.10;
 
 // Largeur du fondu entre deux biomes, en cellules. « Fondu court » : on sent le
 // changement sans le heurter.
