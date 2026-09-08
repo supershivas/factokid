@@ -413,13 +413,19 @@ Tout est dans `render/plaque.js` — aucun autre module ne dessine de touche :
   seule animation de touche du jeu. Au fond, **le bombé se retourne** : la
   lumière passe dessous, et une touche enfoncée se lit enfoncée même arrêtée.
 
-**Les touches ne sont pas du pixel art**, et c'est la seule dérogation à la
-règle. Elles étaient peintes sur une grille de vingt-huit pixels d'art puis
-agrandies : un rond de vingt-huit pixels est un escalier, un dégradé de
+**L'interface n'est pas du pixel art**, et c'est la seule dérogation à la
+règle. Les touches étaient peintes sur une grille de vingt-huit pixels d'art
+puis agrandies : un rond de vingt-huit pixels est un escalier, un dégradé de
 vingt-huit pixels est trois bandes, et une ombre floue n'y existe pas. Elles
-sont tracées en courbes, à la résolution de l'écran. **Le monde reste peint au
-pixel**, et les signes qu'elles portent aussi — la main, le plus, la croix, les
-machines : c'est ce qui les rattache au jeu.
+sont tracées en courbes, à la résolution de l'écran — et **les signes qu'elles
+portent aussi** : la main, le plus, la croix, la pause, les crans du zoom
+(`render/signes.js`, repris du labo au chemin près). Une touche nette qui porte
+un signe crénelé se voit tout de suite ; les deux allaient ensemble.
+
+**Le monde, lui, reste peint au pixel.** Une machine, une matière, un gisement
+se dessinent toujours pixel par pixel : ce sont des objets du jeu, pas des
+commandes, et c'est là que passe la frontière. Un bouton est une courbe, ce
+qu'il montre est un pixel.
 
 **La couleur d'une touche dit la famille de son action**, jamais son
 importance. Cinq familles : crème pour le repos et la lecture, bleu pour le
@@ -440,10 +446,11 @@ règle, jamais dans la rangée des actions.
 matière triée, l'élément choisi dans le menu : tous sont la touche restée au
 fond. Il n'y a plus aucun cadre de sélection dans le jeu.
 
-**Chaque touche porte le signe qui tranche sur son corps**, et cela se mesure :
-la claire et les vives portent des signes noirs, la rouge et l'ardoise des
-signes crème. La croix de destruction est passée du rouge au crème le jour où
-sa touche est devenue rouge.
+**Chaque touche porte le signe qui tranche sur son corps**, et cela ne se
+choisit plus : `signeSur()` prend le noir ou le crème, celui des deux qui
+tranche. La règle existait déjà et s'appliquait sprite par sprite — la croix de
+destruction avait dû être repeinte le jour où sa touche est devenue rouge.
+Elle se calcule.
 
 Les huit premières propositions, en pixels, sont dans `labo/boutons.html` ; les
 dix suivantes, hors du pixel art, dans `labo/touches.html`.
@@ -602,6 +609,7 @@ src/
     toast.js        le bandeau qui annonce et s'en va
     texte.js        fonte bitmap 5 × 7, texte explicable
     motifs.js       les matières en pixels d'art, table pure
+    signes.js       les signes de l'interface, en courbes
     plaque.js       les touches : forme, épaisseur, enfoncement
     demarrage.js    barre de chargement
     particules.js   fumée et étoiles
