@@ -1,34 +1,34 @@
-// Les touches du jeu : leur forme, leur socle, et la façon dont elles
+// Les touches du jeu : leur forme, leur relief, et la façon dont elles
 // s'enfoncent. Ne modifie jamais l'état.
 //
-// Une plaque crème posée sur un fond sombre se lit comme une étiquette autant
-// que comme un bouton. Deux choses le disent mieux :
+// La touche est un bonbon — c'est la direction retenue au labo
+// (labo/touches.html, direction 2) : vernie, bombée, posée sur une ombre de sa
+// propre couleur. Trois choses la disent, et ce sont celles du labo :
 //
 //   la forme — rien n'est rond dans une usine faite de cases, donc un rond
 //   n'est jamais qu'un bouton ;
-//   le socle — un second cercle, plein, décalé sous le premier. Le socle ne
-//   bouge jamais : c'est le sol du bouton. Seul le corps descend dessus, et
-//   rebondit au-dessus quand le doigt le lâche (voir bouton.js).
+//   le bombé — une vraie rampe de la clarté à l'ombre, un reflet au sommet, un
+//   creux au pied ;
+//   l'ombre — portée, floue, de la couleur du bonbon. Elle se resserre quand
+//   la touche descend, et c'est elle qui donne la hauteur.
 //
-// La touche est un bonbon : verni, bombé, posé sur son ombre — c'est la
-// direction retenue au labo (labo/touches.html, direction 2). Le bombé est un
-// dégradé, et un dégradé de pixel art est une pile de bandes : une clarté en
-// haut, le corps au milieu, une ombre en bas. Aucune n'est calculée — ce sont
-// trois couleurs de la palette, données par `FACES`.
+// Ce qui change vraiment ici : **les touches ne sont plus du pixel art**.
+// Elles étaient peintes sur une grille de vingt-huit pixels d'art puis
+// agrandies, et c'est pourquoi elles ne ressemblaient pas au labo — un rond de
+// vingt-huit pixels est un escalier, un dégradé de vingt-huit pixels est trois
+// bandes, et une ombre floue n'y existe pas. Elles sont maintenant tracées en
+// courbes, à la résolution de l'écran. C'est la dérogation assumée : le monde
+// reste peint au pixel, les touches non. Les signes qu'elles portent — la
+// main, le plus, la croix, les machines — restent du pixel art, et c'est ce
+// qui les rattache au jeu.
 //
-// Appuyer retourne le bombé : la lumière passe dessous, le creux passe
-// dessus. C'est ce qui fait qu'une touche enfoncée se lit enfoncée même
-// immobile, et la sélection du jeu est justement une touche restée au fond.
-//
-// Tout est tramé au pixel d'art : jamais d'arc, jamais d'anti-crénelage. Les
-// sprites sont peints une fois et gardés — un bouton ne se redessine pas
-// soixante fois par seconde.
+// Rien n'est redessiné soixante fois par seconde pour autant : chaque touche
+// est peinte une fois, à l'échelle de l'écran, et gardée.
 
-import { PALETTE, FACES, PIXEL, poserImage } from '../design.js';
+import { PALETTE, FACES, poserImage } from '../design.js';
 
-// Hauteur du socle, en pixels d'art. C'est aussi la course de l'appui : le
-// corps descend exactement jusqu'au sol.
-export const SOCLE = 3;
+// La course de l'appui, en unités logiques : de combien le corps descend.
+export const SOCLE = 6;
 
 // La part de la touche qu'une image occupe. Deux valeurs, parce que les deux
 // familles d'images ne remplissent pas leur carré de la même façon : une icône
@@ -38,57 +38,67 @@ export const SOCLE = 3;
 export const PART_ICONE = 6 / 7;
 export const PART_ITEM = 0.72;
 
-// Où poser l'image dans la touche : la règle est dans le design system, et
-// l'outil de lisibilité la relit — c'est elle qui garantit qu'une matière
-// reste centrée et nette dans son jeton.
-function dessinerImage(ctx, image, r, dy, part) {
-  const { taille, marge } = poserImage(r.l, image.width || 24, part);
-  ctx.drawImage(image, r.x + marge, r.y + dy + marge, taille, taille);
+// La marge que l'ombre demande autour du corps, en unités logiques. C'est du
+// vide dans l'image : la touche, elle, reste à sa taille.
+const MARGE = 12;
+
+// L'ombre portée : ce qu'elle descend et de combien elle est floue, au repos
+// puis au fond. Elle se resserre sous le doigt — c'est ce qui fait que la
+// touche a l'air d'aller toucher le sol.
+const OMBRE = {
+  haut: { chute: 7, flou: 12, alpha: 0.55 },
+  bas: { chute: 2, flou: 6, alpha: 0.45 },
+};
+
+// Où le dégradé passe d'une face à l'autre. Le corps occupe le milieu : c'est
+// sur lui que le signe de la touche se lit, et c'est lui que l'outil de
+// lisibilité mesure.
+const RAMPE = [0, 0.5, 1];
+
+// --- teintes ---------------------------------------------------------------
+
+// Une teinte n'est plus qu'une couleur : le reste du bonbon en découle, par
+// `FACES`, qui donne la clarté et l'ombre de chaque couleur de la palette.
+//
+// La claire porte des signes sombres — la main, le plus ; la sombre porte des
+// images claires — les machines, les matières. Chacune garde le fond sur
+// lequel ses signes se lisent.
+export function teinteDe(couleur, ombre) {
+  return { couleur, ombre: ombre || FACES[couleur].sombre };
 }
+
+export const CLAIRE = teinteDe('creme');
+
+// La touche sombre porte une ombre de brume, et c'est la seule exception à
+// « l'ombre est celle du corps ». Un bonbon ardoise n'a pas d'ombre visible
+// sur un fond noir : la sienne est le profond, qui ne s'en détache qu'à
+// 1,54 : 1 — la touche perdait sa hauteur.
+export const SOMBRE = teinteDe('ardoise', 'brume');
+
+function faces(teinte) {
+  const f = FACES[teinte.couleur];
+  return {
+    clair: PALETTE[f.clair],
+    corps: PALETTE[f.corps],
+    sombre: PALETTE[f.sombre],
+    ombre: PALETTE[teinte.ombre],
+  };
+}
+
+// --- peinture --------------------------------------------------------------
 
 const cache = new Map();
 
-function toile(l, h, peindre) {
+// Une image peinte en unités logiques, à la résolution de l'écran. C'est le
+// facteur du contexte qui la donne : le canvas est déjà à l'échelle entière de
+// l'appareil, donc une courbe tracée ici est une courbe, pas un escalier.
+function toile(l, h, k, peindre) {
   const c = document.createElement('canvas');
-  c.width = l;
-  c.height = h;
+  c.width = Math.ceil(l * k);
+  c.height = Math.ceil(h * k);
   const g = c.getContext('2d');
-  const rect = (x, y, w, hauteur, couleur) => {
-    g.fillStyle = couleur;
-    g.fillRect(x, y, w, hauteur);
-  };
-  const disque = (cx, cy, r, couleur) => {
-    g.fillStyle = couleur;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < l; x++) {
-        const dx = x + 0.5 - cx;
-        const dy = y + 0.5 - cy;
-        if (dx * dx + dy * dy <= r * r) g.fillRect(x, y, 1, 1);
-      }
-    }
-  };
-  const anneau = (cx, cy, r, epaisseur, couleur) => {
-    g.fillStyle = couleur;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < l; x++) {
-        const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy);
-        if (d <= r && d > r - epaisseur) g.fillRect(x, y, 1, 1);
-      }
-    }
-  };
-  // Une tranche horizontale de disque : c'est ainsi qu'une bande de dégradé
-  // se découpe sans jamais sortir du rond.
-  const calotte = (cx, cy, r, y0, y1, couleur) => {
-    g.fillStyle = couleur;
-    for (let y = Math.max(0, Math.floor(y0)); y < Math.min(h, Math.ceil(y1)); y++) {
-      for (let x = 0; x < l; x++) {
-        const dx = x + 0.5 - cx;
-        const dy = y + 0.5 - cy;
-        if (dx * dx + dy * dy <= r * r) g.fillRect(x, y, 1, 1);
-      }
-    }
-  };
-  peindre({ rect, disque, anneau, calotte });
+  g.scale(k, k);
+  peindre(g);
   return c;
 }
 
@@ -97,170 +107,137 @@ function garder(cle, fabriquer) {
   return cache.get(cle);
 }
 
+// Le vernis : une rampe verticale de la clarté à l'ombre, en passant par le
+// corps. Retournée, c'est l'état enfoncé — la lumière passe dessous.
+function vernis(g, y0, y1, f, retourne) {
+  const d = g.createLinearGradient(0, y0, 0, y1);
+  const suite = retourne ? [f.sombre, f.corps, f.clair] : [f.clair, f.corps, f.sombre];
+  for (let i = 0; i < RAMPE.length; i++) d.addColorStop(RAMPE[i], suite[i]);
+  return d;
+}
+
+// L'ombre portée, posée avant le corps : on peint la forme une première fois
+// pour l'ombre seule, puis on la repeint par-dessus.
+function porterOmbre(g, tracer, f, enfonce) {
+  const o = enfonce ? OMBRE.bas : OMBRE.haut;
+  g.save();
+  g.shadowColor = f.ombre;
+  g.globalAlpha = o.alpha;
+  g.shadowBlur = o.flou;
+  g.shadowOffsetY = o.chute;
+  tracer();
+  g.fillStyle = f.ombre;
+  g.fill();
+  g.restore();
+}
+
+// Le reflet du sommet et le creux du pied : deux arcs, et rien de plus. C'est
+// ce que les deux ombres internes du labo faisaient en CSS.
+function lustrer(g, tracer, cx, cy, r, f, retourne) {
+  g.save();
+  tracer();
+  g.clip();
+  g.lineWidth = 2.5;
+  g.globalAlpha = 0.7;
+  g.strokeStyle = retourne ? f.sombre : f.clair;
+  g.beginPath();
+  g.arc(cx, cy, r - 1, Math.PI * 1.12, Math.PI * 1.88);
+  g.stroke();
+  g.globalAlpha = 0.5;
+  g.strokeStyle = retourne ? f.clair : f.sombre;
+  g.beginPath();
+  g.arc(cx, cy, r - 1, Math.PI * 0.12, Math.PI * 0.88);
+  g.stroke();
+  g.restore();
+}
+
 // --- touche ronde ---------------------------------------------------------
 
-// Une teinte n'est plus qu'une couleur : le reste du bonbon en découle.
-//
-// La claire porte des signes sombres — la main, le plus, la croix ; la sombre
-// porte des images claires — les machines, les matières. Chacune garde le fond
-// sur lequel ses signes se lisent.
-//
-// Les quatre outils, eux, ont chacun la sienne, et c'est la palette qui porte
-// le sens : le convoyeur est bleu comme le tapis qu'il trace, la construction
-// verte comme une validation, la destruction rouge comme un blocage. La main
-// reste crème : c'est le repos, elle ne dit rien.
-export function teinteDe(couleur, socle) {
-  return { couleur, socle: socle || FACES[couleur].sombre };
-}
-
-export const CLAIRE = teinteDe('creme');
-
-// La touche sombre garde un socle clair, et c'est la seule exception à
-// « le socle est l'ombre du corps ». Un bonbon ardoise n'a pas d'ombre visible
-// sur un fond noir : son ombre est le profond, qui ne s'en détache qu'à
-// 1,54 : 1 — la touche perdait son épaisseur. La brume la lui rend.
-export const SOMBRE = teinteDe('ardoise', 'brume');
-
-// Le reflet du haut : le vernis du bonbon. C'est la clarté de la couleur, sauf
-// quand la touche est déjà crème — une clarté plus claire que le crème
-// n'existe pas, et le bombé s'y lit alors par sa seule ombre du bas.
-function faces(teinte) {
-  const f = FACES[teinte.couleur];
-  return {
-    clair: PALETTE[f.clair],
-    corps: PALETTE[f.corps],
-    sombre: PALETTE[f.sombre],
-    socle: PALETTE[teinte.socle],
-  };
-}
-
-// Où le dégradé change de bande, en part du diamètre. Deux couronnes minces,
-// et le corps nu entre les deux : le vernis se lit sur le bord, pas au milieu.
-//
-// C'est étroit exprès. Le signe que la touche porte — la main, le plus, la
-// croix — doit se lire sur une seule couleur, celle du corps : c'est elle que
-// l'outil de lisibilité mesure, et deux bandes larges lui auraient donné trois
-// fonds au lieu d'un.
-const HAUT = 0.20;
-const BAS = 0.84;
-
-// Peint le bombé dans un disque déjà posé : deux calottes, l'une claire,
-// l'autre sombre, découpées par le disque lui-même.
-//
-// `retourne` inverse les deux : c'est l'état enfoncé. Rien d'autre ne change,
-// et il n'y a donc qu'un dégradé à comprendre, vu des deux côtés.
-function bomber(g, cx, cy, r, f, retourne) {
-  const dessus = retourne ? f.sombre : f.clair;
-  const dessous = retourne ? f.clair : f.sombre;
-  g.calotte(cx, cy, r, cy - r, cy - r + 2 * r * HAUT, dessus);
-  g.calotte(cx, cy, r, cy - r + 2 * r * BAS, cy + r, dessous);
-}
-
-// Le socle et le corps sont deux sprites, et c'est tout le mécanisme : le
-// socle reste posé, le corps voyage dessus. S'ils ne faisaient qu'une image,
-// le socle descendrait avec lui et rien n'aurait l'air enfoncé.
-//
-// Le socle est un disque plein, cerné de noir comme le corps : c'est une
-// pièce du bouton, pas son ombre. On n'en voit que le croissant du bas quand
-// le bouton est au repos, et tout entier quand il décolle au rebond.
-// Le socle prend l'ombre de la couleur : c'est le bonbon posé sur sa propre
-// ombre, et non sur une pièce d'une autre teinte. Il ne se bombe pas — on n'en
-// voit qu'un croissant, et un dégradé sur un croissant ne se lit pas.
-function socleRond(art, teinte) {
-  return garder('socle' + art + teinte.couleur + teinte.socle, () => toile(art, art + SOCLE, (g) => {
+function spriteRond(l, teinte, retourne, k) {
+  const cle = 'rond' + l + teinte.couleur + teinte.ombre + (retourne ? '!' : '') + '@' + k;
+  return garder(cle, () => toile(l + MARGE * 2, l + MARGE * 2, k, (g) => {
     const f = faces(teinte);
-    const c = art / 2;
-    const r = art / 2 - 0.5;
-    g.disque(c, c + SOCLE, r, PALETTE.noir);
-    g.disque(c, c + SOCLE, r - 1, f.socle);
-  }));
-}
-
-function corpsRond(art, teinte, retourne) {
-  return garder('rond' + art + teinte.couleur + (retourne ? '!' : ''), () => toile(art, art, (g) => {
-    const f = faces(teinte);
-    const c = art / 2;
-    const r = art / 2 - 0.5;
-    g.disque(c, c, r, PALETTE.noir);
-    g.disque(c, c, r - 1, f.corps);
-    bomber(g, c, c, r - 1, f, retourne);
+    const c = MARGE + l / 2;
+    const r = l / 2;
+    const tracer = () => {
+      g.beginPath();
+      g.arc(c, c, r, 0, Math.PI * 2);
+    };
+    porterOmbre(g, tracer, f, retourne);
+    tracer();
+    g.fillStyle = vernis(g, c - r, c + r, f, retourne);
+    g.fill();
+    lustrer(g, tracer, c, c, r, f, retourne);
   }));
 }
 
 // Dessine une touche ronde et l'icône qu'elle porte. `enfonce` va de 0 à 1 :
-// à 1, le bouton est au fond, posé sur sa doublure — qui disparaît alors,
-// puisqu'elle est dessous.
+// à 1, le bouton est au fond de sa course.
 //
 // C'est là toute la marque de sélection du jeu : l'outil en cours est une
-// touche restée enfoncée. Pas de cadre, pas de couleur en plus — le signe est
-// celui qu'ont toutes les touches du monde.
+// touche restée enfoncée — descendue, son vernis retourné, son ombre resserrée.
+// Pas de cadre, pas de couleur en plus.
 export function dessinerTouche(
   ctx, r, image, { teinte = CLAIRE, enfonce = 0, alpha = 1, part = PART_ICONE } = {},
 ) {
-  const art = Math.round(r.l / PIXEL);
-  const dy = Math.round(enfonce * SOCLE) * PIXEL;
+  const k = ctx.getTransform().a || 1;
+  const dy = enfonce * SOCLE;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.drawImage(socleRond(art, teinte), r.x, r.y, r.l, (art + SOCLE) * PIXEL);
-  // Au fond, le bombé se retourne : la lumière passe dessous. Une touche
-  // enfoncée se lit donc enfoncée même arrêtée — et c'est ce qui marque la
-  // sélection.
-  ctx.drawImage(corpsRond(art, teinte, enfonce >= 0.5), r.x, r.y + dy, r.l, r.l);
+  const sprite = spriteRond(r.l, teinte, enfonce >= 0.5, k);
+  ctx.drawImage(sprite, r.x - MARGE, r.y + dy - MARGE, r.l + MARGE * 2, r.l + MARGE * 2);
   // L'image est centrée dans le rond : c'est le rond qui s'est élargi pour
   // l'accueillir, pas l'image qui a rétréci.
-  if (image) dessinerImage(ctx, image, r, dy, part);
+  if (image) {
+    const { taille, marge } = poserImage(r.l, image.width || 24, part);
+    ctx.drawImage(image, r.x + marge, r.y + dy + marge, taille, taille);
+  }
   ctx.restore();
 }
 
 // --- pilule ---------------------------------------------------------------
 
 // Les boutons larges — le menu pause, l'écran des essais — ne peuvent pas être
-// ronds : ils portent un mot. Ils gardent la même épaisseur et les mêmes bouts
-// arrondis, à la hauteur d'un rond coupé en deux.
-// Le corps d'une pilule : deux demi-disques et un rectangle entre eux.
-function corpsPilule(g, l, h, dy, couleur, retrait, y0, y1) {
-  const r = h / 2;
-  const haut = y0 === undefined ? dy + retrait : Math.max(dy + retrait, y0);
-  const bas = y1 === undefined ? dy + h - retrait : Math.min(dy + h - retrait, y1);
-  if (bas <= haut) return;
-  g.calotte(r, r + dy, r - retrait, haut, bas, couleur);
-  g.calotte(l - r, r + dy, r - retrait, haut, bas, couleur);
-  g.rect(r, haut, l - h, bas - haut, couleur);
-}
-
-function soclePilule(l, h, teinte) {
-  return garder('soclePilule' + l + 'x' + h + teinte.couleur + teinte.socle, () => toile(l, h + SOCLE, (g) => {
+// ronds : ils portent un mot. Ils gardent le même vernis et la même ombre, aux
+// bouts arrondis à la hauteur d'un rond coupé en deux.
+function spritePilule(l, h, teinte, retourne, k) {
+  const cle = 'pilule' + l + 'x' + h + teinte.couleur + teinte.ombre + (retourne ? '!' : '') + '@' + k;
+  return garder(cle, () => toile(l + MARGE * 2, h + MARGE * 2, k, (g) => {
     const f = faces(teinte);
-    corpsPilule(g, l, h, SOCLE, PALETTE.noir, 0);
-    corpsPilule(g, l, h, SOCLE, f.socle, 1);
-  }));
-}
-
-// La pilule se bombe comme le rond, et par les mêmes bandes : elle n'a pas de
-// dégradé à elle. Ce sont les mêmes hauteurs, prises sur sa hauteur.
-function spritePilule(l, h, teinte, retourne) {
-  const cle = 'pilule' + l + 'x' + h + teinte.couleur + (retourne ? '!' : '');
-  return garder(cle, () => toile(l, h, (g) => {
-    const f = faces(teinte);
-    corpsPilule(g, l, h, 0, PALETTE.noir, 0);
-    corpsPilule(g, l, h, 0, f.corps, 1);
-    corpsPilule(g, l, h, 0, retourne ? f.sombre : f.clair, 1, 0, h * HAUT);
-    corpsPilule(g, l, h, 0, retourne ? f.clair : f.sombre, 1, h * BAS, h);
+    const tracer = () => {
+      g.beginPath();
+      g.roundRect(MARGE, MARGE, l, h, h / 2);
+    };
+    porterOmbre(g, tracer, f, retourne);
+    tracer();
+    g.fillStyle = vernis(g, MARGE, MARGE + h, f, retourne);
+    g.fill();
+    // Le reflet d'une pilule est une bande, pas un arc : elle est trop longue
+    // pour qu'un arc en fasse le tour.
+    g.save();
+    tracer();
+    g.clip();
+    g.globalAlpha = 0.55;
+    g.fillStyle = retourne ? f.sombre : f.clair;
+    g.fillRect(MARGE, MARGE + 1, l, 2);
+    g.globalAlpha = 0.4;
+    g.fillStyle = retourne ? f.clair : f.sombre;
+    g.fillRect(MARGE, MARGE + h - 3, l, 2);
+    g.restore();
   }));
 }
 
 // Rend le décalage qu'a pris le corps : ce qu'on pose dessus — une icône, un
 // mot — doit descendre avec lui.
 export function dessinerPilule(ctx, r, { teinte = CLAIRE, enfonce = 0, alpha = 1 } = {}) {
-  const l = Math.round(r.l / PIXEL);
-  const h = Math.round(r.h / PIXEL);
-  const dy = Math.round(enfonce * SOCLE) * PIXEL;
+  const k = ctx.getTransform().a || 1;
+  const dy = enfonce * SOCLE;
 
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.drawImage(soclePilule(l, h, teinte), r.x, r.y, r.l, (h + SOCLE) * PIXEL);
-  ctx.drawImage(spritePilule(l, h, teinte, enfonce >= 0.5), r.x, r.y + dy, r.l, r.h);
+  const sprite = spritePilule(r.l, r.h, teinte, enfonce >= 0.5, k);
+  ctx.drawImage(sprite, r.x - MARGE, r.y + dy - MARGE, r.l + MARGE * 2, r.h + MARGE * 2);
   ctx.restore();
   return dy;
 }

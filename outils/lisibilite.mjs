@@ -60,15 +60,16 @@ const PAIRES = [
   { quoi: 'le tapis sur la touche du convoyeur', devant: 'noir', derriere: 'bleu', seuil: 3 },
   { quoi: 'le plus sur la touche de construction', devant: 'noir', derriere: 'vert', seuil: 3 },
   { quoi: 'la croix sur la touche de destruction', devant: 'creme', derriere: 'rouge', seuil: 3 },
-  // Le socle d'un bonbon est l'ombre de sa propre couleur, et c'est lui qui
-  // doit se détacher du fond. Le crème et l'ardoise le prennent en brume : le
-  // premier par la règle, le second par exception — l'ombre de l'ardoise est
-  // le profond, qui ne se détache du noir qu'à 1,54 : 1.
-  { quoi: 'le socle brume sous une touche', devant: 'brume', derriere: 'noir', seuil: 3 },
-  { quoi: 'le socle prune sous la touche de destruction', devant: 'prune', derriere: 'noir', seuil: 1.5 },
-  { quoi: 'le socle outremer sous la touche du convoyeur', devant: 'outremer', derriere: 'noir', seuil: 1.5 },
-  { quoi: 'le socle sarcelle sous la touche de construction', devant: 'sarcelle', derriere: 'noir', seuil: 1.5 },
-  { quoi: 'le contour noir d’une touche sur le fond', devant: 'noir', derriere: 'ardoise', seuil: 3 },
+  // L'ombre portée d'un bonbon est celle de sa propre couleur, et c'est elle
+  // qui doit se détacher du fond : depuis que la touche n'a plus de contour
+  // noir, c'est tout ce qui lui donne sa hauteur. Le crème et l'ardoise la
+  // prennent en brume — le premier par la règle, le second par exception :
+  // l'ombre de l'ardoise est le profond, qui ne se détache du noir qu'à
+  // 1,54 : 1.
+  { quoi: 'l’ombre de brume sous une touche', devant: 'brume', derriere: 'noir', seuil: 3 },
+  { quoi: 'l’ombre prune de la destruction', devant: 'prune', derriere: 'noir', seuil: 1.5 },
+  { quoi: 'l’ombre outremer du convoyeur', devant: 'outremer', derriere: 'noir', seuil: 1.5 },
+  { quoi: 'l’ombre sarcelle de la construction', devant: 'sarcelle', derriere: 'noir', seuil: 1.5 },
   // Ce qui détache une matière du tapis, ce n'est pas sa couleur — aucune des
   // huit ne tranche vraiment sur le bleu — mais le noir qui la cerne. C'est
   // donc lui qu'on mesure ici, et la section suivante dit lesquelles ne
