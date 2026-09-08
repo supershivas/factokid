@@ -217,8 +217,10 @@ cellules précises et à l'usine de départ d'être posée d'avance — la carte
 change autour d'eux, jamais sous eux. Un scénario porte sa graine : fixe pour
 le tutoriel et l'usine qui tourne, tirée pour le bac à sable.
 
-Un biome est une **couleur posée sur le noir à une transparence très basse**,
-en trois nuances. Le passage d'un biome à l'autre n'est que le mélange des deux
+Un biome est une **couleur posée sur le noir à une transparence basse**, en
+trois nuances — de seize à vingt-huit pour cent. Elles ont doublé : à huit pour
+cent le sol était presque noir, on voyait les biomes de loin sans voir leur
+couleur. Les six directions comparées sont dans `labo/sols.html`. Le passage d'un biome à l'autre n'est que le mélange des deux
 teintes, sur deux cellules : il n'existe aucune tuile de raccord, et la largeur
 du fondu est un réglage. Les textures sont minimales — un point d'un pixel, ou
 un trait d'un pixel d'épaisseur et de deux à trois de long.
@@ -303,19 +305,45 @@ habituelle. C'est un choix lié au public, pas une approximation.
 
 ### Palette
 
-Huit couleurs, pas neuf. Une couleur par famille de ressource, deux neutres.
-Ajouter une couleur demande mon accord.
+**Seize couleurs, pas dix-sept.** Elle en portait huit, et ces huit-là
+n'étaient pas huit couleurs choisies : c'étaient huit des seize de **Sweetie
+16**, prises une sur deux. Les huit autres existaient donc déjà en creux et
+s'accordent par construction — deux nuits pour les ombres, deux clartés pour
+les reflets, trois teintes de plus pour varier. Passer à seize n'a fait entrer
+aucune couleur étrangère. Ajouter une dix-septième demande mon accord.
 
 | Nom | Hex | Usage |
 |---|---|---|
 | `--noir` | `#1a1c2c` | fond, contours |
+| `--prune` | `#5d275d` | ombre du rouge |
+| `--rouge` | `#b13e53` | ressource A, état bloqué, destruction |
+| `--orange` | `#ef7d57` | ressource B, refermer |
+| `--jaune` | `#ffcd75` | ressource C, énergie, pause |
+| `--anis` | `#a7f070` | clarté du vert |
+| `--vert` | `#38b764` | ressource D, validation, construction |
+| `--sarcelle` | `#257179` | ombre du vert, le recul |
+| `--nuit` | `#29366f` | chevrons du tapis |
+| `--outremer` | `#3b5dc9` | ombre du bleu |
+| `--bleu` | `#41a6f6` | ressource E, la bande du tapis |
+| `--cyan` | `#73eff7` | clarté du bleu, crans du tapis |
+| `--creme` | `#f4f4f4` | texte, surbrillance, le repos |
+| `--brume` | `#94b0c2` | ombre du crème |
 | `--ardoise` | `#566c86` | grille, machines inertes |
-| `--creme` | `#f4f4f4` | texte, surbrillance |
-| `--rouge` | `#b13e53` | ressource A, état bloqué |
-| `--orange` | `#ef7d57` | ressource B |
-| `--jaune` | `#ffcd75` | ressource C, énergie |
-| `--vert` | `#38b764` | ressource D, validation |
-| `--bleu` | `#41a6f6` | ressource E, convoyeur actif |
+| `--profond` | `#333c57` | ombre de l'ardoise |
+
+**Une couleur a trois faces** — sa clarté, son corps, son ombre — et rien n'y
+est calculé : Sweetie 16 est faite de rampes, et une couleur y a presque
+toujours sa voisine plus claire et sa voisine plus sombre. Un dégradé du jeu
+n'est donc jamais un mélange, mais trois couleurs déclarées (`FACES` dans
+`design.js`).
+
+**Le tapis est bleu électrique** : bande en plein bleu, crans de cyan,
+chevrons au nuit. Il était ardoise, de la couleur des machines inertes, alors
+que c'est ce qu'on trace neuf fois sur dix. Le bleu plutôt que l'outremer est
+mesuré, pas choisi : ce qui détache une matière du tapis n'est pas sa couleur
+mais le noir qui la cerne, et ce noir tranche à 6,43 : 1 sur le bleu contre
+2,88 : 1 sur l'outremer. Cinq matières sur dix n'y tiennent plus que par leur
+contour, et c'est le prix assumé d'une bande vive — leur forme les nomme.
 
 Chaque type d'item doit être identifiable **par sa forme seule**, en niveaux de
 gris. La couleur est une confirmation, jamais l'unique porteuse d'information.
@@ -327,9 +355,9 @@ matrices de 9 × 9 pixels d'art (`MOTIFS` dans `render/sprites.js`), où la
 couleur remplit la forme et le noir la cerne.
 
 **Dérogation validée : les sols des biomes.** Composer une couleur de la
-palette sur le noir crée des teintes qui n'y figurent pas. Elles restent très
-basses — de 8 % à 14 % — et ne servent qu'au sol, jamais à un élément. Les huit
-couleurs deviennent donc huit familles, et rien d'autre n'y a droit.
+palette sur le noir crée des teintes qui n'y figurent pas. Elles restent basses
+— de 16 % à 28 % — et ne servent qu'au sol, jamais à un élément. Les seize
+couleurs deviennent donc seize familles, et rien d'autre n'y a droit.
 
 ### Typographie
 
@@ -352,21 +380,43 @@ l'adulte, jamais un passage obligé pour l'enfant.
 
 ### Boutons
 
-Une plaque claire posée sur un fond sombre se lit comme une étiquette autant
-que comme une touche. Deux choses disent mieux le bouton, et elles sont dans
-`render/plaque.js` — aucun autre module ne dessine de touche :
+**La touche est un bonbon** : vernie, bombée, posée sur une ombre de sa propre
+couleur. C'est la direction retenue au labo (`labo/touches.html`, direction 2).
+Tout est dans `render/plaque.js` — aucun autre module ne dessine de touche :
 
 - **La forme.** Rien n'est rond dans une usine faite de cases : un rond n'est
   donc jamais qu'un bouton. La touche fait **56 unités** et porte une icône de
   48 — le rond s'est élargi pour l'accueillir, sinon la croix et la main
   sortaient par les coins. Les boutons larges, qui portent un mot, sont des
   **pilules** de même facture.
-- **Le socle.** Un second cercle, plein, cerné de noir comme le corps, décalé
-  de trois pixels d'art sous lui. Le socle **ne bouge jamais** : c'est le sol
-  du bouton, et on n'en voit que le croissant du bas — tout entier quand le
-  corps décolle. Seul le corps voyage : il descend au fond tant que le doigt
-  le tient, puis part sur un ressort quand il se lève, dépassant le repos
-  avant de s'y poser. C'est la seule animation de touche du jeu.
+- **Le bombé.** Une rampe verticale de la clarté à l'ombre en passant par le
+  corps, un reflet au sommet, un creux au pied. Le corps occupe le milieu :
+  c'est sur lui que le signe se lit, et c'est lui que l'outil de lisibilité
+  mesure.
+- **L'ombre.** Portée, floue, de la couleur du bonbon — elle a remplacé le
+  socle. Elle se resserre quand la touche descend, et c'est elle qui donne la
+  hauteur. Une exception mesurée : la touche ardoise porte une ombre de brume,
+  parce que la sienne est le profond, qui ne se détache du noir qu'à 1,54 : 1.
+- **L'appui.** Le corps descend tant que le doigt le tient, puis part sur un
+  ressort quand il se lève, dépassant le repos avant de s'y poser. C'est la
+  seule animation de touche du jeu. Au fond, **le bombé se retourne** : la
+  lumière passe dessous, et une touche enfoncée se lit enfoncée même arrêtée.
+
+**Les touches ne sont pas du pixel art**, et c'est la seule dérogation à la
+règle. Elles étaient peintes sur une grille de vingt-huit pixels d'art puis
+agrandies : un rond de vingt-huit pixels est un escalier, un dégradé de
+vingt-huit pixels est trois bandes, et une ombre floue n'y existe pas. Elles
+sont tracées en courbes, à la résolution de l'écran. **Le monde reste peint au
+pixel**, et les signes qu'elles portent aussi — la main, le plus, la croix, les
+machines : c'est ce qui les rattache au jeu.
+
+**La couleur d'une touche dit la famille de son action**, jamais son
+importance. Cinq familles : crème pour le repos et la lecture, bleu pour le
+convoyeur, vert pour bâtir et repartir, rouge pour détruire, jaune pour
+suspendre et pour ce qui règle la vue plutôt que le monde. Une touche qui porte
+l'image d'une chose du monde — une machine, une matière — reste sombre : ces
+images sont déjà en couleur, et une matière rouge sur un bonbon rouge n'existe
+pas.
 
 **Deux rangs de boutons.** Le premier agit sur le monde : les outils, les
 éléments à poser, les choix d'un écran. Il est clair, large — 56 unités — et
@@ -379,14 +429,13 @@ règle, jamais dans la rangée des actions.
 matière triée, l'élément choisi dans le menu : tous sont la touche restée au
 fond. Il n'y a plus aucun cadre de sélection dans le jeu.
 
-**Deux teintes, pas une de plus.** La touche claire porte des signes sombres —
-la main, le plus, la croix ; la touche sombre porte des images claires — les
-machines, les matières. Chacune garde le fond sur lequel ses signes se lisent,
-et sa doublure prend l'autre valeur pour rester visible. Une touche éteinte en
-ardoise avait été essayée : elle tue la croix rouge, qui n'y tranche plus.
+**Chaque touche porte le signe qui tranche sur son corps**, et cela se mesure :
+la claire et les vives portent des signes noirs, la rouge et l'ardoise des
+signes crème. La croix de destruction est passée du rouge au crème le jour où
+sa touche est devenue rouge.
 
-Les huit propositions comparées ce jour-là sont dans le labo, avec leurs
-animations d'appui : `labo/boutons.html`.
+Les huit premières propositions, en pixels, sont dans `labo/boutons.html` ; les
+dix suivantes, hors du pixel art, dans `labo/touches.html`.
 
 ### Lisibilité : elle se vérifie, elle ne se suppose pas
 
