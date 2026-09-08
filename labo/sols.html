@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Des sols colorés</title>
+<style>
+  :root { --noir:#1a1c2c; --ardoise:#566c86; --creme:#f4f4f4; --brume:#94b0c2;
+          --rouge:#b13e53; --jaune:#ffcd75; --anis:#a7f070; --bleu:#41a6f6; }
+  html,body{margin:0;background:#0e0f1a;color:var(--creme);
+            font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .enveloppe{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:15px;margin:0 0 2px;color:var(--jaune)}
+  a{color:var(--bleu)}
+  .note{color:var(--brume);max-width:72ch;margin:0 0 10px}
+  .grille{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));margin-top:22px}
+  .carte{background:#141626;border:1px solid #262a42;border-radius:14px;padding:14px}
+  canvas{image-rendering:pixelated;display:block;width:100%;height:auto;border-radius:8px;margin:10px 0 8px}
+  .verdict{font-size:12px;display:flex;align-items:center;gap:8px}
+  .verdict i{width:9px;height:9px;border-radius:99px;display:block}
+  .tient i{background:var(--anis)} .tient{color:var(--anis)}
+  .lache i{background:var(--rouge)} .lache{color:var(--rouge)}
+  .cout{color:var(--ardoise);font-size:12px;margin:6px 0 0}
+</style>
+</head>
+<body>
+<div class="enveloppe">
+  <h1>Des sols colorés</h1>
+  <p class="note">
+    Le sol est aujourd’hui une couleur posée sur le noir à trois transparences
+    très basses — de huit à quatorze pour cent. C’est ce qui le rend presque
+    noir : on distingue les biomes de loin, mais on ne dirait pas que la carte
+    a des couleurs. Monter ces valeurs est le seul réglage qu’il y ait, et une
+    direction n’est rien d’autre qu’un jeu de nombres : rien ici n’ajoute de
+    système.
+    <a href="./index.html">l’atelier</a> ·
+    <a href="./touches.html">les touches</a>
+  </p>
+  <p class="note">
+    Chaque vignette montre ce qui décide : deux biomes qui se rencontrent, un
+    tapis bleu qui les traverse, quatre matières posées <b>à même le sol</b>, et
+    les deux autres familles sur la bande du bas.
+  </p>
+  <p class="note">
+    Ce qui décide se mesure. Sur un sol sombre, le contour noir d’une matière
+    ne sert à rien : c’est sa <b>silhouette colorée</b> qui porte la forme — le
+    design system le dit déjà. Sur un sol clair, c’est l’inverse : la couleur
+    se rapproche du fond, et c’est le contour qui détache. Une matière est donc
+    lisible si <b>l’une des deux</b> tient — sa couleur à 1,5 : 1, ou son
+    contour à 3 : 1 — et elle ne disparaît que si les deux lâchent ensemble.
+    Chaque vignette affiche sa pire paire : quelle matière, sur quel biome, et
+    de quoi elle vit. La fraise sort toujours en tête, et c’est normal : elle
+    est rouge, et les champs de fraises aussi.
+  </p>
+  <div class="grille" id="directions"></div>
+</div>
+<script type="module">
+import { DIRECTIONS, FORMAT, peindre, verdict } from './sols.js';
+
+// « champs de fraises » veut « dans », « terre » veut « sur » : l'article est
+// dans la table des biomes, pas dans une règle de grammaire.
+import { BIOMES } from '../src/data/biomes.js';
+const BIOMES_OU = {};
+for (const b of Object.values(BIOMES)) BIOMES_OU[b.nom] = b.ou;
+
+const hote = document.getElementById('directions');
+for (const d of DIRECTIONS) {
+  const carte = document.createElement('section');
+  carte.className = 'carte';
+  carte.innerHTML = `<h2>${d.nom}</h2><p class="note">${d.these}</p>`;
+  const c = document.createElement('canvas');
+  c.width = FORMAT.largeur;
+  c.height = FORMAT.hauteur;
+  carte.append(c);
+  const r = verdict(d);
+  const v = document.createElement('p');
+  v.className = 'verdict ' + (r.marge >= 1 ? 'tient' : 'lache');
+  v.innerHTML = `<i></i>pire cas : ${r.item} ${BIOMES_OU[r.biome] || 'sur ' + r.biome}`
+    + ` — tient par ${r.par}, à ${Math.round(r.marge * 100)} % du seuil`;
+  carte.append(v);
+  hote.append(carte);
+  peindre(c, d.id);
+}
+</script>
+</body>
+</html>
