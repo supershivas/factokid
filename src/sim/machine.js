@@ -147,7 +147,10 @@ function verserAuTour(machine, dt) {
   const items = Object.keys(machine.stocks);
   const pret = machine.horloge >= machine.periode;
   const enAttente = items.some((i) => machine.stocks[i] > 0);
-  machine.bloquee = pret && enAttente && !items.some((i) => machine.stocks[i] > 0 && peutVerser(machine, i));
+  // Rien où verser, c'est une machine qu'on n'a pas fini de brancher, pas un
+  // bouchon. Elle se tait : le joueur sait déjà qu'il n'a pas tiré son tapis.
+  machine.bloquee = pret && enAttente && machine.sorties.length > 0
+    && !items.some((i) => machine.stocks[i] > 0 && peutVerser(machine, i));
   if (!pret) return;
   if (!enAttente) { machine.horloge = machine.periode; return; }
   for (let n = 0; n < items.length; n++) {
@@ -184,10 +187,13 @@ function majTrieur(machine, dt) {
   const role = item === machine.matiereTriee ? 'triee' : 'reste';
   const sortie = machine.sorties.find((c) => c.role === role);
   const libre = sortie && peutAccepter(sortie);
-  machine.bloquee = pret && !libre;
+  // Un trieur dont aucune branche n'est encore tracée est un chantier, pas un
+  // bouchon. Dès qu'il en a une, il se plaint de celle qui manque : là, c'est
+  // un vrai problème, et le joueur doit le savoir.
+  machine.bloquee = pret && machine.sorties.length > 0 && !libre;
   if (!pret) return;
   if (!libre) { machine.horloge = machine.periode; return; }
-  pousser(sortie, machine.file.shift());
+  pousser(sortie, machine.file.shift(), machine);
   machine.produits++;
   machine.horloge -= machine.periode;
 }
@@ -215,14 +221,17 @@ export function majMachine(machine, dt) {
     }
     machine.horloge += dt;
     const pret = machine.horloge >= machine.periode;
+    // Une machine qui a tout ce qu'il lui faut et ne peut pas sortir se
+    // plaint, même sans tapis de sortie : c'est là que la chaîne s'arrête, et
+    // c'est exactement ce qu'il faut montrer.
     const libre = machine.sorties.length > 0 && peutAccepter(machine.sorties[0]);
     machine.bloquee = pret && !libre;
-    if (!pret || machine.bloquee) {
+    if (!pret || !libre) {
       if (pret) machine.horloge = machine.periode;
       return;
     }
     for (const [item, n] of Object.entries(machine.recette.entrees)) machine.stocks[item] -= n;
-    pousser(machine.sorties[0], machine.recette.sortie);
+    pousser(machine.sorties[0], machine.recette.sortie, machine);
     machine.sorti = machine.recette.sortie;
     machine.produits++;
     machine.consommes++;

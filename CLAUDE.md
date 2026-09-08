@@ -408,8 +408,22 @@ déformation courte de l'icône, ou changement de couleur. Aucune action ne doit
 pouvoir sembler ignorée.
 
 Un bouchon qui dure se signale par une bulle de bande dessinée en éclats,
-avec ses « !!! », qui sort de l'endroit bloqué. Une seule par bouchon, à
-l'endroit d'où il part : ce qui est bloqué en amont se tait.
+avec ses « !!! », qui sort de l'endroit bloqué. **Une bulle ne sort que là où
+la chaîne s'arrête pour de bon** — tout le reste se tait :
+
+- le bouchon est en aval ? on se tait. C'était la règle pour un tapis ; elle
+  vaut aussi pour une machine dont tous les tapis de sortie sont bouchés,
+  sinon le cri remonte la chaîne au lieu d'en montrer le bout ;
+- rien où aller ? on se tait. Un tapis qu'on vient de tracer et qui ne débouche
+  sur rien n'est pas bouché, il est inachevé, et le joueur le sait. Un
+  extracteur ou un trieur qu'aucun tapis ne quitte encore, pareil ;
+- une seule bulle par machine. Deux tapis pleins qui butent sur la même
+  confiserie affamée disaient deux fois la même chose.
+
+Le délai est de **4 s** et non de 1,2 : une usine qui vit a des à-coups tout
+le temps, et 1,2 s en attrapait la plupart. Sur une scène de débutant — un
+extracteur non relié, un tapis tracé dans le vide, une machine nourrie de la
+mauvaise matière — on passe de quatre bulles à une, et c'est la bonne.
 
 ---
 

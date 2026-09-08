@@ -16,7 +16,7 @@ import { attendus } from '../sim/machine.js';
 import { dessinerAlerte } from './alerte.js';
 import { chutePose } from './pose.js';
 import { dessinerChevrons, COULEUR_CHEVRON, COULEUR_CRETE } from './chevron.js';
-import { parcourirItems, celluleDe } from '../sim/belt.js';
+import { parcourirItems, celluleDe, destinations } from '../sim/belt.js';
 
 const REPOUSSE = REPOUSSE_TICKS / TICKS_PAR_SECONDE;
 const TAILLE_ITEM_PX = 9;
@@ -771,18 +771,44 @@ function marquePause(ctx, machine, coin) {
 // Les bulles passent au-dessus de tout : elles se dessinent en dernier.
 // Une seule par bouchon, à l'endroit d'où il part : un tapis bloqué parce que
 // ce qu'il alimente est lui-même bloqué ne dit rien, c'est l'autre qui parle.
+// Une bulle ne sort que là où la chaîne s'arrête pour de bon. Tout le reste
+// se tait, et c'est ce qui a changé : l'écran criait sur des chantiers autant
+// que sur des bouchons, et plusieurs fois pour le même.
+//
+//   Le bouchon est en aval ? On se tait. C'était déjà la règle pour un tapis ;
+//   elle vaut maintenant aussi pour une machine dont tous les tapis de sortie
+//   sont bouchés — sinon le cri remontait la chaîne au lieu d'en montrer le
+//   bout.
+//   Rien où aller ? On se tait. Un tapis qu'on vient de tracer et qui ne
+//   débouche sur rien n'est pas bouché, il est inachevé, et le joueur le sait.
+//   Une seule bulle par machine. Deux tapis pleins qui butent sur la même
+//   confiserie affamée disaient deux fois la même chose.
+//
+// Et le délai est passé de 1,2 s à 4 s : une usine qui vit a des à-coups tout
+// le temps, et 1,2 s en attrapait la plupart.
 function dessinerAlertes(ctx, scene, f) {
+  const dure = (t) => t > ALERTE_DELAI;
+  const criantes = new Set();
+
   for (const machine of scene.machines) {
+    if (!dure(machine.bloqueeDepuis)) continue;
+    // Ce qui la bloque est plus loin : c'est là-bas qu'il faut regarder.
+    if (machine.sorties.length > 0 && machine.sorties.every((c) => dure(c.bloque))) continue;
+    criantes.add(machine);
     if (!celluleVisible(machine.cx, machine.cy, f)) continue;
-    if (machine.bloqueeDepuis > ALERTE_DELAI) {
-      alerte(ctx, machine.cx, machine.cy, machine.bloqueeDepuis - ALERTE_DELAI);
-    }
+    alerte(ctx, machine.cx, machine.cy, machine.bloqueeDepuis - ALERTE_DELAI);
   }
+
   for (const convoyeur of scene.convoyeurs) {
-    if (convoyeur.bloque <= ALERTE_DELAI) continue;
+    if (!dure(convoyeur.bloque)) continue;
+    if (destinations(convoyeur).length === 0) continue;
     if (convoyeur.cible && convoyeur.cible.pause) continue; // en pause : elle assume
-    if (convoyeur.cible && convoyeur.cible.bloqueeDepuis > ALERTE_DELAI) continue;
-    if (convoyeur.sorties.some((suite) => suite.bloque > ALERTE_DELAI)) continue;
+    if (convoyeur.cible && dure(convoyeur.cible.bloqueeDepuis)) continue;
+    if (convoyeur.sorties.some((suite) => dure(suite.bloque))) continue;
+    if (convoyeur.cible) {
+      if (criantes.has(convoyeur.cible)) continue;
+      criantes.add(convoyeur.cible);
+    }
     const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
     if (!celluleVisible(bout.cx, bout.cy, f)) continue;
     alerte(ctx, bout.cx, bout.cy, convoyeur.bloque - ALERTE_DELAI);

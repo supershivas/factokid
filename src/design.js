@@ -187,8 +187,10 @@ export function rectCollection(i) {
 }
 
 // Un bouchon ne se signale qu'après avoir duré : sinon l'écran clignote au
-// moindre à-coup.
-export const ALERTE_DELAI = 1.2; // secondes
+// moindre à-coup. Une seconde et deux dixièmes, c'était le moindre à-coup —
+// une usine qui vit a des à-coups tout le temps, et l'écran criait sans
+// arrêt. Quatre secondes : ce qui dure quatre secondes est un vrai bouchon.
+export const ALERTE_DELAI = 4; // secondes
 
 // Panneau d'information d'un élément construit : son nom, ce qu'il fait de
 // quoi, et ses réglages. Sa hauteur n'est pas un nombre écrit ici : elle se
