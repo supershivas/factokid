@@ -111,6 +111,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   function majBoutons() {
     const outils = OUTILS.map((o) => ({
       icone: o.icone,
+      couleur: o.couleur,
       actif: o.id === etat.outil,
       action: () => {
         // Un second appui sur « construction » referme la liste : le bouton
@@ -131,7 +132,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     }));
     // Pas de bouton retour sur une carte : on revient en touchant son
     // téléporteur, comme on y est venu. Un geste, pas deux chemins.
-    etat.boutons = outils.map((o) => ({ icone: o.icone, actif: o.actif }));
+    etat.boutons = outils.map((o) => ({ icone: o.icone, couleur: o.couleur, actif: o.actif }));
     actionsBoutons = outils.map((o) => o.action);
   }
 

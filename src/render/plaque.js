@@ -10,11 +10,21 @@
 //   bouge jamais : c'est le sol du bouton. Seul le corps descend dessus, et
 //   rebondit au-dessus quand le doigt le lâche (voir bouton.js).
 //
+// La touche est un bonbon : verni, bombé, posé sur son ombre — c'est la
+// direction retenue au labo (labo/touches.html, direction 2). Le bombé est un
+// dégradé, et un dégradé de pixel art est une pile de bandes : une clarté en
+// haut, le corps au milieu, une ombre en bas. Aucune n'est calculée — ce sont
+// trois couleurs de la palette, données par `FACES`.
+//
+// Appuyer retourne le bombé : la lumière passe dessous, le creux passe
+// dessus. C'est ce qui fait qu'une touche enfoncée se lit enfoncée même
+// immobile, et la sélection du jeu est justement une touche restée au fond.
+//
 // Tout est tramé au pixel d'art : jamais d'arc, jamais d'anti-crénelage. Les
 // sprites sont peints une fois et gardés — un bouton ne se redessine pas
 // soixante fois par seconde.
 
-import { PALETTE, PIXEL, poserImage } from '../design.js';
+import { PALETTE, FACES, PIXEL, poserImage } from '../design.js';
 
 // Hauteur du socle, en pixels d'art. C'est aussi la course de l'appui : le
 // corps descend exactement jusqu'au sol.
@@ -66,7 +76,19 @@ function toile(l, h, peindre) {
       }
     }
   };
-  peindre({ rect, disque, anneau });
+  // Une tranche horizontale de disque : c'est ainsi qu'une bande de dégradé
+  // se découpe sans jamais sortir du rond.
+  const calotte = (cx, cy, r, y0, y1, couleur) => {
+    g.fillStyle = couleur;
+    for (let y = Math.max(0, Math.floor(y0)); y < Math.min(h, Math.ceil(y1)); y++) {
+      for (let x = 0; x < l; x++) {
+        const dx = x + 0.5 - cx;
+        const dy = y + 0.5 - cy;
+        if (dx * dx + dy * dy <= r * r) g.fillRect(x, y, 1, 1);
+      }
+    }
+  };
+  peindre({ rect, disque, anneau, calotte });
   return c;
 }
 
@@ -77,12 +99,62 @@ function garder(cle, fabriquer) {
 
 // --- touche ronde ---------------------------------------------------------
 
-// Deux teintes de touche, et pas une de plus : la claire porte des signes
-// sombres — la main, le plus, la croix ; la sombre porte des images claires —
-// les machines, les matières. Chacune garde le fond sur lequel ses signes se
-// lisent, et son socle prend l'autre valeur pour rester visible.
-export const CLAIRE = { corps: PALETTE.creme, socle: PALETTE.ardoise };
-export const SOMBRE = { corps: PALETTE.ardoise, socle: PALETTE.creme };
+// Une teinte n'est plus qu'une couleur : le reste du bonbon en découle.
+//
+// La claire porte des signes sombres — la main, le plus, la croix ; la sombre
+// porte des images claires — les machines, les matières. Chacune garde le fond
+// sur lequel ses signes se lisent.
+//
+// Les quatre outils, eux, ont chacun la sienne, et c'est la palette qui porte
+// le sens : le convoyeur est bleu comme le tapis qu'il trace, la construction
+// verte comme une validation, la destruction rouge comme un blocage. La main
+// reste crème : c'est le repos, elle ne dit rien.
+export function teinteDe(couleur, socle) {
+  return { couleur, socle: socle || FACES[couleur].sombre };
+}
+
+export const CLAIRE = teinteDe('creme');
+
+// La touche sombre garde un socle clair, et c'est la seule exception à
+// « le socle est l'ombre du corps ». Un bonbon ardoise n'a pas d'ombre visible
+// sur un fond noir : son ombre est le profond, qui ne s'en détache qu'à
+// 1,54 : 1 — la touche perdait son épaisseur. La brume la lui rend.
+export const SOMBRE = teinteDe('ardoise', 'brume');
+
+// Le reflet du haut : le vernis du bonbon. C'est la clarté de la couleur, sauf
+// quand la touche est déjà crème — une clarté plus claire que le crème
+// n'existe pas, et le bombé s'y lit alors par sa seule ombre du bas.
+function faces(teinte) {
+  const f = FACES[teinte.couleur];
+  return {
+    clair: PALETTE[f.clair],
+    corps: PALETTE[f.corps],
+    sombre: PALETTE[f.sombre],
+    socle: PALETTE[teinte.socle],
+  };
+}
+
+// Où le dégradé change de bande, en part du diamètre. Deux couronnes minces,
+// et le corps nu entre les deux : le vernis se lit sur le bord, pas au milieu.
+//
+// C'est étroit exprès. Le signe que la touche porte — la main, le plus, la
+// croix — doit se lire sur une seule couleur, celle du corps : c'est elle que
+// l'outil de lisibilité mesure, et deux bandes larges lui auraient donné trois
+// fonds au lieu d'un.
+const HAUT = 0.20;
+const BAS = 0.84;
+
+// Peint le bombé dans un disque déjà posé : deux calottes, l'une claire,
+// l'autre sombre, découpées par le disque lui-même.
+//
+// `retourne` inverse les deux : c'est l'état enfoncé. Rien d'autre ne change,
+// et il n'y a donc qu'un dégradé à comprendre, vu des deux côtés.
+function bomber(g, cx, cy, r, f, retourne) {
+  const dessus = retourne ? f.sombre : f.clair;
+  const dessous = retourne ? f.clair : f.sombre;
+  g.calotte(cx, cy, r, cy - r, cy - r + 2 * r * HAUT, dessus);
+  g.calotte(cx, cy, r, cy - r + 2 * r * BAS, cy + r, dessous);
+}
 
 // Le socle et le corps sont deux sprites, et c'est tout le mécanisme : le
 // socle reste posé, le corps voyage dessus. S'ils ne faisaient qu'une image,
@@ -91,21 +163,27 @@ export const SOMBRE = { corps: PALETTE.ardoise, socle: PALETTE.creme };
 // Le socle est un disque plein, cerné de noir comme le corps : c'est une
 // pièce du bouton, pas son ombre. On n'en voit que le croissant du bas quand
 // le bouton est au repos, et tout entier quand il décolle au rebond.
+// Le socle prend l'ombre de la couleur : c'est le bonbon posé sur sa propre
+// ombre, et non sur une pièce d'une autre teinte. Il ne se bombe pas — on n'en
+// voit qu'un croissant, et un dégradé sur un croissant ne se lit pas.
 function socleRond(art, teinte) {
-  return garder('socle' + art + teinte.socle, () => toile(art, art + SOCLE, ({ disque }) => {
+  return garder('socle' + art + teinte.couleur + teinte.socle, () => toile(art, art + SOCLE, (g) => {
+    const f = faces(teinte);
     const c = art / 2;
     const r = art / 2 - 0.5;
-    disque(c, c + SOCLE, r, PALETTE.noir);
-    disque(c, c + SOCLE, r - 1, teinte.socle);
+    g.disque(c, c + SOCLE, r, PALETTE.noir);
+    g.disque(c, c + SOCLE, r - 1, f.socle);
   }));
 }
 
-function corpsRond(art, teinte) {
-  return garder('rond' + art + teinte.corps, () => toile(art, art, ({ disque }) => {
+function corpsRond(art, teinte, retourne) {
+  return garder('rond' + art + teinte.couleur + (retourne ? '!' : ''), () => toile(art, art, (g) => {
+    const f = faces(teinte);
     const c = art / 2;
     const r = art / 2 - 0.5;
-    disque(c, c, r, PALETTE.noir);
-    disque(c, c, r - 1, teinte.corps);
+    g.disque(c, c, r, PALETTE.noir);
+    g.disque(c, c, r - 1, f.corps);
+    bomber(g, c, c, r - 1, f, retourne);
   }));
 }
 
@@ -125,7 +203,10 @@ export function dessinerTouche(
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.drawImage(socleRond(art, teinte), r.x, r.y, r.l, (art + SOCLE) * PIXEL);
-  ctx.drawImage(corpsRond(art, teinte), r.x, r.y + dy, r.l, r.l);
+  // Au fond, le bombé se retourne : la lumière passe dessous. Une touche
+  // enfoncée se lit donc enfoncée même arrêtée — et c'est ce qui marque la
+  // sélection.
+  ctx.drawImage(corpsRond(art, teinte, enfonce >= 0.5), r.x, r.y + dy, r.l, r.l);
   // L'image est centrée dans le rond : c'est le rond qui s'est élargi pour
   // l'accueillir, pas l'image qui a rétréci.
   if (image) dessinerImage(ctx, image, r, dy, part);
@@ -138,24 +219,34 @@ export function dessinerTouche(
 // ronds : ils portent un mot. Ils gardent la même épaisseur et les mêmes bouts
 // arrondis, à la hauteur d'un rond coupé en deux.
 // Le corps d'une pilule : deux demi-disques et un rectangle entre eux.
-function corpsPilule(g, l, h, dy, couleur, retrait) {
+function corpsPilule(g, l, h, dy, couleur, retrait, y0, y1) {
   const r = h / 2;
-  g.disque(r, r + dy, r - retrait, couleur);
-  g.disque(l - r, r + dy, r - retrait, couleur);
-  g.rect(r, dy + retrait, l - h, h - retrait * 2, couleur);
+  const haut = y0 === undefined ? dy + retrait : Math.max(dy + retrait, y0);
+  const bas = y1 === undefined ? dy + h - retrait : Math.min(dy + h - retrait, y1);
+  if (bas <= haut) return;
+  g.calotte(r, r + dy, r - retrait, haut, bas, couleur);
+  g.calotte(l - r, r + dy, r - retrait, haut, bas, couleur);
+  g.rect(r, haut, l - h, bas - haut, couleur);
 }
 
 function soclePilule(l, h, teinte) {
-  return garder('soclePilule' + l + 'x' + h + teinte.socle, () => toile(l, h + SOCLE, (g) => {
+  return garder('soclePilule' + l + 'x' + h + teinte.couleur + teinte.socle, () => toile(l, h + SOCLE, (g) => {
+    const f = faces(teinte);
     corpsPilule(g, l, h, SOCLE, PALETTE.noir, 0);
-    corpsPilule(g, l, h, SOCLE, teinte.socle, 1);
+    corpsPilule(g, l, h, SOCLE, f.socle, 1);
   }));
 }
 
-function spritePilule(l, h, teinte) {
-  return garder('pilule' + l + 'x' + h + teinte.corps, () => toile(l, h, (g) => {
+// La pilule se bombe comme le rond, et par les mêmes bandes : elle n'a pas de
+// dégradé à elle. Ce sont les mêmes hauteurs, prises sur sa hauteur.
+function spritePilule(l, h, teinte, retourne) {
+  const cle = 'pilule' + l + 'x' + h + teinte.couleur + (retourne ? '!' : '');
+  return garder(cle, () => toile(l, h, (g) => {
+    const f = faces(teinte);
     corpsPilule(g, l, h, 0, PALETTE.noir, 0);
-    corpsPilule(g, l, h, 0, teinte.corps, 1);
+    corpsPilule(g, l, h, 0, f.corps, 1);
+    corpsPilule(g, l, h, 0, retourne ? f.sombre : f.clair, 1, 0, h * HAUT);
+    corpsPilule(g, l, h, 0, retourne ? f.clair : f.sombre, 1, h * BAS, h);
   }));
 }
 
@@ -169,7 +260,7 @@ export function dessinerPilule(ctx, r, { teinte = CLAIRE, enfonce = 0, alpha = 1
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.drawImage(soclePilule(l, h, teinte), r.x, r.y, r.l, (h + SOCLE) * PIXEL);
-  ctx.drawImage(spritePilule(l, h, teinte), r.x, r.y + dy, r.l, r.h);
+  ctx.drawImage(spritePilule(l, h, teinte, enfonce >= 0.5), r.x, r.y + dy, r.l, r.h);
   ctx.restore();
   return dy;
 }

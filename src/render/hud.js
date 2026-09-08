@@ -10,7 +10,7 @@ import {
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
 import { enfoncement } from './bouton.js';
-import { dessinerTouche, dessinerPilule, SOMBRE, PART_ITEM } from './plaque.js';
+import { dessinerTouche, dessinerPilule, teinteDe, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
 import { auPlusLoin } from '../camera.js';
 import { dessinerMenu } from './menu.js';
@@ -135,15 +135,18 @@ function dessinerSurmodale(ctx, interfaceJeu) {
   ctx.restore();
 }
 
-// Barre d'outils : trois touches rondes. L'outil en cours est en pleine
-// lumière, les autres attendent en ardoise — la différence se voit sans cadre
-// ni contour, et c'est la seule marque de sélection du jeu.
+// Barre d'outils : quatre bonbons, un par outil. Chacun a sa couleur — le
+// convoyeur bleu, la construction verte, la destruction rouge, la main crème —
+// et c'est la table des outils qui la dit, pas ce module.
+//
+// La sélection reste un enfoncement : l'outil en cours est la touche restée au
+// fond, son bombé retourné. Pas de cadre, pas de contour, pas de couleur en
+// plus — la couleur, elle, ne bouge jamais.
 function dessinerOutils(ctx, interfaceJeu) {
   for (let i = 0; i < interfaceJeu.boutons.length; i++) {
     const b = interfaceJeu.boutons[i];
-    // L'outil en cours est la touche restée enfoncée : c'est toute la marque
-    // de sélection, et elle se lit comme une touche enclenchée.
     dessinerTouche(ctx, rectBouton(i), INTERFACE[b.icone], {
+      teinte: teinteDe(b.couleur),
       enfonce: enfoncement('outil:' + i, b.actif ? 1 : 0),
     });
   }
@@ -160,7 +163,9 @@ function dessinerRangees(ctx, interfaceJeu) {
   ctx.fillStyle = PALETTE.noir;
   ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
   ctx.globalAlpha = 1;
-  dessinerTouche(ctx, interfaceJeu.ancre, INTERFACE.outilConstruction, { enfonce: 1 });
+  dessinerTouche(ctx, interfaceJeu.ancre, INTERFACE.outilConstruction, {
+    teinte: teinteDe('vert'), enfonce: 1,
+  });
 
   // La progression vient d'un ressort : elle dépasse un peu, puis se pose.
   // Chaque rangée part un peu après la précédente : la liste se déplie, elle

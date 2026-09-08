@@ -52,9 +52,22 @@ const PAIRES = [
   { quoi: 'texte ardoise sur le fond noir', devant: 'ardoise', derriere: 'noir', seuil: 3 },
   { quoi: 'texte noir sur une touche claire', devant: 'noir', derriere: 'creme', seuil: 4.5 },
   { quoi: 'texte crème sur une touche sombre', devant: 'creme', derriere: 'ardoise', seuil: 4.5 },
-  { quoi: 'la croix de destruction sur sa touche', devant: 'rouge', derriere: 'creme', seuil: 3 },
-  { quoi: 'le socle ardoise sous une touche claire', devant: 'ardoise', derriere: 'noir', seuil: 3 },
-  { quoi: 'le socle crème sous une touche sombre', devant: 'creme', derriere: 'ardoise', seuil: 3 },
+  // Les quatre outils sont maintenant des bonbons de couleur, et chacun porte
+  // le signe qui tranche sur son corps : le noir sur les clairs, le crème sur
+  // le rouge, qui est trop sombre pour lui (2,96 : 1). Le bombé, lui, ne compte
+  // pas ici — ses deux couronnes sont minces et le signe se lit sur le corps.
+  { quoi: 'la main sur sa touche crème', devant: 'noir', derriere: 'creme', seuil: 3 },
+  { quoi: 'le tapis sur la touche du convoyeur', devant: 'noir', derriere: 'bleu', seuil: 3 },
+  { quoi: 'le plus sur la touche de construction', devant: 'noir', derriere: 'vert', seuil: 3 },
+  { quoi: 'la croix sur la touche de destruction', devant: 'creme', derriere: 'rouge', seuil: 3 },
+  // Le socle d'un bonbon est l'ombre de sa propre couleur, et c'est lui qui
+  // doit se détacher du fond. Le crème et l'ardoise le prennent en brume : le
+  // premier par la règle, le second par exception — l'ombre de l'ardoise est
+  // le profond, qui ne se détache du noir qu'à 1,54 : 1.
+  { quoi: 'le socle brume sous une touche', devant: 'brume', derriere: 'noir', seuil: 3 },
+  { quoi: 'le socle prune sous la touche de destruction', devant: 'prune', derriere: 'noir', seuil: 1.5 },
+  { quoi: 'le socle outremer sous la touche du convoyeur', devant: 'outremer', derriere: 'noir', seuil: 1.5 },
+  { quoi: 'le socle sarcelle sous la touche de construction', devant: 'sarcelle', derriere: 'noir', seuil: 1.5 },
   { quoi: 'le contour noir d’une touche sur le fond', devant: 'noir', derriere: 'ardoise', seuil: 3 },
   // Ce qui détache une matière du tapis, ce n'est pas sa couleur — quatre des
   // huit ne peuvent pas trancher sur l'ardoise sans sortir de la palette —

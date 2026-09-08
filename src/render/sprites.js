@@ -331,7 +331,10 @@ const outilConvoyeur = toile(TUILE_PX, (rect) => {
 // Sur la plaque claire, le rouge tranche largement (5,2 : 1) : la croix peut
 // donc être rouge pleine, sans trait de renfort. La forme la distingue déjà du
 // plus en niveaux de gris ; le rouge ne fait que confirmer.
-const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.rouge, 3, 2));
+// La croix passe au crème : sa touche est maintenant rouge, et une croix rouge
+// sur un bonbon rouge n'existe plus. C'est la règle habituelle, appliquée à une
+// touche de couleur — elle porte le signe qui tranche sur son corps.
+const outilDestruction = toile(TUILE_PX, (rect) => traitCroix(rect, PALETTE.creme, 3, 2));
 
 // Pause, reprise, essais : les trois signes du menu. Ils sont décrits une
 // seule fois et déclinés en couleur — le même dessin sur la plaque claire du
