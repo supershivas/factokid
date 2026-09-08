@@ -25,7 +25,8 @@
 // Rien n'est redessiné soixante fois par seconde pour autant : chaque touche
 // est peinte une fois, à l'échelle de l'écran, et gardée.
 
-import { PALETTE, FACES, poserImage } from '../design.js';
+import { PALETTE, FACES, signeSur, poserImage } from '../design.js';
+import { spriteSigne } from './signes.js';
 
 // La course de l'appui, en unités logiques : de combien le corps descend.
 export const SOCLE = 6;
@@ -64,7 +65,7 @@ const RAMPE = [0, 0.5, 1];
 // images claires — les machines, les matières. Chacune garde le fond sur
 // lequel ses signes se lisent.
 export function teinteDe(couleur, ombre) {
-  return { couleur, ombre: ombre || FACES[couleur].sombre };
+  return { couleur, ombre: ombre || FACES[couleur].sombre, signe: signeSur(couleur) };
 }
 
 export const CLAIRE = teinteDe('creme');
@@ -189,7 +190,16 @@ export function dessinerTouche(
   ctx.drawImage(sprite, r.x - MARGE, r.y + dy - MARGE, r.l + MARGE * 2, r.l + MARGE * 2);
   // L'image est centrée dans le rond : c'est le rond qui s'est élargi pour
   // l'accueillir, pas l'image qui a rétréci.
-  if (image) {
+  //
+  // Deux sortes de signes : un nom, et c'est une courbe tracée à la
+  // résolution de l'écran ; une image, et c'est du pixel art — une machine,
+  // une matière. Les commandes sont des courbes, les choses du monde des
+  // pixels, et la frontière passe exactement là.
+  if (typeof image === 'string') {
+    const { taille, marge } = poserImage(r.l, 24, part);
+    const signe = spriteSigne(image, taille, teinte.signe, k);
+    if (signe) ctx.drawImage(signe, r.x + marge, r.y + dy + marge, taille, taille);
+  } else if (image) {
     const { taille, marge } = poserImage(r.l, image.width || 24, part);
     ctx.drawImage(image, r.x + marge, r.y + dy + marge, taille, taille);
   }

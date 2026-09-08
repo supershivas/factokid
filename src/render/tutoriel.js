@@ -12,7 +12,7 @@ import {
 import { cadrerMonde, celluleVisible, fenetre } from '../camera.js';
 import { coinCellule } from '../sim/grid.js';
 import { dessinerMotCentre } from './texte.js';
-import { dessinerPastille, INTERFACE } from './sprites.js';
+import { dessinerPastille } from './sprites.js';
 import { dessinerTouche, SOMBRE } from './plaque.js';
 import { enfoncement } from './bouton.js';
 
@@ -74,7 +74,7 @@ export function dessinerBandeau(ctx, etape, part) {
   ctx.fillRect(b.x + marge, b.y + b.h - 8, Math.round(large * part), PIXEL);
 
   // Passer : on ne guide plus, et la carte reste telle qu'elle est.
-  dessinerTouche(ctx, rectPasserTuto(), INTERFACE.menuFermer, {
+  dessinerTouche(ctx, rectPasserTuto(), 'menuFermer', {
     teinte: SOMBRE,
     enfonce: enfoncement('passer'),
   });

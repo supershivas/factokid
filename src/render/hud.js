@@ -9,6 +9,7 @@ import {
   SURMODALE_TEXTE, BOUTON_ZOOM, rectBouton, rectRangee, rectOption, rectFermer, rectSecondaire,
 } from '../design.js';
 import { INTERFACE, spriteItem, spriteNomme, TAILLE_ITEM } from './sprites.js';
+import { estSigne } from './signes.js';
 import { enfoncement } from './bouton.js';
 import { dessinerTouche, dessinerPilule, teinteDe, SOMBRE, PART_ITEM } from './plaque.js';
 import { dessinerMiniCarte } from './minicarte.js';
@@ -73,13 +74,13 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   dessinerCompteur(ctx, livraison ? livraison.consommes : 0);
 
   // Le bouton pause, puis la carte du monde : où l'on est, et où l'on va.
-  dessinerTouche(ctx, BOUTON_PAUSE, INTERFACE.outilPause, {
+  dessinerTouche(ctx, BOUTON_PAUSE, 'outilPause', {
     teinte: teinteDe(TEINTES.pause), enfonce: enfoncement('pause'),
   });
   // Le recul, au second rang : il règle ce qu'on regarde, pas le monde. Son
   // signe montre ce qu'on obtient en appuyant — quatre grosses cases pour
   // revenir bâtir, seize petites pour voir loin.
-  dessinerTouche(ctx, BOUTON_ZOOM, INTERFACE[auPlusLoin() ? 'zoomPres' : 'zoomLoin'], {
+  dessinerTouche(ctx, BOUTON_ZOOM, auPlusLoin() ? 'zoomPres' : 'zoomLoin', {
     teinte: teinteDe(TEINTES.zoom),
     enfonce: enfoncement('zoom'),
   });
@@ -133,7 +134,7 @@ function dessinerSurmodale(ctx, interfaceJeu) {
     TEXTE_PETIT, PALETTE.ardoise, PALETTE.creme,
   );
 
-  dessinerTouche(ctx, rectFermer(b), INTERFACE.menuFermer, {
+  dessinerTouche(ctx, rectFermer(b), 'menuFermer', {
     teinte: teinteDe(TEINTES.fermer), enfonce: enfoncement('fermer'),
   });
   ctx.restore();
@@ -149,7 +150,7 @@ function dessinerSurmodale(ctx, interfaceJeu) {
 function dessinerOutils(ctx, interfaceJeu) {
   for (let i = 0; i < interfaceJeu.boutons.length; i++) {
     const b = interfaceJeu.boutons[i];
-    dessinerTouche(ctx, rectBouton(i), INTERFACE[b.icone], {
+    dessinerTouche(ctx, rectBouton(i), b.icone, {
       teinte: teinteDe(b.couleur),
       enfonce: enfoncement('outil:' + i, b.actif ? 1 : 0),
     });
@@ -167,7 +168,7 @@ function dessinerRangees(ctx, interfaceJeu) {
   ctx.fillStyle = PALETTE.noir;
   ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
   ctx.globalAlpha = 1;
-  dessinerTouche(ctx, interfaceJeu.ancre, INTERFACE.outilConstruction, {
+  dessinerTouche(ctx, interfaceJeu.ancre, 'outilConstruction', {
     teinte: teinteDe('vert'), enfonce: 1,
   });
 
@@ -231,7 +232,8 @@ function dessinerPanneau(ctx, interfaceJeu) {
   // Le bouton secondaire, à droite du nom : ce qui règle l'élément qu'on
   // regarde, plus petit et plus sombre que ce qui agit sur le monde.
   if (p.secondaire) {
-    dessinerTouche(ctx, rectSecondaire(b), spriteNomme(p.secondaire.icone), {
+    const signe = p.secondaire.icone;
+    dessinerTouche(ctx, rectSecondaire(b), estSigne(signe) ? signe : spriteNomme(signe), {
       teinte: SOMBRE,
       enfonce: enfoncement('secondaire'),
     });

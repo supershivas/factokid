@@ -68,6 +68,31 @@ export const CIBLE_TACTILE = 48;
 // Les chevrons passent au nuit : ils étaient bleus, et la bande l'est
 // devenue. La crête de lumière qui les traverse reste crème — c'est le saut
 // du nuit au crème qui la fait voir, pas son contraste avec la bande.
+// Le contraste de deux couleurs, au rapport WCAG. C'est la même mesure que
+// celle de outils/lisibilite.mjs : elle est ici parce que le jeu s'en sert
+// pour choisir, et là-bas pour vérifier.
+function luminance(hex) {
+  const c = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+
+export function contraste(a, b) {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+// Le signe que porte une touche de cette couleur : le noir ou le crème, celui
+// des deux qui tranche le mieux. C'était choisi à la main, sprite par sprite,
+// et la croix de destruction avait dû passer au crème le jour où sa touche est
+// devenue rouge. La règle est la même, elle se calcule maintenant.
+export function signeSur(couleur) {
+  const c = PALETTE[couleur];
+  return contraste(PALETTE.noir, c) >= contraste(PALETTE.creme, c) ? PALETTE.noir : PALETTE.creme;
+}
+
 // La couleur d'une touche dit la famille de son action, jamais son importance.
 // Cinq familles, et rien d'autre :
 //

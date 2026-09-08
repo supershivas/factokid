@@ -15,6 +15,7 @@ import { VERSION } from '../data/version.js';
 import { ICONES, INTERFACE, spriteItem, spriteItemEteint, spriteNomme } from './sprites.js';
 import { dessinerPilule, dessinerTouche, teinteDe, CLAIRE, SOMBRE, PART_ITEM } from './plaque.js';
 import { enfoncement } from './bouton.js';
+import { estSigne, dessinerSigne } from './signes.js';
 import {
   dessinerMot, dessinerMotCentre, dessinerNombre, largeurNombre, largeurMot,
 } from './texte.js';
@@ -40,13 +41,18 @@ function voile(ctx) {
 // Un bouton large : la même touche que partout ailleurs, allongée pour porter
 // un mot. Elle s'enfonce sur sa doublure comme les rondes.
 function bouton(ctx, r, icone, nom, cle, couleur) {
-  const dy = dessinerPilule(ctx, r, {
-    teinte: couleur ? teinteDe(couleur) : CLAIRE, enfonce: enfoncement(cle),
-  });
-  const sprite = spriteNomme(icone);
+  const teinte = couleur ? teinteDe(couleur) : CLAIRE;
+  const dy = dessinerPilule(ctx, r, { teinte, enfonce: enfoncement(cle) });
   const taille = r.h - 16;
-  if (sprite) ctx.drawImage(sprite, r.x + 12, r.y + dy + 8, taille, taille);
-  dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + dy + r.h / 2, TEXTE_PETIT, PALETTE.noir);
+  // Une commande est une courbe, une chose du monde reste du pixel art : la
+  // pilule des recettes porte un bonbon, les quatre autres un signe.
+  if (estSigne(icone)) {
+    dessinerSigne(ctx, icone, r.x + 12, r.y + dy + 8, taille, teinte.signe);
+  } else {
+    const sprite = spriteNomme(icone);
+    if (sprite) ctx.drawImage(sprite, r.x + 12, r.y + dy + 8, taille, taille);
+  }
+  dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + dy + r.h / 2, TEXTE_PETIT, teinte.signe);
 }
 
 // Le numéro de version, en bas du menu pause. En petit et en ardoise : il ne

@@ -337,7 +337,9 @@ export function brancherPointeur(canvas, vue, jeu) {
   // travailler, et cesse donc de signaler un bouchon qu'on assume.
   function optionPause(machine) {
     return {
-      icone: machine.pause ? 'bulleReprise' : 'bullePause',
+      // Les mêmes signes que dans le menu : ce sont des commandes, donc des
+      // courbes, et il n'y a qu'un dessin de pause dans le jeu.
+      icone: machine.pause ? 'menuReprise' : 'outilPause',
       action: () => { machine.pause = !machine.pause; ouvrirPanneau(machine, null); },
     };
   }
