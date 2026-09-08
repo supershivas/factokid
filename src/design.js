@@ -68,6 +68,24 @@ export const CIBLE_TACTILE = 48;
 // Les chevrons passent au nuit : ils étaient bleus, et la bande l'est
 // devenue. La crête de lumière qui les traverse reste crème — c'est le saut
 // du nuit au crème qui la fait voir, pas son contraste avec la bande.
+// La couleur d'une touche dit la famille de son action, jamais son importance.
+// Cinq familles, et rien d'autre :
+//
+//   crème    — le repos et la lecture : la main, les mots ;
+//   bleu     — le convoyeur, comme le tapis qu'il trace ;
+//   vert     — bâtir, valider, repartir ;
+//   rouge    — détruire ;
+//   jaune    — suspendre, et ce qui règle la vue plutôt que le monde.
+//
+// Une touche qui porte l'image d'une chose du monde — une machine, une matière
+// — reste sombre, et ce n'est pas une exception décorative : ces images sont
+// déjà en couleur, et une matière rouge sur un bonbon rouge n'existe pas.
+export const TEINTES = {
+  pause: 'jaune',
+  zoom: 'sarcelle',   // son damier est crème : il lui faut une couleur sombre
+  fermer: 'orange',   // refermer n'est pas détruire, et la couleur les sépare
+};
+
 export const TAPIS = {
   bande: 'bleu',
   crans: 'cyan',

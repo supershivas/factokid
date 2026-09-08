@@ -17,6 +17,7 @@ export const SCENARIOS = [
     id: 'nouvelle',
     nom: 'nouvelle partie',
     icone: 'bulleExtracteur',
+    couleur: 'vert',
     disposition: DEPART_NU,
     tutoriel: true,
     graine: 1,
@@ -25,6 +26,7 @@ export const SCENARIOS = [
     id: 'usine',
     nom: 'usine qui tourne',
     icone: 'bulleConfiserie',
+    couleur: 'jaune',
     disposition: DEPART,
     tutoriel: false,
     graine: 1,
@@ -33,6 +35,7 @@ export const SCENARIOS = [
     id: 'bac',
     nom: 'bac à sable',
     icone: 'bulleConvoyeur',
+    couleur: 'bleu',
     disposition: DEPART_NU,
     tutoriel: false,
     graine: null, // une carte neuve à chaque essai

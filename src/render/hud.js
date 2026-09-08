@@ -2,7 +2,7 @@
 // élément. Icônes et chiffres ; les seuls mots sont là pour l'adulte.
 
 import {
-  PALETTE, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, COMPTEUR, CELLULE,
+  PALETTE, TEINTES, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE, COMPTEUR, CELLULE,
   VOILE, BANDEAU_HAUT, BANDEAU_BAS,
   TEXTE_GRAND, TEXTE_PETIT, TUILE_PX, BULLE, PANNEAU_TEXTE, PANNEAU_MARGE, BOUTON_PAUSE,
   poserImage,
@@ -73,12 +73,14 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   dessinerCompteur(ctx, livraison ? livraison.consommes : 0);
 
   // Le bouton pause, puis la carte du monde : où l'on est, et où l'on va.
-  dessinerTouche(ctx, BOUTON_PAUSE, INTERFACE.outilPause, { enfonce: enfoncement('pause') });
+  dessinerTouche(ctx, BOUTON_PAUSE, INTERFACE.outilPause, {
+    teinte: teinteDe(TEINTES.pause), enfonce: enfoncement('pause'),
+  });
   // Le recul, au second rang : il règle ce qu'on regarde, pas le monde. Son
   // signe montre ce qu'on obtient en appuyant — quatre grosses cases pour
   // revenir bâtir, seize petites pour voir loin.
   dessinerTouche(ctx, BOUTON_ZOOM, INTERFACE[auPlusLoin() ? 'zoomPres' : 'zoomLoin'], {
-    teinte: SOMBRE,
+    teinte: teinteDe(TEINTES.zoom),
     enfonce: enfoncement('zoom'),
   });
   dessinerMiniCarte(ctx, monde);
@@ -131,7 +133,9 @@ function dessinerSurmodale(ctx, interfaceJeu) {
     TEXTE_PETIT, PALETTE.ardoise, PALETTE.creme,
   );
 
-  dessinerTouche(ctx, rectFermer(b), INTERFACE.menuFermer, { enfonce: enfoncement('fermer') });
+  dessinerTouche(ctx, rectFermer(b), INTERFACE.menuFermer, {
+    teinte: teinteDe(TEINTES.fermer), enfonce: enfoncement('fermer'),
+  });
   ctx.restore();
 }
 

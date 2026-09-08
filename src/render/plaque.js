@@ -46,8 +46,8 @@ const MARGE = 12;
 // puis au fond. Elle se resserre sous le doigt — c'est ce qui fait que la
 // touche a l'air d'aller toucher le sol.
 const OMBRE = {
-  haut: { chute: 7, flou: 12, alpha: 0.55 },
-  bas: { chute: 2, flou: 6, alpha: 0.45 },
+  haut: { chute: 7, flou: 14, alpha: 0.38 },
+  bas: { chute: 2, flou: 7, alpha: 0.32 },
 };
 
 // Où le dégradé passe d'une face à l'autre. Le corps occupe le milieu : c'est

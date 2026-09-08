@@ -66,7 +66,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     relaches: [],                // touches que le doigt vient de lâcher
     // L'écran des essais de la bêta : tant qu'il est là, rien du jeu ne se
     // touche, et il n'y a d'ailleurs pas encore de monde.
-    choix: SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone })),
+    choix: SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone, couleur: s.couleur })),
   };
   const trace = etat.trace;
   let pointeur = null;
@@ -429,17 +429,19 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   function majMenuPause() {
     const boutons = [
-      { icone: 'menuReprise', nom: 'reprendre', action: () => { etat.menuPause = null; } },
-      { icone: 'bonbon', nom: 'recettes', action: () => { etat.menuPause = 'recettes'; } },
+      { icone: 'menuReprise', nom: 'reprendre', couleur: 'vert', action: () => { etat.menuPause = null; } },
+      { icone: 'bonbon', nom: 'recettes', couleur: 'jaune', action: () => { etat.menuPause = 'recettes'; } },
       // Le livre des matières : ce qu'on a déjà tenu entre les mains.
       {
         icone: 'menuCollection',
         nom: 'matières',
+        couleur: 'cyan',
         action: () => { etat.menuPause = 'collection'; },
       },
       {
         icone: 'outilPause',
         nom: toutEnPause() ? 'tout relancer' : 'tout arrêter',
+        couleur: 'orange',
         action: () => {
           const pause = !toutEnPause();
           for (const m of scene().machines) m.pause = pause;
@@ -451,16 +453,17 @@ export function brancherPointeur(canvas, vue, jeu) {
       {
         icone: 'menuEssais',
         nom: 'changer d\'essai',
+        couleur: 'brume',
         action: () => {
           etat.menuPause = null;
           etat.panneau = null;
           fermerMenu();
           jeu.oublier();
-          etat.choix = SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone }));
+          etat.choix = SCENARIOS.map((s) => ({ id: s.id, nom: s.nom, icone: s.icone, couleur: s.couleur }));
         },
       },
     ];
-    etat.boutonsMenu = boutons.map((b) => ({ icone: b.icone, nom: b.nom }));
+    etat.boutonsMenu = boutons.map((b) => ({ icone: b.icone, nom: b.nom, couleur: b.couleur }));
     actionsMenu = boutons.map((b) => b.action);
   }
 
