@@ -11,10 +11,13 @@ import {
 import { RECETTES } from '../data/recipes.js';
 import { ITEMS, BONBONS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
+import { VERSION } from '../data/version.js';
 import { ICONES, INTERFACE, spriteItem, spriteItemEteint, spriteNomme } from './sprites.js';
 import { dessinerPilule, dessinerTouche, teinteDe, CLAIRE, SOMBRE, PART_ITEM } from './plaque.js';
 import { enfoncement } from './bouton.js';
-import { dessinerMot, dessinerMotCentre, dessinerNombre, largeurNombre } from './texte.js';
+import {
+  dessinerMot, dessinerMotCentre, dessinerNombre, largeurNombre, largeurMot,
+} from './texte.js';
 
 // L'item est dessiné sur 9 pixels d'art : ×3 le porte à 27, échelle entière.
 const ITEM_RECETTE = 27;
@@ -46,6 +49,17 @@ function bouton(ctx, r, icone, nom, cle, couleur) {
   dessinerMotCentre(ctx, nom, r.x + r.h + 8, r.y + dy + r.h / 2, TEXTE_PETIT, PALETTE.noir);
 }
 
+// Le numéro de version, en bas du menu pause. En petit et en ardoise : il ne
+// s'adresse pas à l'enfant qui joue mais à l'adulte qui rapporte un problème,
+// et c'est la seule page où on peut aller le chercher sans rien interrompre.
+function version(ctx) {
+  const mot = 'v' + VERSION;
+  dessinerMot(
+    ctx, mot, Math.round((LARGEUR_LOGIQUE - largeurMot(mot, TEXTE_PETIT)) / 2),
+    HAUTEUR_LOGIQUE - 40, TEXTE_PETIT, PALETTE.ardoise,
+  );
+}
+
 export function dessinerMenu(ctx, monde, interfaceJeu) {
   if (!interfaceJeu.menuPause) return;
   voile(ctx);
@@ -55,6 +69,7 @@ export function dessinerMenu(ctx, monde, interfaceJeu) {
     const b = interfaceJeu.boutonsMenu[j];
     bouton(ctx, rectMenu(j), b.icone, b.nom, 'menu:' + j, b.couleur);
   }
+  version(ctx);
 }
 
 // Le livre des matières : les huit, dans l'ordre de la table. Celles qu'on a

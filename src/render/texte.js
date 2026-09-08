@@ -101,7 +101,11 @@ const ACCENTS = {
 // question ne se pose pas.
 function glyphe(caractere) {
   const accent = ACCENTS[caractere];
-  if (!accent) return { rangees: LETTRES[caractere], accent: null };
+  // Un chiffre dans un mot : les nombres avaient leur propre table, réservée
+  // au compteur, et un mot qui en contenait un s'écrivait avec des trous.
+  // C'est la même fonte : un mot peut porter un chiffre, comme un numéro de
+  // version.
+  if (!accent) return { rangees: LETTRES[caractere] || CHIFFRES[caractere], accent: null };
   return { rangees: LETTRES[accent[0]], accent: accent[1] };
 }
 
