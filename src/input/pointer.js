@@ -643,6 +643,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (!g || g.extracteur || !poserExtracteur(monde(), c.cx, c.cy)) return false;
     marquerConstruit([c]);
     etat.panneau = null;
+    rendreLaMain();
     return true;
   }
 
@@ -653,7 +654,20 @@ export function brancherPointeur(canvas, vue, jeu) {
     ajouterMachine(scene(), type, c.cx, c.cy, {});
     marquerConstruit([c]);
     etat.panneau = null;
+    rendreLaMain();
     return true;
+  }
+
+  // Un bâtiment posé rend la main. C'est l'inverse de ce qu'on faisait — un
+  // élément choisi le restait, pour en poser dix d'affilée — et c'est une
+  // décision qui a changé : on pose un bâtiment, puis on tire ses tapis, et
+  // rester en mode « pose » faisait bâtir une confiserie au premier doigt
+  // posé sur la carte. Le convoyeur, lui, ne rend pas la main : on en trace
+  // dix de suite, c'est tout l'intérêt du geste.
+  function rendreLaMain() {
+    etat.outil = 'main';
+    fermerMenu();
+    majBoutons();
   }
 
   function detruire(c) {

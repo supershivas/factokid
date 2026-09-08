@@ -125,10 +125,13 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   filtre. Un appui long ouvre les informations et les réglages. Le panneau
   montre en grand **ce dont il parle** : sur un gisement, c'est la matière,
   pas la machine qu'on propose d'y bâtir.
-- **L'élément choisi le reste.** Poser une machine ne rend pas la main au
-  convoyeur : on en pose dix d'affilée sans rouvrir le menu. C'est l'outil
-  main, ou un autre élément, qui met fin au mode. Tant qu'une machine est
-  choisie, le doigt ne trace rien — le tracé reste le geste du convoyeur.
+- **Un bâtiment posé rend la main.** C'est l'inverse de ce qui était décidé —
+  « l'élément choisi le reste », pour en poser dix d'affilée — et c'est une
+  décision qui a changé : on pose un bâtiment, puis on tire ses tapis, et
+  rester en mode « pose » faisait bâtir une confiserie au premier doigt posé
+  sur la carte. **Le convoyeur, lui, ne rend pas la main** : on en trace dix de
+  suite, c'est tout l'intérêt du geste. Tant qu'un bâtiment est choisi, le
+  doigt ne trace rien — le tracé reste le geste du convoyeur.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
