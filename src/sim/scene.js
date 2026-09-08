@@ -137,16 +137,74 @@ function raccorderCeQuiVise(scene, machine) {
 // touchait. Un doigt qui avait dépassé, puis retiré ses tuiles en trop, se
 // retrouvait devant un tapis branché pour l'œil et mort pour la machine.
 //
-// Une machine seulement, et seulement s'il y reste une place : raccorder un
-// tapis à un autre coupe le second, et libérer une place en détruit un —
-// détruire une tuile ne doit jamais remanier ce qui est à côté.
+// Une machine, ou un autre tapis. Jamais rien de plus : libérer une place en
+// détruirait un, et détruire une tuile ne doit jamais remanier ce qui est à
+// côté. Se raccorder à un tapis, en revanche, ne détruit rien — cela le coupe
+// au point de jonction, et c'est exactement ce que fait le doigt qui vient
+// buter dessus.
 function raccorderLeBout(scene, convoyeur) {
   const bout = convoyeur.celluleSortie;
   if (!bout) return;
   const machine = machineEn(scene, bout.cx, bout.cy);
-  if (!peutPrendre(machine, convoyeur)) return;
-  machine.entrees.push(convoyeur);
-  reconstruire(convoyeur, convoyeur.chemin, machine);
+  if (peutPrendre(machine, convoyeur)) {
+    machine.entrees.push(convoyeur);
+    reconstruire(convoyeur, convoyeur.chemin, machine);
+    return;
+  }
+  const hote = convoyeurEn(scene, bout.cx, bout.cy);
+  if (peutSeDeverserDans(convoyeur, hote)) raccorderA(scene, convoyeur, hote, bout);
+}
+
+// Ce tapis peut-il se déverser tout seul dans celui-là ?
+//
+// Seulement s'il n'a nulle part où aller : on ne détourne jamais un tapis qui
+// travaille. Et seulement si l'autre ne revient pas jusqu'à lui — un tapis qui
+// se nourrit de lui-même tournerait sans fin.
+function peutSeDeverserDans(convoyeur, hote) {
+  if (!hote || hote === convoyeur) return false;
+  if (convoyeur.cible || convoyeur.sorties.length > 0) return false;
+  return !mene(hote, convoyeur);
+}
+
+// L'aval d'un tapis mène-t-il jusqu'à celui-là ? On suit les sorties, en
+// gardant trace de ce qu'on a vu : la scène peut déjà contenir une boucle.
+function mene(depart, cherche) {
+  const vus = new Set();
+  const file = [depart];
+  while (file.length) {
+    const c = file.pop();
+    if (c === cherche) return true;
+    if (vus.has(c)) continue;
+    vus.add(c);
+    for (const s of c.sorties) file.push(s);
+  }
+  return false;
+}
+
+// Le pendant : un tapis qu'on vient de poser prend au passage ceux qui le
+// visaient déjà. C'est la même règle vue de l'autre côté — « ce qu'un tapis
+// vise, il l'alimente, quel que soit l'ordre des gestes » — et sans elle, un
+// tapis tracé avant celui qu'il devait nourrir restait plein et muet : branché
+// pour l'œil, mort pour la simulation.
+function raccorderCeQuiViseLeTapis(scene, nouveau) {
+  // Un raccord coupe l'hôte en deux : les cellules suivantes appartiennent
+  // alors à la suite, pas au tapis qu'on vient de poser. On retient donc les
+  // cellules, et on redemande à la grille à qui chacune est maintenant.
+  const cellules = nouveau.chemin.map((c) => ({ cx: c.cx, cy: c.cy }));
+  for (const cellule of cellules) {
+    const hote = convoyeurEn(scene, cellule.cx, cellule.cy);
+    if (!hote) continue;
+    const voisines = [
+      { cx: cellule.cx, cy: cellule.cy - 1 }, { cx: cellule.cx + 1, cy: cellule.cy },
+      { cx: cellule.cx, cy: cellule.cy + 1 }, { cx: cellule.cx - 1, cy: cellule.cy },
+    ];
+    for (const v of voisines) {
+      const amont = convoyeurEn(scene, v.cx, v.cy);
+      if (!amont || !vise(amont, cellule.cx, cellule.cy)) continue;
+      if (!peutSeDeverserDans(amont, hote)) continue;
+      raccorderA(scene, amont, hote, cellule);
+    }
+  }
 }
 
 // Reprendre un tracé interrompu : on ajoute des cellules au bout, sans perdre
@@ -274,6 +332,12 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   // Un tapis qui passe devant un extracteur au repos le prend au passage : la
   // règle vaut dans les deux sens, qu'on pose la machine ou le tapis en dernier.
   raccorderMinesAutour(scene, [...chemin]);
+  // Et les tapis qui butaient déjà là, dans le vide, se déversent enfin.
+  raccorderCeQuiViseLeTapis(scene, convoyeur);
+  // Le nouveau venu, lui aussi, vise peut-être quelque chose : un doigt qui
+  // s'arrête une case avant l'autre tapis dessine exactement la même image
+  // qu'un doigt qui va jusqu'à lui.
+  raccorderLeBout(scene, convoyeur);
   return convoyeur;
 }
 

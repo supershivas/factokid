@@ -282,7 +282,65 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   }
 }
 
-// ————— 9. martelage : on construit et on détruit au hasard, en vérifiant
+// ————— 9. un tapis qui bute sur un autre se déverse dedans, dans les trois
+// ordres de gestes
+//
+// « Venir buter dessus suffit » ne valait qu'au tracé, et seulement quand le
+// doigt atteignait la cellule de l'hôte. Un doigt qui s'arrête une case avant,
+// un hôte tracé après, un tapis raccourci jusqu'à buter : trois images
+// identiques à l'écran, et trois tapis pleins et muets. C'est ce que montrait
+// une usine où deux tapis restaient bloqués sans raison.
+{
+  const orientations = ['l’hôte d’abord', 'l’amont d’abord', 'raccourci jusqu’à buter'];
+  for (const ordre of orientations) {
+    const s = creerScene();
+    const a = ajouterMachine(s, 'extracteur', 12, 5, { item: 'sucre' });
+    const b = ajouterMachine(s, 'extracteur', 6, 1, { item: 'sucre' });
+    const four = ajouterMachine(s, 'chaufferie', 6, 10);
+    // L'hôte descend la colonne 6 jusqu'à la chaufferie ; l'amont vient de
+    // l'est et s'arrête une case avant lui.
+    const hote = () => poserConvoyeur(s, ligne(6, 2, 8, 0, 1), b, four);
+    const amont = () => poserConvoyeur(s, ligne(11, 5, 5, -1, 0), a, null);
+    if (ordre === 'l’hôte d’abord') { hote(); amont(); } else if (ordre === 'l’amont d’abord') { amont(); hote(); } else {
+      hote();
+      // Le doigt a dépassé : il a tourné vers le bas. On retire les deux
+      // tuiles en trop, et le bout vient buter sur l'hôte.
+      poserConvoyeur(
+        s, [...ligne(11, 5, 5, -1, 0), { cx: 7, cy: 6 }, { cx: 7, cy: 7 }], a, null,
+      );
+      couperConvoyeur(s, convoyeurEn(s, 7, 7), 7, 7);
+      couperConvoyeur(s, convoyeurEn(s, 7, 6), 7, 6);
+    }
+    verifier(s, 'tapis qui bute, ' + ordre);
+    const venu = convoyeurEn(s, 8, 5);
+    veut(destinations(venu).length > 0, 'le tapis qui bute a où aller — ' + ordre);
+
+    // Et il livre pour de bon, de l'autre côté de la jonction.
+    if (peutAccepter(venu)) pousser(venu, 'sucre');
+    for (let k = 0; k < 900; k++) majScene(s, 1 / 60);
+    veut(four.stocks.sucre > 0 || four.produits > 0, 'il livre vraiment — ' + ordre);
+  }
+}
+
+// ————— 10. un tapis ne se raccorde pas à lui-même
+//
+// Le raccord automatique suit les sorties pour vérifier que l'aval ne revient
+// pas : sans cela, un tapis qui boucle sur son propre amont tournerait sans
+// fin et rien n'en sortirait.
+{
+  const s = creerScene();
+  const a = ajouterMachine(s, 'extracteur', 1, 5, { item: 'sucre' });
+  // Un U : on descend, on va à droite, on remonte, et le bout vise la
+  // deuxième cellule de son propre tapis.
+  const t = poserConvoyeur(s, [
+    { cx: 2, cy: 5 }, { cx: 3, cy: 5 }, { cx: 3, cy: 6 }, { cx: 2, cy: 6 },
+  ], a, null);
+  verifier(s, 'tapis en U');
+  veut(!t.sorties.includes(t), 'un tapis ne se déverse pas dans lui-même');
+  for (const suite of t.sorties) veut(suite !== t, 'aucune sortie ne revient au tapis');
+}
+
+// ————— 11. martelage : on construit et on détruit au hasard, en vérifiant
 // tous les invariants après chaque geste.
 {
   // Un générateur reproductible et correctement mélangé : les bits de poids
