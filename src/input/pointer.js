@@ -6,7 +6,7 @@
 // il ne le modifie jamais.
 
 import {
-  CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE,
+  CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE, ZOOMS,
   BOUTON_PAUSE, BOUTON_ZOOM, PANNEAU_TEXTE, SURMODALE, SURMODALE_TEXTE, TEXTE_PETIT,
   boitePanneau, boiteSurmodale,
   rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
@@ -28,7 +28,9 @@ import {
   prolongerConvoyeur, brancherConvoyeur, raccorderA, ajouterMachine, retirerMachine,
 } from '../sim/scene.js';
 import { gisementEn, poserExtracteur, retirerExtracteur } from '../sim/gisement.js';
-import { camera, deplacerCamera, centrerCamera, versMonde, zoomer } from '../camera.js';
+import {
+  camera, deplacerCamera, centrerCamera, versMonde, zoomer, reglerZoom,
+} from '../camera.js';
 import { aUneSortie, attendus, maxEntrees, choisirRecette } from '../sim/machine.js';
 
 const APPUI_LONG = 0.42 * 1000; // millisecondes
@@ -70,6 +72,10 @@ export function brancherPointeur(canvas, vue, jeu) {
   };
   const trace = etat.trace;
   let pointeur = null;
+  // Les doigts posés, par identifiant : c'est tout ce qu'il faut pour
+  // reconnaître une pince. Un seul doigt joue, deux doigts règlent la vue.
+  const doigts = new Map();
+  let pince = null;
   let toucheAppuyee = null;      // la touche que le doigt tient en ce moment
   let actionsBulles = [];
   let actionsBoutons = [];
@@ -713,9 +719,43 @@ export function brancherPointeur(canvas, vue, jeu) {
     minuterie = null;
   }
 
+  // --- la pince -----------------------------------------------------------
+  //
+  // Deux doigts règlent ce qu'on regarde, jamais le monde : la pince ne fait
+  // que choisir l'un des deux crans de zoom, les mêmes que la touche du second
+  // rang. Il n'y a rien entre les deux, donc rien à suivre en continu — on
+  // attend que l'écart ait franchement changé, et on y va d'un coup.
+  //
+  // Écarter les doigts rapproche, les rapprocher éloigne : c'est le sens de
+  // tout le monde, et c'était l'inverse tant que rien n'était écrit.
+  const PINCE_SEUIL = 1.25; // de combien l'écart doit changer pour compter
+
+  const ecartDoigts = () => {
+    const [a, b] = [...doigts.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+
+  function ouvrirPince() {
+    // Un tracé commencé à un doigt n'a rien à faire dans une pince : `relacher`
+    // le défait avant qu'il ne pose un bout de tapis en travers, et rend le
+    // pointeur.
+    relacher();
+    pince = { depart: ecartDoigts(), fait: false };
+  }
+
+  function reglerPince() {
+    if (!pince || pince.fait || doigts.size < 2) return;
+    const rapport = ecartDoigts() / pince.depart;
+    if (rapport > PINCE_SEUIL) pince.fait = reglerZoom(0) || true;
+    else if (rapport < 1 / PINCE_SEUIL) pince.fait = reglerZoom(ZOOMS.length - 1) || true;
+  }
+
   function debut(e) {
     const p = point(e);
     e.preventDefault();
+    doigts.set(e.pointerId, p);
+    if (doigts.size === 2) { ouvrirPince(); return; }
+    if (doigts.size > 1) return;
     appuiLongFait = false;
     if (choixTouche(p)) { relacher(); return; }
     // La surmodale passe avant le menu pause : le livre des matières en ouvre
@@ -805,6 +845,8 @@ export function brancherPointeur(canvas, vue, jeu) {
   }
 
   function deplacement(e) {
+    if (doigts.has(e.pointerId)) doigts.set(e.pointerId, point(e));
+    if (pince) { e.preventDefault(); reglerPince(); return; }
     if (e.pointerId !== pointeur) return;
     e.preventDefault();
     const p = point(e);
@@ -856,6 +898,14 @@ export function brancherPointeur(canvas, vue, jeu) {
   // Un convoyeur lâché en cours de route reste construit : on ne recommence
   // jamais du début.
   function fin(e) {
+    doigts.delete(e.pointerId);
+    // Une pince ne se termine qu'au dernier doigt levé : sinon le doigt qui
+    // reste reprendrait un tracé au milieu du geste.
+    if (pince) {
+      if (doigts.size === 0) pince = null;
+      lacherTouche();
+      return;
+    }
     // Le doigt se lève : la touche qu'il tenait rebondit, même si le geste
     // n'a jamais pris le pointeur — un appui sur l'interface n'en capture pas.
     lacherTouche();
@@ -919,6 +969,13 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   majBoutons();
   majMenuPause();
+  // iOS ignore `user-scalable=no` depuis dix ans : sans ça, deux doigts font
+  // grossir la page elle-même, et c'est ce qu'on prenait pour un zoom du jeu.
+  // Les événements de geste ne sont émis que là, et seulement sur le document.
+  for (const geste of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(geste, (e) => e.preventDefault(), { passive: false });
+  }
+
   canvas.addEventListener('pointerdown', debut);
   canvas.addEventListener('pointermove', deplacement);
   canvas.addEventListener('pointerup', fin);

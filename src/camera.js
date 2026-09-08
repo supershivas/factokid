@@ -73,18 +73,26 @@ export function centrerCamera(cx, cy) {
   camera.y = entre((cy + 0.5) * CELLULE - v.h / 2, b.y0, b.y1);
 }
 
-// Reculer d'un cran, et revenir au premier après le dernier. Ce qu'on avait au
-// milieu de l'écran y reste : on recule autour de ce qu'on regardait, on ne
-// saute pas ailleurs.
-export function zoomer() {
+// Aller à un niveau donné. Ce qu'on avait au milieu de l'écran y reste : on
+// recule autour de ce qu'on regardait, on ne saute pas ailleurs.
+export function reglerZoom(niveau) {
+  const n = Math.max(0, Math.min(ZOOMS.length - 1, niveau));
+  if (n === camera.niveau) return false;
   const avant = vue();
   const cx = camera.x + avant.l / 2;
   const cy = camera.y + avant.h / 2;
-  camera.niveau = (camera.niveau + 1) % ZOOMS.length;
+  camera.niveau = n;
   const apres = vue();
   const b = bornes();
   camera.x = entre(cx - apres.l / 2, b.x0, b.x1);
   camera.y = entre(cy - apres.h / 2, b.y0, b.y1);
+  return true;
+}
+
+// Reculer d'un cran, et revenir au premier après le dernier : c'est la touche
+// du second rang, qui n'a qu'un état à faire changer.
+export function zoomer() {
+  reglerZoom((camera.niveau + 1) % ZOOMS.length);
 }
 
 // Le décalage appliqué au rendu : arrondi au pixel d'art, pour que le monde
