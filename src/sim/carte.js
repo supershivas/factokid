@@ -1,26 +1,32 @@
-// La carte d'une partie : ses régions de biome et ses gisements, tirés au sort
-// à la création du monde. Ne dessine rien — le rendu lit ce qui sort d'ici.
+// La carte d'une partie : ses gisements, semés à la graine. Ne dessine rien —
+// le rendu lit ce qui sort d'ici.
 //
-// Le monde fait trente-six fenêtres. Écrire ses cent gisements à la main
-// revenait à dessiner la même carte pour tout le monde, à jamais ; ils sont
-// donc engendrés, et deux parties ne se ressemblent plus.
+// **Le monde se lit en étages.** Cinq bandes horizontales de douze rangées,
+// du bas vers le haut, décrites dans `data/zones.js` : un étage, un biome, une
+// matière. Le biome d'une cellule est donc donné par sa rangée, et rien
+// d'autre — il n'y a plus de régions tirées au hasard dans le plan, plus de
+// garanties par matière, plus de plancher de rattrapage. Il ne peut pas
+// manquer de sucre dans le monde du sucre.
 //
-// **Sauf la clairière.** Le centre du monde ne bouge jamais : sa région est de
-// terre, ses quatre gisements sont ceux de data/monde.js, et rien n'est tiré
-// dans son rayon. C'est ce qui permet au tutoriel de nommer des cellules
-// précises et à l'usine de départ d'être posée d'avance — la carte change
-// autour d'eux, jamais sous eux.
+// Ce que la carte invente encore, c'est où tombent les gisements : semés par
+// **bouquets** — un arbre seul n'est pas une forêt, et c'est un bosquet qu'on
+// veut trouver au bout d'un tapis — chacun dans l'étage où il naît.
+//
+// **Sauf le pied du monde.** Autour du départ, à l'étage 1, rien n'est tiré :
+// ses gisements sont écrits dans `data/monde.js`. C'est ce qui permet au
+// tutoriel de nommer des cellules précises et à l'usine de départ d'être posée
+// d'avance — la carte change autour d'eux, jamais sous eux.
 //
 // La graine est celle de la partie : à graine égale, carte égale. C'est ce qui
 // rend une carte rejouable et les outils reproductibles.
 
-import { COLONNES, LIGNES, CENTRE } from '../design.js';
+import { COLONNES, LIGNES } from '../design.js';
 import {
-  BIOMES, MATIERE_DE, FONDU, ONDULATION, PAS_ONDULATION, REGION_CENTRALE,
-  REGIONS_TIREES, REGIONS_GARANTIES, ECART_REGIONS, RAYON_CLAIRIERE, BOUQUETS, PAR_BOUQUET,
-  RAYON_BOUQUET, MINIMUM_PAR_MATIERE,
+  FONDU, ONDULATION, PAS_ONDULATION, BOUQUETS_PAR_ETAGE, PAR_BOUQUET,
+  RAYON_BOUQUET, RAYON_DEPART,
 } from '../data/biomes.js';
-import { GISEMENTS } from '../data/monde.js';
+import { ETAGES, HAUTEUR_ETAGE } from '../data/zones.js';
+import { GISEMENTS, PIED_DU_MONDE } from '../data/monde.js';
 
 // Un générateur reproductible et correctement mélangé : les bits de poids
 // faible d'un LCG naïf ne le sont pas, et la carte y ferait des rayures.
@@ -60,75 +66,76 @@ export function bruitLisse(x, y) {
   return haut + (bas - haut) * sy;
 }
 
-// Les deux régions les plus proches d'une cellule, et la part de la seconde.
-// C'est la seule chose qu'il faut savoir d'un sol : le rendu en tire une
-// teinte, le tirage des gisements en tire une matière.
-export function voisinage(regions, cx, cy) {
-  // La frontière ondule : sans ça, deux régions se partagent le sol le long
-  // d'une droite, et le passage d'un biome à l'autre se voit à la règle. Ce
-  // n'est pas la distance qu'on fausse mais la cellule : on la déplace d'un
-  // bruit doux avant de mesurer. Les taches gardent leur forme, leur bord
-  // serpente, et deux cellules voisines dérivent ensemble.
-  const x = cx + (bruitLisse(cx / PAS_ONDULATION, cy / PAS_ONDULATION) - 0.5) * 2 * ONDULATION;
-  const y = cy + (bruitLisse((cx + 97) / PAS_ONDULATION, (cy + 31) / PAS_ONDULATION) - 0.5) * 2 * ONDULATION;
-  let premiere = null;
-  let seconde = null;
-  for (const r of regions) {
-    const d = Math.abs(r.cx - x) + Math.abs(r.cy - y);
-    if (!premiere || d < premiere.d) { seconde = premiere; premiere = { r, d }; continue; }
-    if (!seconde || d < seconde.d) seconde = { r, d };
-  }
-  // À égale distance, moitié-moitié ; au-delà du fondu, la première seule.
-  const ecart = (seconde.d - premiere.d) / (2 * FONDU);
-  return { premiere: premiere.r, seconde: seconde.r, part: Math.max(0, 0.5 - ecart) };
+// --- les étages ------------------------------------------------------------
+
+// Les rangées d'un étage, et celle de son mur. L'étage 1 est en bas du monde :
+// on ne progresse que vers le haut. Le mur est la rangée qui le ferme, tout en
+// haut de sa bande — quand on est au pied de l'étage, on le voit.
+export function rangeesDe(n) {
+  const haut = LIGNES - n * HAUTEUR_ETAGE;
+  return { haut, bas: haut + HAUTEUR_ETAGE - 1, mur: haut };
 }
 
-// Le biome qui règne sur une cellule : celui des deux voisines qui l'emporte.
-export function biomeEn(regions, cx, cy) {
-  const { premiere, seconde, part } = voisinage(regions, cx, cy);
-  return part < 0.5 ? premiere.biome : seconde.biome;
+const dernier = ETAGES.length - 1;
+
+// L'indice de l'étage qui contient cette rangée. Prend un nombre continu : le
+// fondu entre deux bandes travaille entre les rangées.
+function indiceDe(y) {
+  const i = Math.floor((LIGNES - 1 - y) / HAUTEUR_ETAGE);
+  return Math.max(0, Math.min(dernier, i));
 }
 
-// Les régions : celle du milieu, puis des graines semées au hasard, en gardant
-// un écart minimal. On abandonne après un nombre d'essais raisonnable plutôt
-// que de boucler — une région de moins ne se voit pas, une page figée si.
-function semerRegions(tirer) {
-  const regions = [{ cx: CENTRE.cx, cy: CENTRE.cy, biome: REGION_CENTRALE.biome }];
-  const noms = Object.keys(BIOMES);
-  // Un plancher, mélangé : les premières régions posées se partagent les quatre
-  // biomes, deux fois chacun, dans un ordre tiré. Ensuite le tirage est libre.
-  // Leur place reste au hasard dans tous les cas — c'est la présence qui est
-  // garantie, pas la carte.
-  const dus = [];
-  for (let i = 0; i < REGIONS_GARANTIES; i++) dus.push(...noms);
-  for (let i = dus.length - 1; i > 0; i--) {
-    const j = Math.floor(tirer() * (i + 1));
-    [dus[i], dus[j]] = [dus[j], dus[i]];
-  }
-  for (let essais = 0; essais < REGIONS_TIREES * 40; essais++) {
-    if (regions.length > REGIONS_TIREES) break;
-    const cx = Math.floor(tirer() * COLONNES);
-    const cy = Math.floor(tirer() * LIGNES);
-    if (regions.some((r) => distance(r, { cx, cy }) < ECART_REGIONS)) continue;
-    const biome = dus.length > 0 ? dus.pop() : noms[Math.floor(tirer() * noms.length)];
-    regions.push({ cx, cy, biome });
-  }
-  return regions;
+// L'étage d'une cellule. Tout le reste du jeu passe par là plutôt que de
+// refaire la division.
+export function etageDe(cy) {
+  return ETAGES[indiceDe(cy)];
 }
 
-// Les gisements : ceux de la clairière tels quels, puis des bouquets semés
-// partout ailleurs. Chaque bouquet porte la matière du biome où tombe son
-// cœur — c'est ce qui fait qu'on sait où chercher rien qu'à la couleur du sol.
-function semerGisements(tirer, regions) {
+// Les deux biomes qui se disputent une cellule, et la part du second. C'est
+// tout ce qu'il faut savoir d'un sol : le rendu en tire une teinte.
+//
+// La frontière ondule : sans ça, deux bandes se partagent le sol le long d'une
+// droite, et le passage d'un biome à l'autre se voit à la règle. Ce n'est pas
+// la distance qu'on fausse mais la cellule : on la déplace d'un bruit doux
+// avant de regarder où elle tombe. Les bandes gardent leur hauteur, leur bord
+// serpente, et deux cellules voisines dérivent ensemble.
+export function voisinage(cx, cy) {
+  const y = cy + (bruitLisse(cx / PAS_ONDULATION, cy / PAS_ONDULATION) - 0.5) * 2 * ONDULATION;
+  const i = indiceDe(y);
+  // Les deux bords de la bande, et celui dont on est le plus près.
+  const versHaut = y - (LIGNES - (i + 1) * HAUTEUR_ETAGE - 0.5);
+  const versBas = (LIGNES - i * HAUTEUR_ETAGE - 0.5) - y;
+  const j = Math.max(0, Math.min(dernier, versHaut < versBas ? i + 1 : i - 1));
+  const d = Math.max(0, Math.min(versHaut, versBas));
+  // À cheval sur le bord, moitié-moitié ; au-delà du fondu, la bande seule.
+  return {
+    premiere: ETAGES[i].biome,
+    seconde: ETAGES[j].biome,
+    part: Math.max(0, 0.5 - d / (2 * FONDU)),
+  };
+}
+
+// Le biome qui règne sur une cellule : celui des deux voisins qui l'emporte.
+export function biomeEn(cx, cy) {
+  const { premiere, seconde, part } = voisinage(cx, cy);
+  return part < 0.5 ? premiere : seconde;
+}
+
+// --- les gisements ---------------------------------------------------------
+
+// Ceux du pied du monde tels quels, puis des bouquets dans chaque étage qui
+// porte une matière. Un bouquet ne déborde jamais de sa bande : c'est ce qui
+// fait qu'on sait où chercher quoi rien qu'à la hauteur où l'on est.
+function semerGisements(tirer) {
   const pris = new Set();
   const gisements = [];
-  // La clairière se refuse ici, et pas seulement au cœur du bouquet : un
-  // bouquet s'étale de deux cases, et ses bords tombaient dedans. Ses quatre
-  // gisements écrits doivent rester les plus proches — c'est toute la promesse
-  // du premier écran.
+  // Le pied du monde se refuse ici, et pas seulement au cœur du bouquet : un
+  // bouquet s'étale de deux cases, et ses bords tombaient dedans. Les
+  // gisements écrits doivent rester les plus proches du départ — c'est toute
+  // la promesse du premier écran.
   const poser = (cx, cy, item, ecrit = false) => {
     if (cx < 0 || cy < 0 || cx >= COLONNES || cy >= LIGNES) return;
-    if (!ecrit && distance({ cx, cy }, CENTRE) < RAYON_CLAIRIERE) return;
+    if (!ecrit && distance({ cx, cy }, PIED_DU_MONDE) < RAYON_DEPART) return;
     const cle = cx + ',' + cy;
     if (pris.has(cle)) return;
     pris.add(cle);
@@ -136,49 +143,34 @@ function semerGisements(tirer, regions) {
   };
   for (const g of GISEMENTS) poser(g.cx, g.cy, g.item, true);
 
-  for (let b = 0; b < BOUQUETS; b++) {
-    const cx = Math.floor(tirer() * COLONNES);
-    const cy = Math.floor(tirer() * LIGNES);
-    const item = MATIERE_DE[biomeEn(regions, cx, cy)];
-    if (!item) continue;
-    bouquet(tirer, cx, cy, item, poser);
-  }
-
-  // Aucune matière ne peut manquer. Un bouquet tombe où il tombe : garantir
-  // des régions ne garantit pas des gisements, et une graine sur cent donnait
-  // une carte à un seul arbre. On compte, et on complète au pied d'une région
-  // du bon biome — jamais dans la clairière, qui garde ses quatre.
-  const compte = {};
-  for (const g of gisements) compte[g.item] = (compte[g.item] || 0) + 1;
-  for (const biome of Object.keys(MATIERE_DE)) {
-    const item = MATIERE_DE[biome];
-    const siennes = regions.filter(
-      (r) => r.biome === biome && distance(r, CENTRE) >= RAYON_CLAIRIERE,
-    );
-    if (siennes.length === 0) continue;
-    for (let essais = 0; essais < 60 && (compte[item] || 0) < MINIMUM_PAR_MATIERE; essais++) {
-      const r = siennes[Math.floor(tirer() * siennes.length)];
-      const avant = gisements.length;
-      bouquet(tirer, r.cx, r.cy, item, poser);
-      compte[item] = (compte[item] || 0) + gisements.length - avant;
+  for (const etage of ETAGES) {
+    if (!etage.matiere) continue;
+    const { haut, bas } = rangeesDe(etage.n);
+    // La rangée du mur ne porte rien : on ne peut pas y bâtir, un gisement y
+    // serait un gisement qu'on regarde sans jamais le récolter.
+    const premiere = haut + 1;
+    for (let b = 0; b < BOUQUETS_PAR_ETAGE; b++) {
+      const cx = Math.floor(tirer() * COLONNES);
+      const cy = premiere + Math.floor(tirer() * (bas - premiere + 1));
+      bouquet(tirer, cx, cy, etage.matiere, premiere, bas, poser);
     }
   }
   return gisements;
 }
 
 // Un bouquet : quelques gisements de la même matière, serrés autour d'un cœur.
-function bouquet(tirer, cx, cy, item, poser) {
+// Il reste dans sa bande — un arbre au milieu des fraises dirait le contraire
+// de ce que le sol raconte.
+function bouquet(tirer, cx, cy, item, premiere, derniere, poser) {
   const [mini, maxi] = PAR_BOUQUET;
   const combien = mini + Math.floor(tirer() * (maxi - mini + 1));
   for (let i = 0; i < combien; i++) {
     const dx = Math.round((tirer() * 2 - 1) * RAYON_BOUQUET);
     const dy = Math.round((tirer() * 2 - 1) * RAYON_BOUQUET);
-    poser(cx + dx, cy + dy, item);
+    poser(cx + dx, Math.max(premiere, Math.min(derniere, cy + dy)), item);
   }
 }
 
 export function creerCarte(graine) {
-  const tirer = hasard(graine);
-  const regions = semerRegions(tirer);
-  return { regions, gisements: semerGisements(tirer, regions) };
+  return { gisements: semerGisements(hasard(graine)) };
 }

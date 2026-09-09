@@ -119,7 +119,6 @@ function decrire(partie) {
     graine: monde.graine,
     caisse: monde.caisse,
     decouvertes: monde.decouvertes,
-    regions: monde.regions,
     gisements: monde.gisements.map((g) => ({
       ou: cle(g), item: g.item, present: g.present, horloge: g.horloge,
       // L'extracteur retrouvé par sa case : un gisement qui perd le sien
@@ -205,9 +204,12 @@ const partieDe = (monde, camera, tutoriel) => ({
 // s'ils ne sont pas écrits, ils sont perdus, et rien d'autre ne le dirait.
 {
   const monde = creerMonde(DEPART, 1);
-  const plieuse = monde.scene.machines.find((m) => m.type === 'plieuse');
+  // L'usine de départ est celle de l'étage 1 : elle n'a ni plieuse ni trieur.
+  // On les pose à côté, hors de sa chaîne — ce qu'on éprouve ici, ce sont les
+  // trois réglages, pas la chaîne qui les porte.
+  const plieuse = ajouterMachine(monde.scene, 'plieuse', 30, 50);
   choisirRecette(plieuse, 'berlingot');
-  const trieur = ajouterMachine(monde.scene, 'trieur', 30, 30);
+  const trieur = ajouterMachine(monde.scene, 'trieur', 30, 53);
   trieur.matiereTriee = 'menthe';
   trieur.file.push('menthe', 'sucre', 'bois');
   monde.scene.machines.find((m) => m.type === 'chaufferie').pause = true;
@@ -300,10 +302,9 @@ const partieDe = (monde, camera, tutoriel) => ({
     const monde = {
       graine: 1,
       scene,
-      regions: [{ cx: 21, cy: 30, biome: 'terre' }],
       decouvertes: { sucre: true },
       caisse: 42,
-      gisements: [],
+      gisements: [{ cx: 21, cy: 58, item: 'sucre', present: true, horloge: 0, extracteur: null }],
     };
     pires = Math.max(pires, scene.convoyeurs.length);
     if (!eprouver(partieDe(monde), 'martelage #' + essai, 2)) break;
@@ -327,7 +328,7 @@ const partieDe = (monde, camera, tutoriel) => ({
   casser('un format d’un autre âge', (p) => { p.format = FORMAT + 1; });
   casser('pas de format du tout', (p) => { delete p.format; });
   casser('un monde absent', (p) => { delete p.monde; });
-  casser('une carte sans régions', (p) => { p.monde.regions = []; });
+  casser('une carte sans gisements', (p) => { p.monde.gisements = []; });
   casser('une machine inconnue', (p) => { p.monde.scene.machines[0].type = 'téléporteur'; });
   casser('une machine hors de la grille', (p) => { p.monde.scene.machines[0].cx = 999; });
   casser('une caisse absente', (p) => { delete p.monde.caisse; });

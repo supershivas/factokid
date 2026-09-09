@@ -12,20 +12,20 @@ import { creerCarte } from './carte.js';
 
 // `disposition` dit ce qui est déjà posé au premier instant : l'usine qui
 // tourne, ou la carte nue. C'est le scénario choisi qui l'apporte, avec la
-// graine de sa carte : deux parties de même graine ont le même sol et les
-// mêmes gisements, et la clairière du milieu ne change jamais.
+// graine de sa carte : deux parties de même graine ont les mêmes gisements, et
+// le pied du monde ne change jamais.
 //
-// Le monde garde ses régions : le rendu en tire la teinte de chaque cellule,
-// et il n'y a donc qu'une carte, pas une pour la simulation et une pour l'œil.
+// Le sol, lui, n'appartient plus à la partie : le biome d'une cellule est
+// donné par sa rangée, le monde se lisant en étages. Il n'y a donc plus de
+// régions à porter.
 export function creerMonde(disposition = DEPART, graine = 1) {
   const carte = creerCarte(graine);
   const monde = {
     // La graine de sa carte : le monde la garde parce que c'est elle qui le
-    // décrit. La sauvegarde écrit tout de même régions et gisements en clair —
-    // une partie doit survivre au jour où le tirage changera.
+    // décrit. La sauvegarde écrit tout de même les gisements en clair — une
+    // partie doit survivre au jour où le tirage changera.
     graine,
     scene: creerScene(),
-    regions: carte.regions,
     // Ce que le joueur a déjà tenu entre les mains, une fois : le livre des
     // matières s'en sert, et rien d'autre. C'est de l'état de partie — une
     // nouvelle partie repart d'un livre vide.

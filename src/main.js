@@ -11,7 +11,7 @@ import { marquerPose, majPoses } from './render/pose.js';
 import { presser, relacher, majAppuis } from './render/bouton.js';
 import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
-import { poserRegions } from './render/biome.js';
+import { oublierSol } from './render/biome.js';
 import { oublierMiniCarte } from './render/minicarte.js';
 import { dessinerChoix } from './render/choix.js';
 import { dessinerHalo, dessinerBandeau } from './render/tutoriel.js';
@@ -48,9 +48,9 @@ const jeu = {
     // neuve à chaque fois, les deux autres gardent la leur.
     const graine = scenario.graine === null ? (Date.now() & 0x7fffffff) : scenario.graine;
     jeu.monde = creerMonde(scenario.disposition, graine);
-    // Le sol appartient à la partie qui commence : le rendu oublie celui de la
-    // précédente et repeint à partir de ses régions.
-    poserRegions(jeu.monde.regions);
+    // Le sol se déduit de la rangée, mais il reste en cache : le rendu oublie
+    // celui de la partie précédente.
+    oublierSol();
     oublierMiniCarte();
     jeu.tutoriel = scenario.tutoriel ? creerTutoriel() : null;
     centrerCamera(scenario.disposition.regard.cx, scenario.disposition.regard.cy);
@@ -68,7 +68,7 @@ const jeu = {
     enAttente = null;
     jeu.monde = monde;
     jeu.tutoriel = tutoriel;
-    poserRegions(monde.regions);
+    oublierSol();
     oublierMiniCarte();
     poserCamera(regard);
     if (interfaceJeu) interfaceJeu.choix = null;

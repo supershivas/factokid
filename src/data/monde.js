@@ -5,9 +5,10 @@
 // première chaîne ; les autres sont loin, et c'est la distance qui fait la
 // progression — un gisement à vingt cases coûte vingt convoyeurs.
 //
-// Cette table ne contient plus que les quatre de la clairière. Tous les autres
-// sont engendrés (voir sim/carte.js) : le monde fait trente-six fenêtres, et
-// écrire ses cent gisements à la main serait les figer pour rien.
+// Cette table ne contient plus que les trois du pied du monde. Tous les autres
+// sont engendrés étage par étage (voir sim/carte.js) : le monde fait
+// trente-six fenêtres, et écrire ses cent gisements à la main serait les figer
+// pour rien.
 //
 // Les dimensions du monde vivent dans le design system, avec la fenêtre.
 
@@ -22,28 +23,26 @@ export const EXTRACTEUR = {
 
 export const REPOUSSE_TICKS = 90; // 1,5 s à 60 Hz
 
-// Le papier ne se ramasse plus : ce sont des arbres qui poussent là, et la
-// scierie en fait du papier.
+// Le pied du monde : le centre de l'étage 1, là où la partie commence. Rien
+// n'est tiré autour, et les gisements ci-dessous y sont écrits — c'est ce qui
+// permet au tutoriel de nommer des cellules précises et à l'usine de départ
+// d'être posée d'avance.
 //
-// Le cœur du monde est son centre : c'est là que la livraison se trouve et que
-// les quatre premiers gisements sont à portée de tapis.
-// Ailleurs, chaque gisement porte la matière de son biome : le sucre est dans
-// les plaines de sucre, la menthe dans les champs de menthe. La carte se lit
-// donc de loin — on sait où aller chercher quoi rien qu'à la couleur du sol.
+// Il a remplacé la clairière du centre du monde, qui avait un peu de tout : on
+// ne commence plus au milieu mais en bas, et l'étage 1 est le monde du sucre.
+// Il n'y a donc qu'une matière ici, et c'est tout ce qu'il faut — sucre,
+// chaufferie, livraison est déjà une usine qui rapporte.
+export const PIED_DU_MONDE = { cx: 21, cy: 55 };
+
+// Les gisements du départ. Ils sont à trois ou cinq cases de leurs machines :
+// un tapis de deux cases se vide en une seconde, et l'usine de départ avait
+// toujours l'air vide, quelle que soit la cadence. C'est la même règle que
+// partout ailleurs — la distance est la ressource, et c'est elle qui remplit
+// les tapis.
 //
-// Les quatre premiers font exception : ils sont dans la clairière de départ,
-// qui a un peu de tout. C'est ce qui permet de fabriquer un bonbon avant
-// d'avoir traversé quoi que ce soit.
-//
-// Ils ont été écartés de leurs machines : ils étaient à une ou deux cases, et
-// un tapis de deux cases se vide en une seconde — l'usine de départ avait
-// toujours l'air vide, quelle que soit la cadence. Ils sont maintenant à trois
-// ou cinq, et ce sont seize cases de tapis qui portent la matière brute au
-// lieu de six. C'est la même règle que partout ailleurs : la distance est la
-// ressource, et c'est elle qui remplit les tapis.
+// Tous les autres sont engendrés (voir sim/carte.js), étage par étage.
 export const GISEMENTS = [
-  { cx: 13, cy: 27, item: 'sucre' },
-  { cx: 19, cy: 23, item: 'fraise' },
-  { cx: 25, cy: 29, item: 'menthe' },
-  { cx: 23, cy: 35, item: 'bois' },
+  { cx: 15, cy: 54, item: 'sucre' },
+  { cx: 27, cy: 52, item: 'sucre' },
+  { cx: 21, cy: 58, item: 'sucre' },
 ];

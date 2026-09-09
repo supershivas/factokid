@@ -3,20 +3,30 @@
 //
 //   node outils/carte.mjs [combien]
 //
-// Depuis que la carte est tirée au sort, ce n'est plus une table qu'on relit
-// mais une promesse qu'on tient. Ce qu'elle promet :
+// Depuis que le monde se lit en étages, ce n'est plus une répartition qu'on
+// espère mais une promesse qu'on tient. Ce qu'elle promet :
 //
-//   1. la clairière ne change jamais — mêmes quatre gisements, même région de
-//      terre au centre, et rien d'autre de tiré dans son rayon ;
-//   2. aucune matière ne manque — une carte à un seul arbre est une chasse au
-//      trésor, pas une partie ;
-//   3. la carte est saine — pas deux gisements sur la même case, rien hors de
+//   1. le pied du monde ne change jamais — mêmes gisements écrits, et rien
+//      d'autre de tiré dans son rayon ;
+//   2. un étage, une matière — aucun gisement ne déborde de sa bande, et
+//      aucun ne porte autre chose que ce que son étage donne ;
+//   3. aucun étage à matière n'est pauvre : il ne peut pas manquer de sucre
+//      dans le monde du sucre ;
+//   4. la rangée du mur ne porte rien — un gisement qu'on ne peut pas
+//      atteindre est un gisement qu'on regarde ;
+//   5. la carte est saine — pas deux gisements sur la même case, rien hors de
 //      la grille, et une graine donne toujours la même carte.
 
-import { COLONNES, LIGNES, CENTRE } from '../src/design.js';
-import { creerCarte } from '../src/sim/carte.js';
-import { GISEMENTS } from '../src/data/monde.js';
-import { MATIERE_DE, MINIMUM_PAR_MATIERE, RAYON_CLAIRIERE } from '../src/data/biomes.js';
+import { COLONNES, LIGNES } from '../src/design.js';
+import { creerCarte, etageDe, rangeesDe } from '../src/sim/carte.js';
+import { GISEMENTS, PIED_DU_MONDE } from '../src/data/monde.js';
+import { ETAGES } from '../src/data/zones.js';
+import { RAYON_DEPART } from '../src/data/biomes.js';
+
+// Ce qu'un étage doit porter au minimum pour qu'on y bâtisse quelque chose.
+// Un tapis porte la récolte de dix extracteurs : bien en dessous de ça, un
+// étage devient une chasse au trésor, et ce n'est pas le jeu.
+const MINIMUM_PAR_ETAGE = 12;
 
 const COMBIEN = Number(process.argv[2] || 300);
 let echecs = 0;
@@ -24,59 +34,67 @@ const echec = (m) => { echecs++; console.log('  ✗ ' + m); };
 const cle = (g) => g.cx + ',' + g.cy;
 const distance = (a, b) => Math.abs(a.cx - b.cx) + Math.abs(a.cy - b.cy);
 
-const matieres = Object.values(MATIERE_DE);
-const clairiere = GISEMENTS.map((g) => cle(g) + ':' + g.item).join(' ');
+const depart = GISEMENTS.map((g) => cle(g) + ':' + g.item).join(' ');
+// Le plus pauvre des étages, toutes graines confondues : c'est lui qui dit si
+// une partie peut tourner court quelque part.
 const pires = {};
-for (const m of matieres) pires[m] = Infinity;
-let totalGisements = 0;
+for (const e of ETAGES) if (e.matiere) pires[e.n] = Infinity;
 
 for (let graine = 1; graine <= COMBIEN; graine++) {
   const carte = creerCarte(graine);
-  totalGisements += carte.gisements.length;
 
-  // 1. la clairière, intacte
-  const quatre = carte.gisements.slice(0, GISEMENTS.length).map((g) => cle(g) + ':' + g.item).join(' ');
-  if (quatre !== clairiere) echec(`graine ${graine} : la clairière a bougé — ${quatre}`);
-  const centre = carte.regions[0];
-  if (centre.cx !== CENTRE.cx || centre.cy !== CENTRE.cy || centre.biome !== 'terre') {
-    echec(`graine ${graine} : la région du milieu n'est plus la terre du centre`);
-  }
+  // 1. le pied du monde
+  const ecrits = carte.gisements.slice(0, GISEMENTS.length).map((g) => cle(g) + ':' + g.item).join(' ');
+  if (ecrits !== depart) echec(`graine ${graine} : le pied du monde a bougé — ${ecrits}`);
   for (const g of carte.gisements.slice(GISEMENTS.length)) {
-    if (distance(g, CENTRE) < RAYON_CLAIRIERE) {
-      echec(`graine ${graine} : un gisement tiré en ${cle(g)} est dans la clairière`);
-      break;
+    if (distance(g, PIED_DU_MONDE) < RAYON_DEPART) {
+      echec(`graine ${graine} : un gisement tiré en ${cle(g)} tombe dans le pied du monde`);
     }
   }
 
-  // 2. aucune matière ne manque
+  // 2 et 4. chacun dans son étage, et jamais sur un mur
   const compte = {};
-  for (const g of carte.gisements) compte[g.item] = (compte[g.item] || 0) + 1;
-  for (const m of matieres) {
-    const n = compte[m] || 0;
-    pires[m] = Math.min(pires[m], n);
-    if (n < MINIMUM_PAR_MATIERE) echec(`graine ${graine} : ${n} gisement(s) de ${m}`);
+  for (const g of carte.gisements) {
+    const etage = etageDe(g.cy);
+    if (!etage.matiere) { echec(`graine ${graine} : un gisement à l'étage ${etage.n}, qui ne donne rien`); continue; }
+    if (g.item !== etage.matiere) {
+      echec(`graine ${graine} : du ${g.item} à l'étage ${etage.n}, qui donne ${etage.matiere}`);
+    }
+    if (g.cy === rangeesDe(etage.n).mur) {
+      echec(`graine ${graine} : un gisement en ${cle(g)}, sur la rangée du mur`);
+    }
+    compte[etage.n] = (compte[etage.n] || 0) + 1;
   }
 
-  // 3. la carte est saine
+  // 3. aucun étage pauvre
+  for (const e of ETAGES) {
+    if (!e.matiere) continue;
+    const n = compte[e.n] || 0;
+    pires[e.n] = Math.min(pires[e.n], n);
+    if (n < MINIMUM_PAR_ETAGE) echec(`graine ${graine} : ${n} gisement(s) à l'étage ${e.n}`);
+  }
+
+  // 5. la carte est saine
   const vues = new Set();
   for (const g of carte.gisements) {
-    if (vues.has(cle(g))) { echec(`graine ${graine} : deux gisements en ${cle(g)}`); break; }
+    if (vues.has(cle(g))) echec(`graine ${graine} : deux gisements en ${cle(g)}`);
     vues.add(cle(g));
     if (g.cx < 0 || g.cy < 0 || g.cx >= COLONNES || g.cy >= LIGNES) {
-      echec(`graine ${graine} : un gisement en ${cle(g)} est hors de la grille`);
-      break;
+      echec(`graine ${graine} : un gisement hors de la grille en ${cle(g)}`);
     }
+  }
+
+  // la même graine, la même carte
+  const encore = creerCarte(graine);
+  if (JSON.stringify(encore.gisements) !== JSON.stringify(carte.gisements)) {
+    echec(`graine ${graine} : deux tirages, deux cartes`);
   }
 }
 
-// La même graine doit rendre la même carte : c'est ce qui rend une partie
-// rejouable et cet outil reproductible.
-const a = JSON.stringify(creerCarte(7));
-const b = JSON.stringify(creerCarte(7));
-if (a !== b) echec('deux cartes de même graine diffèrent');
-
-console.log(`${COMBIEN} cartes — ${(totalGisements / COMBIEN).toFixed(0)} gisements en moyenne`);
-console.log('  au pire :', matieres.map((m) => `${m} ${pires[m]}`).join(', '),
-  `(plancher ${MINIMUM_PAR_MATIERE})`);
+console.log(
+  COMBIEN + ' cartes',
+  '— au pire par étage : ' + Object.entries(pires).map(([n, v]) => 'étage ' + n + ' ' + v).join(', '),
+  `(plancher ${MINIMUM_PAR_ETAGE})`,
+);
 console.log(echecs === 0 ? '\n✓ toutes les cartes tiennent' : `\n✗ ${echecs} problème(s)`);
 process.exit(echecs === 0 ? 0 : 1);

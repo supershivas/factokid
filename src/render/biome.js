@@ -1,13 +1,15 @@
 // Le sol de la carte : la teinte de chaque cellule, et la tuile qui va avec.
 // Pure présentation — la simulation ne sait pas qu'il existe des biomes.
 //
-// Une cellule appartient à la région la plus proche. Quand deux régions se la
-// disputent, sa teinte est le mélange des deux : c'est tout ce qu'un passage
-// demande, il n'y a aucune tuile de raccord à dessiner.
+// Le biome d'une cellule est donné par sa rangée : le monde se lit en étages.
+// Aux abords d'une frontière, deux bandes se disputent la cellule et sa teinte
+// est le mélange des deux — c'est tout ce qu'un passage demande, il n'y a
+// aucune tuile de raccord à dessiner.
 //
-// Les régions sont celles de la partie en cours, tirées à sa création : le
-// rendu ne les invente pas, il les reçoit par `poserRegions()` — sinon le sol
-// d'une carte resterait affiché sur la suivante.
+// Le sol est donc une fonction de la cellule, et rien d'autre : il n'y a plus
+// de régions à recevoir. Ce qui est peint reste en cache, et `oublierSol()` le
+// jette quand une autre partie commence — la graine ne change plus le sol,
+// mais elle change les gisements, et le cache tient les deux.
 
 import { PALETTE, TUILE_PX, COLONNES, LIGNES } from '../design.js';
 import { BIOMES, NUANCES, TEXTURE } from '../data/biomes.js';
@@ -140,20 +142,17 @@ function varianteDe(cx, cy) {
 
 const sols = new Array(COLONNES * LIGNES).fill(null);
 const teintes = new Array(COLONNES * LIGNES).fill(null);
-let regions = [];
 
-// Les régions de la partie qui commence. Tout ce qui était peint appartenait à
-// la précédente : on l'oublie.
-export function poserRegions(nouvelles) {
-  regions = nouvelles;
+// Une autre partie commence : ce qui était peint ne vaut plus rien.
+export function oublierSol() {
   sols.fill(null);
   teintes.fill(null);
 }
 
 function preparer(cx, cy) {
-  const { premiere, seconde, part } = voisinage(regions, cx, cy);
-  const a = BIOMES[premiere.biome];
-  const b = BIOMES[seconde.biome];
+  const { premiere, seconde, part } = voisinage(cx, cy);
+  const a = BIOMES[premiere];
+  const b = BIOMES[seconde];
   const n = nuanceDe(cx, cy);
   const fond = melange(teinte(a.couleur, NUANCES[n]), teinte(b.couleur, NUANCES[n]), part);
   // La texture est celle du biome qui domine : elle bascule d'un coup là où la

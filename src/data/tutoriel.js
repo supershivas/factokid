@@ -2,10 +2,20 @@
 // logique ici — `epreuve` nomme ce qu'il faut avoir fait, et src/tutoriel.js
 // sait le reconnaître.
 //
-// Le tutoriel va jusqu'au bout : à la dernière étape, l'usine tourne et livre
-// ses bonbons. Il bâtit exactement la chaîne de l'essai « usine qui tourne »,
-// case par case — ce qu'on obtient à la fin est ce que cet essai donne tout
-// fait. Qui n'en veut pas le passe d'un bouton.
+// Il se joue au pied du monde, à l'étage 1 : le monde du sucre. Il n'a plus à
+// enseigner les quatre matières d'un coup — ce sont les murs qui les
+// présentent une par une —, et il a rétréci d'autant : dix-sept étapes sont
+// devenues treize, et la chaîne de sept machines une chaîne de deux.
+//
+// Ce qu'il montre tient en une phrase : **une branche, puis la même deux fois
+// de plus.** Extracteur, chaufferie, livraison — c'est le noyau qui rapporte,
+// et le reste du jeu n'est que ça, en plus grand. Rien n'est à comprendre de
+// neuf entre la première branche et la troisième, seulement à en vouloir
+// davantage : c'est exactement ce qu'un mur demandera.
+//
+// Il bâtit exactement la chaîne de l'essai « usine qui tourne », case par
+// case — ce qu'on obtient à la fin est ce que cet essai donne tout fait. Qui
+// n'en veut pas le passe d'un bouton.
 //
 // Quatre épreuves, et pas une de plus :
 //
@@ -13,169 +23,135 @@
 //   `machine`    — une machine de ce type occupe la case `cible` ;
 //   `lien`       — des tapis mènent de la machine `de` à la machine `a`,
 //                  branches comprises ;
-//   `livre`      — la livraison a reçu son premier bonbon.
+//   `livre`      — la livraison a reçu sa première pièce.
 //
-// `cibles` : les cellules que le halo montre. `icone` : ce qu'il y a à poser,
-// avec le dessin exact de sa bulle dans le menu de construction.
+// `cibles` : les cellules que le halo montre — pour un lien, les deux machines
+// qu'on relie et tout ce qui passe entre elles. `icone` : ce qu'il y a à
+// poser, avec le dessin exact de sa bulle dans le menu de construction.
 
 export const TUTORIEL = [
+  // --- la première branche : c'est déjà une usine qui rapporte -------------
   {
     id: 'extracteur-sucre',
     nom: 'pose un extracteur sur le sucre',
     icone: 'bulleExtracteur',
-    cibles: [{ cx: 13, cy: 27 }],
+    cibles: [{ cx: 15, cy: 54 }],
     epreuve: 'extracteur',
-    cible: { cx: 13, cy: 27 },
+    cible: { cx: 15, cy: 54 },
   },
   {
     id: 'chaufferie',
-    nom: 'pose une chaufferie ici',
+    nom: 'la chaufferie fond le sucre',
     icone: 'bulleChaufferie',
-    cibles: [{ cx: 17, cy: 27 }],
+    cibles: [{ cx: 19, cy: 54 }],
     epreuve: 'machine',
     machine: 'chaufferie',
-    cible: { cx: 17, cy: 27 },
+    cible: { cx: 19, cy: 54 },
   },
   {
     id: 'tapis-sucre',
     nom: 'glisse le doigt de l’un à l’autre',
     icone: 'bulleConvoyeur',
     cibles: [
-      { cx: 13, cy: 27 }, { cx: 14, cy: 27 }, { cx: 15, cy: 27 },
-      { cx: 16, cy: 27 }, { cx: 17, cy: 27 },
+      { cx: 15, cy: 54 }, { cx: 16, cy: 54 }, { cx: 17, cy: 54 },
+      { cx: 18, cy: 54 }, { cx: 19, cy: 54 },
     ],
     epreuve: 'lien',
-    de: { cx: 13, cy: 27 },
-    a: { cx: 17, cy: 27 },
-  },
-  {
-    id: 'confiserie',
-    nom: 'la confiserie va faire les pastilles',
-    icone: 'bulleConfiserie',
-    cibles: [{ cx: 19, cy: 29 }],
-    epreuve: 'machine',
-    machine: 'confiserie',
-    cible: { cx: 19, cy: 29 },
+    de: { cx: 15, cy: 54 },
+    a: { cx: 19, cy: 54 },
   },
   {
     id: 'tapis-caramel',
-    nom: 'porte le caramel à la confiserie',
+    nom: 'porte le caramel à la livraison',
     icone: 'bulleConvoyeur',
-    cibles: [{ cx: 17, cy: 28 }, { cx: 17, cy: 29 }, { cx: 18, cy: 29 }, { cx: 19, cy: 29 }],
+    cibles: [{ cx: 19, cy: 54 }, { cx: 20, cy: 54 }, { cx: 21, cy: 54 }],
     epreuve: 'lien',
-    de: { cx: 17, cy: 27 },
-    a: { cx: 19, cy: 29 },
+    de: { cx: 19, cy: 54 },
+    a: { cx: 21, cy: 54 },
   },
   {
-    id: 'extracteur-fraise',
-    nom: 'il faut aussi des fraises',
-    icone: 'bulleExtracteur',
-    cibles: [{ cx: 19, cy: 23 }],
-    epreuve: 'extracteur',
-    cible: { cx: 19, cy: 23 },
-  },
-  {
-    id: 'tapis-fraise',
-    nom: 'descends-les vers la confiserie',
-    icone: 'bulleConvoyeur',
-    cibles: [
-      { cx: 19, cy: 23 }, { cx: 19, cy: 24 }, { cx: 19, cy: 25 }, { cx: 19, cy: 26 },
-      { cx: 19, cy: 27 }, { cx: 19, cy: 28 }, { cx: 19, cy: 29 },
-    ],
-    epreuve: 'lien',
-    de: { cx: 19, cy: 23 },
-    a: { cx: 19, cy: 29 },
-  },
-  {
-    id: 'extracteur-menthe',
-    nom: 'et de la menthe',
-    icone: 'bulleExtracteur',
-    cibles: [{ cx: 25, cy: 29 }],
-    epreuve: 'extracteur',
-    cible: { cx: 25, cy: 29 },
-  },
-  {
-    id: 'tapis-menthe',
-    nom: 'ramène-la de l’autre côté',
-    icone: 'bulleConvoyeur',
-    cibles: [
-      { cx: 25, cy: 29 }, { cx: 24, cy: 29 }, { cx: 23, cy: 29 },
-      { cx: 22, cy: 29 }, { cx: 21, cy: 29 }, { cx: 20, cy: 29 }, { cx: 19, cy: 29 },
-    ],
-    epreuve: 'lien',
-    de: { cx: 25, cy: 29 },
-    a: { cx: 19, cy: 29 },
-  },
-  {
-    id: 'plieuse',
-    nom: 'la plieuse emballe les bonbons',
-    icone: 'bulliePlieuse',
-    cibles: [{ cx: 21, cy: 31 }],
-    epreuve: 'machine',
-    machine: 'plieuse',
-    cible: { cx: 21, cy: 31 },
-  },
-  {
-    id: 'tapis-pastille',
-    nom: 'porte les pastilles à la plieuse',
-    icone: 'bulleConvoyeur',
-    cibles: [{ cx: 19, cy: 30 }, { cx: 20, cy: 30 }, { cx: 20, cy: 31 }, { cx: 21, cy: 31 }],
-    epreuve: 'lien',
-    de: { cx: 19, cy: 29 },
-    a: { cx: 21, cy: 31 },
-  },
-  {
-    id: 'extracteur-bois',
-    nom: 'abats cet arbre pour son bois',
-    icone: 'bulleExtracteur',
-    cibles: [{ cx: 23, cy: 35 }],
-    epreuve: 'extracteur',
-    cible: { cx: 23, cy: 35 },
-  },
-  {
-    id: 'scierie',
-    nom: 'la scierie en fera du papier',
-    icone: 'bulleScierie',
-    cibles: [{ cx: 22, cy: 32 }],
-    epreuve: 'machine',
-    machine: 'scierie',
-    cible: { cx: 22, cy: 32 },
-  },
-  {
-    id: 'tapis-bois',
-    nom: 'porte le bois à la scierie',
-    icone: 'bulleConvoyeur',
-    cibles: [
-      { cx: 23, cy: 35 }, { cx: 23, cy: 34 }, { cx: 23, cy: 33 },
-      { cx: 23, cy: 32 }, { cx: 22, cy: 32 },
-    ],
-    epreuve: 'lien',
-    de: { cx: 23, cy: 35 },
-    a: { cx: 22, cy: 32 },
-  },
-  {
-    id: 'tapis-papier',
-    nom: 'et le papier à la plieuse',
-    icone: 'bulleConvoyeur',
-    cibles: [{ cx: 22, cy: 31 }, { cx: 21, cy: 31 }],
-    epreuve: 'lien',
-    de: { cx: 22, cy: 32 },
-    a: { cx: 21, cy: 31 },
-  },
-  {
-    id: 'tapis-livraison',
-    nom: 'livre enfin tes bonbons',
-    icone: 'bulleConvoyeur',
-    cibles: [{ cx: 21, cy: 32 }, { cx: 21, cy: 33 }],
-    epreuve: 'lien',
-    de: { cx: 21, cy: 31 },
-    a: { cx: 21, cy: 33 },
-  },
-  {
-    id: 'bonbon',
-    nom: 'ton usine tourne !',
-    icone: 'bonbon',
-    cibles: [{ cx: 21, cy: 33 }],
+    id: 'premier-caramel',
+    nom: 'elle t’achète ton caramel !',
+    icone: 'caramel',
+    cibles: [{ cx: 21, cy: 54 }],
     epreuve: 'livre',
+  },
+
+  // --- la deuxième : la même chose, en dessous -----------------------------
+  {
+    id: 'extracteur-sud',
+    nom: 'il y a d’autre sucre par là',
+    icone: 'bulleExtracteur',
+    cibles: [{ cx: 21, cy: 58 }],
+    epreuve: 'extracteur',
+    cible: { cx: 21, cy: 58 },
+  },
+  {
+    id: 'chaufferie-sud',
+    nom: 'une chaufferie pour lui aussi',
+    icone: 'bulleChaufferie',
+    cibles: [{ cx: 21, cy: 56 }],
+    epreuve: 'machine',
+    machine: 'chaufferie',
+    cible: { cx: 21, cy: 56 },
+  },
+  {
+    id: 'tapis-sucre-sud',
+    nom: 'relie-les',
+    icone: 'bulleConvoyeur',
+    cibles: [{ cx: 21, cy: 58 }, { cx: 21, cy: 57 }, { cx: 21, cy: 56 }],
+    epreuve: 'lien',
+    de: { cx: 21, cy: 58 },
+    a: { cx: 21, cy: 56 },
+  },
+  {
+    id: 'tapis-caramel-sud',
+    nom: 'et remonte le caramel',
+    icone: 'bulleConvoyeur',
+    cibles: [{ cx: 21, cy: 56 }, { cx: 21, cy: 55 }, { cx: 21, cy: 54 }],
+    epreuve: 'lien',
+    de: { cx: 21, cy: 56 },
+    a: { cx: 21, cy: 54 },
+  },
+
+  // --- la troisième : plus loin, donc plus de tapis ------------------------
+  {
+    id: 'extracteur-est',
+    nom: 'encore du sucre, plus loin',
+    icone: 'bulleExtracteur',
+    cibles: [{ cx: 27, cy: 52 }],
+    epreuve: 'extracteur',
+    cible: { cx: 27, cy: 52 },
+  },
+  {
+    id: 'chaufferie-est',
+    nom: 'sa chaufferie, tout près',
+    icone: 'bulleChaufferie',
+    cibles: [{ cx: 25, cy: 52 }],
+    epreuve: 'machine',
+    machine: 'chaufferie',
+    cible: { cx: 25, cy: 52 },
+  },
+  {
+    id: 'tapis-sucre-est',
+    nom: 'relie-les',
+    icone: 'bulleConvoyeur',
+    cibles: [{ cx: 27, cy: 52 }, { cx: 26, cy: 52 }, { cx: 25, cy: 52 }],
+    epreuve: 'lien',
+    de: { cx: 27, cy: 52 },
+    a: { cx: 25, cy: 52 },
+  },
+  {
+    id: 'tapis-caramel-est',
+    nom: 'ton usine tourne !',
+    icone: 'bulleConvoyeur',
+    cibles: [
+      { cx: 25, cy: 52 }, { cx: 25, cy: 53 }, { cx: 24, cy: 53 },
+      { cx: 23, cy: 53 }, { cx: 22, cy: 53 }, { cx: 22, cy: 54 },
+      { cx: 21, cy: 54 },
+    ],
+    epreuve: 'lien',
+    de: { cx: 25, cy: 52 },
+    a: { cx: 21, cy: 54 },
   },
 ];

@@ -27,7 +27,12 @@ import { MACHINES } from '../data/machines.js';
 // autrement ; une sauvegarde qui n'en porte pas le numéro courant est
 // illisible, et une sauvegarde illisible est écartée — mise de côté sous une
 // clé à part, jamais écrasée tout de suite, et annoncée par le bandeau.
-export const FORMAT = 1;
+//
+// 2 : le monde se lit en étages. Le sol n'appartient plus à la partie — le
+// biome d'une cellule est donné par sa rangée —, les régions ont donc disparu
+// de ce qu'on écrit. Les parties du format 1 se jouaient sur un autre monde :
+// elles ne sont pas migrables, et elles sont écartées.
+export const FORMAT = 2;
 
 const CLE = 'factokid.partie';
 const CLE_ECARTEE = 'factokid.partie.ecartee';
@@ -109,9 +114,8 @@ function serialiserScene(scene) {
 }
 
 // La partie entière : le monde, ce qu'on regarde, et où en est le premier
-// contact. La carte n'est pas rejouée depuis sa graine — ses régions et ses
-// gisements sont écrits tels quels, pour qu'une partie survive au jour où le
-// tirage changera.
+// contact. La carte n'est pas rejouée depuis sa graine — ses gisements sont
+// écrits tels quels, pour qu'une partie survive au jour où le tirage changera.
 export function serialiserPartie({ monde, camera, tutoriel }) {
   return {
     format: FORMAT,
@@ -121,7 +125,6 @@ export function serialiserPartie({ monde, camera, tutoriel }) {
       graine: monde.graine,
       caisse: monde.caisse,
       decouvertes: { ...monde.decouvertes },
-      regions: monde.regions.map((r) => ({ cx: r.cx, cy: r.cy, biome: r.biome })),
       gisements: monde.gisements.map((g) => ({
         cx: g.cx, cy: g.cy, item: g.item, present: g.present, horloge: g.horloge,
       })),
@@ -218,14 +221,12 @@ export function deserialiserPartie(brut) {
   exiger(brut.format === FORMAT, 'format ' + brut.format + ', attendu ' + FORMAT);
   exiger(brut.monde && brut.monde.scene, 'monde absent');
   const m = brut.monde;
-  exiger(Array.isArray(m.regions) && m.regions.length > 0, 'carte sans régions');
-  exiger(Array.isArray(m.gisements), 'carte sans gisements');
+  exiger(Array.isArray(m.gisements) && m.gisements.length > 0, 'carte sans gisements');
   exiger(Array.isArray(m.scene.machines) && Array.isArray(m.scene.convoyeurs), 'scène absente');
 
   const monde = {
     graine: m.graine,
     scene: relireScene(m.scene),
-    regions: m.regions.map((r) => ({ cx: r.cx, cy: r.cy, biome: r.biome })),
     decouvertes: { ...m.decouvertes },
     caisse: m.caisse,
     gisements: m.gisements.map((g) => ({

@@ -63,45 +63,33 @@ export const FONDU = 2;
 export const ONDULATION = 3;
 export const PAS_ONDULATION = 6;
 
-// Chaque région tire le sol à elle : une cellule appartient à la région la
-// plus proche, et se teinte des deux plus proches quand elles se disputent.
-//
-// Les régions ne sont plus écrites une par une : le monde fait trente-six
-// fenêtres, et les poser à la main revenait à dessiner la même carte pour
-// tout le monde, à jamais. Elles sont tirées au sort à la création de la
-// partie (voir sim/carte.js) — sauf celle du milieu, qui ne bouge pas.
-//
-// La clairière est la seule chose que la carte n'invente pas : c'est là que le
-// tutoriel se joue et que l'usine de départ est posée. Elle est de terre, elle
-// est au centre, et ses quatre gisements sont dans data/monde.js.
-export const REGION_CENTRALE = { biome: 'terre' };
+// --- les bandes ------------------------------------------------------------
 
-// Combien de régions sont tirées, et à quelle distance minimale les unes des
-// autres. Trop serrées, les biomes se hachent et le sol ne dit plus rien de
-// loin ; trop lâches, on marche dix écrans dans la même couleur.
-export const REGIONS_TIREES = 26;
-export const ECART_REGIONS = 6; // en cellules
+// Le biome d'une cellule est donné par sa rangée : le monde se lit en étages,
+// et c'est `data/zones.js` qui dit lequel porte quoi. Il n'y a plus de régions
+// tirées au hasard dans le plan, plus de garanties par matière, plus de
+// plancher de rattrapage — il ne peut pas manquer de sucre dans le monde du
+// sucre.
 
-// Combien de régions chaque biome reçoit d'office avant que le tirage soit
-// libre. Leur place, elle, reste tirée.
-export const REGIONS_GARANTIES = 2;
-
-// Autour de la clairière, on ne tire rien : ses quatre gisements doivent
-// rester les plus proches, sinon le premier écran ne raconte plus rien.
-export const RAYON_CLAIRIERE = 7; // en cellules
+// Autour du départ, à l'étage 1, on ne tire rien : les gisements écrits dans
+// data/monde.js doivent rester les plus proches, sinon le premier écran ne
+// raconte plus rien.
+export const RAYON_DEPART = 7; // en cellules
 
 // Les gisements ne sont pas semés un par un mais par bouquets : un arbre seul
 // au milieu de rien n'est pas une forêt, et c'est un bosquet qu'on veut
-// trouver au bout d'un tapis. Un bouquet tient dans son rayon, et porte la
-// matière du biome où tombe son cœur.
-// Le plancher qui compte vraiment : combien de gisements de chaque matière une
-// carte doit porter au minimum. Garantir des régions ne suffit pas — un
-// bouquet tombe où il tombe, et une graine sur cent donnait une carte à un
-// seul arbre. La partie n'y était pas perdue, les gisements de la clairière
-// repoussent, mais elle devenait une chasse au trésor : ce n'est pas le jeu.
-// On complète donc au pied d'une région du bon biome.
-export const MINIMUM_PAR_MATIERE = 12;
-
-export const BOUQUETS = 46;
+// trouver au bout d'un tapis. Un bouquet tient dans son rayon, ne sort jamais
+// de son étage, et porte la matière de celui-ci.
+//
+// Douze bouquets par étage font une trentaine de gisements sur ses cinq cents
+// cases — soit, à l'étage 1, de quoi nourrir bien plus d'extracteurs qu'un
+// tapis n'en peut porter. Ce n'est pas le nombre qui limite, c'est la
+// distance, et c'est ce qu'on veut.
+//
+// Neuf suffisaient partout ailleurs, mais pas à l'étage 1 : un bouquet qui
+// tombe dans le rayon du départ est perdu tout entier, et sur trois cents
+// graines le pire étage 1 descendait à douze gisements quand les autres en
+// gardaient vingt. À douze bouquets, le pire remonte à dix-neuf.
+export const BOUQUETS_PAR_ETAGE = 12;
 export const PAR_BOUQUET = [2, 5];  // combien de gisements, bornes comprises
 export const RAYON_BOUQUET = 2;     // en cellules
