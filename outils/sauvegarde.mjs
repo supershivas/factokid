@@ -27,6 +27,7 @@ import {
 } from '../src/sim/scene.js';
 import { pousser, peutAccepter } from '../src/sim/belt.js';
 import { choisirRecette } from '../src/sim/machine.js';
+import { poserMur } from '../src/sim/mur.js';
 import { lire } from '../src/sim/grid.js';
 import { serialiserPartie, deserialiserPartie, FORMAT } from '../src/save/run.js';
 import { problemes } from './invariants.mjs';
@@ -118,6 +119,7 @@ function decrire(partie) {
   return JSON.stringify({
     graine: monde.graine,
     caisse: monde.caisse,
+    etageOuvert: monde.etageOuvert,
     decouvertes: monde.decouvertes,
     gisements: monde.gisements.map((g) => ({
       ou: cle(g), item: g.item, present: g.present, horloge: g.horloge,
@@ -304,8 +306,13 @@ const partieDe = (monde, camera, tutoriel) => ({
       scene,
       decouvertes: { sucre: true },
       caisse: 42,
+      etageOuvert: 1,
       gisements: [{ cx: 21, cy: 58, item: 'sucre', present: true, horloge: 0, extracteur: null }],
     };
+    // Un monde monté à la main n'a pas posé son mur : la relecture, elle, le
+    // pose toujours. Sans ça les deux grilles diffèrent, et c'est l'outil qui
+    // ment, pas la sauvegarde.
+    poserMur(monde);
     pires = Math.max(pires, scene.convoyeurs.length);
     if (!eprouver(partieDe(monde), 'martelage #' + essai, 2)) break;
   }
@@ -329,6 +336,7 @@ const partieDe = (monde, camera, tutoriel) => ({
   casser('pas de format du tout', (p) => { delete p.format; });
   casser('un monde absent', (p) => { delete p.monde; });
   casser('une carte sans gisements', (p) => { p.monde.gisements = []; });
+  casser('un étage ouvert absent', (p) => { delete p.monde.etageOuvert; });
   casser('une machine inconnue', (p) => { p.monde.scene.machines[0].type = 'téléporteur'; });
   casser('une machine hors de la grille', (p) => { p.monde.scene.machines[0].cx = 999; });
   casser('une caisse absente', (p) => { delete p.monde.caisse; });

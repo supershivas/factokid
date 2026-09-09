@@ -14,6 +14,7 @@ import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
 import { attendus } from '../sim/machine.js';
 import { dessinerAlerte } from './alerte.js';
+import { dessinerMur } from './mur.js';
 import { chutePose } from './pose.js';
 import { dessinerChevrons, COULEUR_CHEVRON, COULEUR_CRETE } from './chevron.js';
 import { parcourirItems, celluleDe, destinations } from '../sim/belt.js';
@@ -514,6 +515,8 @@ export function dessinerScene(ctx, monde, trace, dessinerParticules) {
   // Les particules aussi vivent dans le monde : fumée et éclats restent sur la
   // case qui les a produits, même quand la fenêtre s'en va.
   if (dessinerParticules) dessinerParticules(ctx);
+  // Le mur passe au-dessus du monde : ce qu'il ferme est derrière lui.
+  dessinerMur(ctx, monde, f);
   dessinerAlertes(ctx, scene, f);
   if (trace && trace.actif) dessinerTrace(ctx, trace);
 

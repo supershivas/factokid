@@ -38,7 +38,11 @@ export const ETAGES = [
     ouvre: ['extracteur', 'chaufferie'],
     // Le mur demande le produit de l'étage qu'il ferme. Le caramel vaut 1 à la
     // livraison : le total livré au mur, lui, ne se dépense pas.
-    mur: { item: 'caramel', combien: 40 },
+    //
+    // Cent, mesuré (`node outils/mur.mjs`) : l'usine des trois branches que le
+    // tutoriel bâtit l'ouvre en une minute quarante, une branche seule en près
+    // de cinq. L'écart est le message — on n'attend pas, on agrandit.
+    mur: { item: 'caramel', combien: 100 },
   },
   {
     n: 2,

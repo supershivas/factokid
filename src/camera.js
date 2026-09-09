@@ -16,6 +16,17 @@ import {
 
 export const camera = { x: 0, y: 0, niveau: 0 };
 
+// La rangée la plus haute qu'on puisse regarder : celle du mur qui nous
+// arrête. Elle monte quand un mur tombe. Ce n'est pas la caméra qui le sait —
+// c'est le monde, et il le lui dit.
+let plafond = 0;
+
+export function poserPlafond(cy) {
+  plafond = cy;
+  const b = bornes();
+  camera.y = entre(camera.y, b.y0, b.y1);
+}
+
 // Combien d'unités d'écran vaut une unité du monde : 1 quand on bâtit, 1/2
 // quand on recule.
 export function echelle() {
@@ -45,11 +56,15 @@ export function vue() {
 function bornes() {
   const z = echelle();
   const v = vue();
+  // Le plafond est la rangée du mur : elle doit pouvoir venir dans la zone
+  // sûre, donc la caméra monte juste assez pour l'y amener, et pas plus. Au
+  // départ il vaut zéro, et on retrouve le bord du monde.
+  const haut = plafond * CELLULE - ZONE_SURE.haut / z;
   return {
     x0: 0,
     x1: Math.max(0, COLONNES * CELLULE - v.l),
-    y0: -ZONE_SURE.haut / z,
-    y1: Math.max(0, LIGNES * CELLULE - v.h) + ZONE_SURE.bas / z,
+    y0: haut,
+    y1: Math.max(haut, LIGNES * CELLULE - v.h + ZONE_SURE.bas / z),
   };
 }
 

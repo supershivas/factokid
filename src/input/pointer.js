@@ -30,6 +30,7 @@ import {
   prolongerConvoyeur, brancherConvoyeur, raccorderA, ajouterMachine, retirerMachine,
 } from '../sim/scene.js';
 import { gisementEn, poserExtracteur, retirerExtracteur } from '../sim/gisement.js';
+import { constructible } from '../sim/mur.js';
 import {
   camera, deplacerCamera, centrerCamera, versMonde, zoomer, reglerZoom,
 } from '../camera.js';
@@ -648,6 +649,9 @@ export function brancherPointeur(canvas, vue, jeu) {
       return;
     }
     if (!adjacentes(avant, c) || dejaTracee(c)) return;
+    // Derrière le mur, on ne trace pas. Sa rangée occupe déjà la grille, mais
+    // celles du dessus sont vides — et on les voit en reculant d'un cran.
+    if (!constructible(monde(), c.cy)) return;
     if (!celluleLibre(scene(), c.cx, c.cy)) {
       // Buter sur un convoyeur, c'est vouloir s'y raccorder : on retient le
       // point de contact, le doigt n'a pas besoin de viser plus juste.
@@ -693,6 +697,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   // dix d'affilée sans rouvrir le menu, et c'est l'outil main — ou un autre
   // élément — qui met fin au mode.
   function batirExtracteur(c) {
+    if (!constructible(monde(), c.cy)) return false;
     const g = gisementEn(monde(), c.cx, c.cy);
     if (!g || g.extracteur || !abordable('extracteur')) return false;
     if (!poserExtracteur(monde(), c.cx, c.cy)) return false;
@@ -706,6 +711,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   // Pose une machine sur une cellule libre. Comme l'extracteur, elle reste
   // choisie : dix confiseries se posent en dix appuis.
   function batirMachine(c, type) {
+    if (!constructible(monde(), c.cy)) return false;
     if (!celluleLibre(scene(), c.cx, c.cy)) return false;
     if (!payer(type)) return false;
     ajouterMachine(scene(), type, c.cx, c.cy, {});

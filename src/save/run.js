@@ -21,6 +21,7 @@ import { creerScene } from '../sim/scene.js';
 import { creerConvoyeur, majGeometrie } from '../sim/belt.js';
 import { creerMachine, choisirRecette } from '../sim/machine.js';
 import { poser, dansGrille } from '../sim/grid.js';
+import { poserMur } from '../sim/mur.js';
 import { MACHINES } from '../data/machines.js';
 
 // Le numéro de format de la sauvegarde. Il monte quand ce fichier écrit
@@ -124,6 +125,9 @@ export function serialiserPartie({ monde, camera, tutoriel }) {
     monde: {
       graine: monde.graine,
       caisse: monde.caisse,
+      // Jusqu'où les murs sont tombés. C'est la progression du jeu entier, et
+      // c'est un nombre.
+      etageOuvert: monde.etageOuvert,
       decouvertes: { ...monde.decouvertes },
       gisements: monde.gisements.map((g) => ({
         cx: g.cx, cy: g.cy, item: g.item, present: g.present, horloge: g.horloge,
@@ -229,11 +233,19 @@ export function deserialiserPartie(brut) {
     scene: relireScene(m.scene),
     decouvertes: { ...m.decouvertes },
     caisse: m.caisse,
+    etageOuvert: m.etageOuvert,
+    murTombe: null,
     gisements: m.gisements.map((g) => ({
       cx: g.cx, cy: g.cy, item: g.item, present: g.present, horloge: g.horloge, extracteur: null,
     })),
   };
   exiger(Number.isFinite(monde.caisse), 'caisse absente');
+  exiger(Number.isInteger(monde.etageOuvert) && monde.etageOuvert >= 1, 'étage ouvert absent');
+
+  // Le mur se repose sur la grille : il n'est pas écrit dans la sauvegarde,
+  // puisqu'il se déduit de l'étage ouvert. La grille, elle, est reconstruite
+  // de ce qui est posé dessus, et sans lui sa rangée serait libre.
+  poserMur(monde);
 
   // Un gisement retrouve son extracteur par sa case : c'est la machine posée
   // dessus, et il n'y en a jamais deux.

@@ -18,9 +18,12 @@ import { dessinerHalo, dessinerBandeau } from './render/tutoriel.js';
 import { creerDemarrage, avancerDemarrage, dessinerDemarrage } from './render/demarrage.js';
 import { spriteItem } from './render/sprites.js';
 import { creerMonde, majMonde } from './sim/world.js';
+import { plafond } from './sim/mur.js';
 import { creerTutoriel, majTutoriel, etapeCourante, avancement } from './tutoriel.js';
 import { SCENARIOS } from './data/scenarios.js';
-import { camera, centrerCamera, poserCamera, fenetreSure, celluleVisible } from './camera.js';
+import {
+  camera, centrerCamera, poserCamera, poserPlafond, fenetreSure, celluleVisible,
+} from './camera.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
 import { brancherPointeur } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
@@ -53,6 +56,9 @@ const jeu = {
     oublierSol();
     oublierMiniCarte();
     jeu.tutoriel = scenario.tutoriel ? creerTutoriel() : null;
+    // La caméra ne monte pas au-dessus du mur : c'est le monde qui dit
+    // jusqu'où on peut regarder, elle ne le devine pas.
+    poserPlafond(plafond(jeu.monde));
     centrerCamera(scenario.disposition.regard.cx, scenario.disposition.regard.cy);
     // L'écran des essais se referme, même quand l'essai est choisi d'ailleurs
     // que par le doigt — la sonde des outils de capture passe par ici aussi,
@@ -70,6 +76,7 @@ const jeu = {
     jeu.tutoriel = tutoriel;
     oublierSol();
     oublierMiniCarte();
+    poserPlafond(plafond(monde));
     poserCamera(regard);
     if (interfaceJeu) interfaceJeu.choix = null;
     return true;
@@ -202,6 +209,13 @@ demarrerBoucle(
     // l'arrête pas : il n'y a rien à arrêter tant qu'aucun monde n'existe.
     if (interfaceJeu.menuPause || !demarrage.fini || !jeu.monde) return;
     majMonde(jeu.monde, dt);
+    // Un mur est tombé : la vue monte d'un étage, et le bandeau le dit. La
+    // simulation ne fait que le poser — c'est ici qu'on l'apprend.
+    if (jeu.monde.murTombe) {
+      poserPlafond(plafond(jeu.monde));
+      annoncer('le mur s’ouvre !', 'vert');
+      jeu.monde.murTombe = null;
+    }
     const fetee = majTutoriel(jeu.tutoriel, jeu.monde, dt);
     // Une étape réussie se fête là où elle a eu lieu : le tutoriel ne dessine
     // rien, il dit seulement quelle case a bougé.

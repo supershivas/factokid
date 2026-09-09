@@ -16,7 +16,9 @@
 // une table, elle grossit avec le jeu.
 
 import { PALETTE, TAPIS, PIXEL, TUILE_PX, CELLULE, COLONNES, LIGNES, poserImage } from '../src/design.js';
-import { centrerCamera, fenetreSure, celluleVisible } from '../src/camera.js';
+import { ETAGES } from '../src/data/zones.js';
+import { murCourant, plafond } from '../src/sim/mur.js';
+import { centrerCamera, poserPlafond, fenetreSure, celluleVisible } from '../src/camera.js';
 import { MOTIFS } from '../src/render/motifs.js';
 import { ITEMS } from '../src/data/items.js';
 
@@ -223,20 +225,33 @@ for (const p of POSES.filter((x) => x.natif === 9 && x.rond !== false)) {
 // arrivée — la première et la dernière rangée restaient sous une incrustation
 // quoi qu'on fasse.
 //
-// La règle : toute cellule du monde doit pouvoir venir dans la zone sûre.
-console.log('\ntoute cellule peut venir dans la zone sûre');
+// La règle : toute cellule *ouverte* doit pouvoir venir dans la zone sûre —
+// et la rangée du mur avec elles, puisque c'est en la regardant qu'on voit ce
+// qu'il faut lui livrer. Ce qui est derrière ne se visite pas : c'est le
+// plafond de la caméra, et il monte d'un étage à chaque mur qui tombe.
+console.log('\ntoute cellule ouverte peut venir dans la zone sûre');
 {
-  const coins = [];
-  for (const cx of [0, 1, COLONNES - 2, COLONNES - 1]) {
-    for (const cy of [0, 1, LIGNES - 2, LIGNES - 1]) coins.push({ cx, cy });
-  }
   const perdues = [];
-  for (const c of coins) {
-    centrerCamera(c.cx, c.cy);
-    if (!celluleVisible(c.cx, c.cy, fenetreSure())) perdues.push(c.cx + ',' + c.cy);
+  for (let ouvert = 1; ouvert <= ETAGES.length; ouvert++) {
+    const monde = { etageOuvert: ouvert };
+    const mur = murCourant(monde);
+    poserPlafond(plafond(monde));
+    // Les quatre coins de ce qui est ouvert, la rangée du mur comprise.
+    const haut = mur ? mur.cy : 0;
+    const cibles = [];
+    for (const cx of [0, 1, COLONNES - 2, COLONNES - 1]) {
+      for (const cy of [haut, haut + 1, LIGNES - 2, LIGNES - 1]) cibles.push({ cx, cy });
+    }
+    for (const c of cibles) {
+      centrerCamera(c.cx, c.cy);
+      if (!celluleVisible(c.cx, c.cy, fenetreSure())) {
+        perdues.push(`étage ${ouvert} : ${c.cx},${c.cy}`);
+      }
+    }
   }
-  if (perdues.length > 0) echec(`hors d'atteinte : ${perdues.join(' ')}`);
-  else ok('les seize cellules des quatre coins se laissent regarder');
+  poserPlafond(0);
+  if (perdues.length > 0) echec(`hors d'atteinte : ${perdues.join(' | ')}`);
+  else ok(`les coins de chacun des ${ETAGES.length} étages se laissent regarder, murs compris`);
 }
 
 console.log(echecs === 0 ? '\n✓ tout se lit' : `\n✗ ${echecs} problème(s) de lisibilité`);

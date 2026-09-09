@@ -8,6 +8,7 @@ import { PALETTE, MINICARTE, MINICARTE_PAS, CELLULE, COLONNES, LIGNES } from '..
 import { ITEMS } from '../data/items.js';
 import { camera, vue } from '../camera.js';
 import { teinteSol } from './biome.js';
+import { murCourant } from '../sim/mur.js';
 
 const P = MINICARTE_PAS;
 
@@ -60,6 +61,22 @@ export function dessinerMiniCarte(ctx, monde) {
   ctx.fillStyle = PALETTE.creme;
   for (const m of monde.scene.machines) {
     ctx.fillRect(MINICARTE.x + m.cx * P, MINICARTE.y + m.cy * P, P, P);
+  }
+
+  // Les étages fermés s'éteignent, comme le livre des matières montre les
+  // silhouettes de ce qu'on n'a pas trouvé : on voit qu'il y a quelque chose
+  // là sans savoir encore quoi. C'est ce qui fait de la mini-carte la barre de
+  // progression du jeu entier — et le voile passe par-dessus les gisements,
+  // parce qu'un gisement qu'on ne peut pas atteindre n'est pas une adresse.
+  const mur = murCourant(monde);
+  if (mur) {
+    ctx.fillStyle = PALETTE.noir;
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(MINICARTE.x, MINICARTE.y, MINICARTE.l, mur.cy * P);
+    ctx.globalAlpha = 1;
+    // L'arête du mur : la ligne qu'on est en train de pousser vers le haut.
+    ctx.fillStyle = PALETTE.brume;
+    ctx.fillRect(MINICARTE.x, MINICARTE.y + mur.cy * P, MINICARTE.l, 1);
   }
 
   // Le cadre de la fenêtre : où l'on regarde, dans tout ça. La caméra déborde

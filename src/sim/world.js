@@ -9,6 +9,7 @@ import { DEPART } from '../data/depart.js';
 import { creerScene, ajouterMachine, poserConvoyeur, majScene, itemsDeScene } from './scene.js';
 import { creerGisements, majGisements, gisementEn, poserExtracteur } from './gisement.js';
 import { creerCarte } from './carte.js';
+import { poserMur, majMur } from './mur.js';
 
 // `disposition` dit ce qui est déjà posé au premier instant : l'usine qui
 // tourne, ou la carte nue. C'est le scénario choisi qui l'apporte, avec la
@@ -35,7 +36,19 @@ export function creerMonde(disposition = DEPART, graine = 1) {
     // livraison achète aussi le caramel et la pastille, pour bien moins.
     caisse: disposition.caisse || 0,
     gisements: creerGisements(carte),
+    // On ne progresse que vers le haut : au premier instant, seul l'étage du
+    // bas est ouvert. Un mur ferme les autres, et il demande le produit de
+    // l'étage qu'il ferme.
+    etageOuvert: 1,
+    // Ce qu'un mur vient d'ouvrir, que le monde pose et que l'écran relève —
+    // comme la caisse et le livre. La simulation ne fait rien savoir
+    // elle-même.
+    murTombe: null,
   };
+
+  // Le mur avant tout le reste : une disposition de départ ne doit jamais
+  // pouvoir bâtir sur sa rangée.
+  poserMur(monde);
 
   for (const e of disposition.extracteurs) poserExtracteur(monde, e.cx, e.cy);
 
@@ -60,6 +73,7 @@ export function majMonde(monde, dt) {
   majScene(monde.scene, dt);
   noterDecouvertes(monde);
   releverCaisse(monde);
+  majMur(monde);
 }
 
 // Ce que la livraison a payé depuis la dernière image. La machine met de côté,
