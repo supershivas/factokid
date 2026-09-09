@@ -20,6 +20,10 @@ import { creerCarte } from './carte.js';
 export function creerMonde(disposition = DEPART, graine = 1) {
   const carte = creerCarte(graine);
   const monde = {
+    // La graine de sa carte : le monde la garde parce que c'est elle qui le
+    // décrit. La sauvegarde écrit tout de même régions et gisements en clair —
+    // une partie doit survivre au jour où le tirage changera.
+    graine,
     scene: creerScene(),
     regions: carte.regions,
     // Ce que le joueur a déjà tenu entre les mains, une fois : le livre des
