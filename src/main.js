@@ -20,13 +20,14 @@ import { spriteItem } from './render/sprites.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { creerTutoriel, majTutoriel, etapeCourante, avancement } from './tutoriel.js';
 import { SCENARIOS } from './data/scenarios.js';
-import { centrerCamera, fenetreSure, celluleVisible } from './camera.js';
+import { camera, centrerCamera, poserCamera, fenetreSure, celluleVisible } from './camera.js';
 import { CELLULE, GRILLE_X, GRILLE_Y } from './design.js';
 import { brancherPointeur } from './input/pointer.js';
 import { demarrerBoucle } from './loop.js';
 import { creerVeille } from './maj.js';
 import { VERSION } from './data/version.js';
-import { majToast, dessinerToast } from './render/toast.js';
+import { lirePartie, ecrirePartie, effacerPartie } from './save/run.js';
+import { majToast, dessinerToast, annoncer } from './render/toast.js';
 
 const canvas = document.getElementById('jeu');
 const vue = creerVue(canvas);
@@ -58,14 +59,73 @@ const jeu = {
     // et l'entrée resterait sinon prise par un écran qu'on ne voit plus.
     if (interfaceJeu) interfaceJeu.choix = null;
   },
-  // Revenir aux essais : la partie est abandonnée, pas mise de côté. Rien ici
-  // n'est censé survivre — l'état permanent est ailleurs, et il n'existe pas
-  // encore.
-  oublier() { jeu.monde = null; jeu.tutoriel = null; },
+  // Reprendre la partie qui attendait : elle est relue telle qu'elle était,
+  // regard compris. Ce n'est pas un scénario de plus — rien n'est bâti, tout
+  // est retrouvé.
+  reprendre() {
+    if (!enAttente) return false;
+    const { monde, camera: regard, tutoriel } = enAttente;
+    enAttente = null;
+    jeu.monde = monde;
+    jeu.tutoriel = tutoriel;
+    poserRegions(monde.regions);
+    oublierMiniCarte();
+    poserCamera(regard);
+    if (interfaceJeu) interfaceJeu.choix = null;
+    return true;
+  },
+  // Revenir aux essais : la partie est abandonnée, pas mise de côté. Elle est
+  // donc effacée pour de bon — sans quoi l'écran des essais proposerait de
+  // reprendre ce que le joueur vient de quitter. L'état permanent est
+  // ailleurs, et il ne porte encore rien.
+  oublier() {
+    jeu.monde = null;
+    jeu.tutoriel = null;
+    enAttente = null;
+    effacerPartie();
+  },
 };
+
+// La partie qui attendait au lancement. Trois réponses possibles et pas
+// deux : rien, une partie, ou une sauvegarde qu'on ne sait pas relire — cette
+// dernière est écartée, mise de côté sous une clé à part, et annoncée. Elle ne
+// s'adresse pas à l'enfant, qui n'y peut rien, mais à l'adulte qui rapportera
+// le problème.
+const attendait = lirePartie();
+let enAttente = attendait.etat === 'lue' ? attendait.partie : null;
 
 const interfaceJeu = brancherPointeur(canvas, vue, jeu);
 const ctx = vue.ctx;
+
+if (attendait.etat === 'illisible') annoncer('partie illisible', 'orange');
+// La touche de reprise passe en tête des essais : elle ne remplace rien, elle
+// s'ajoute, et elle disparaît le jour où il n'y a plus rien à reprendre.
+if (enAttente) {
+  interfaceJeu.choix.unshift({
+    id: 'reprendre', nom: 'reprendre', icone: 'menuReprise', couleur: 'vert',
+  });
+}
+
+// La partie s'écrit toute seule, de temps en temps, et à chaque fois que
+// l'onglet part à l'arrière-plan. Écrire coûte moins d'un dixième de
+// milliseconde sur une usine de cinq minutes : la période n'est courte que
+// pour que rien ne se perde, pas pour ménager la machine.
+const PERIODE_SAUVEGARDE = 5; // secondes
+let horlogeSauvegarde = 0;
+
+function sauvegarder() {
+  if (!jeu.monde) return;
+  ecrirePartie({ monde: jeu.monde, camera, tutoriel: jeu.tutoriel });
+}
+
+// Cette écoute est posée avant celle de la veille, et l'ordre compte : quand
+// l'onglet passe à l'arrière-plan, la mise à jour recharge la page, et la
+// partie doit être écrite avant qu'elle le fasse.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') sauvegarder();
+});
+// Un téléphone ferme parfois l'onglet sans repasser par là.
+window.addEventListener('pagehide', sauvegarder);
 
 // La veille des mises à jour. Elle vit avec le rendu et non avec la
 // simulation : elle doit continuer de regarder quand le jeu est en pause, et
@@ -170,6 +230,14 @@ demarrerBoucle(
     majAppuis(dt);
     majVeille(dt);
     majToast(dt);
+
+    // On écrit entre deux images, jamais au milieu d'un pas de simulation :
+    // la partie est alors dans un état que la relecture retrouvera tel quel.
+    horlogeSauvegarde += dt;
+    if (horlogeSauvegarde >= PERIODE_SAUVEGARDE) {
+      horlogeSauvegarde = 0;
+      sauvegarder();
+    }
 
     // Pas encore d'essai choisi : l'écran des essais tient l'écran, et rien
     // d'autre n'existe.

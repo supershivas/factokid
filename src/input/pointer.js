@@ -527,7 +527,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     for (let j = 0; j < etat.choix.length; j++) {
       if (!dansRect(rectChoix(j), p.x, p.y)) continue;
       presser('essai:' + j);
-      jeu.choisir(etat.choix[j].id);
+      // Une partie qui attend est une entrée de plus, en tête : elle ne bâtit
+      // rien, elle reprend ce qui était là.
+      const id = etat.choix[j].id;
+      if (id === 'reprendre') jeu.reprendre(); else jeu.choisir(id);
       etat.choix = null;
       majBoutons();
       majMenuPause();

@@ -73,6 +73,17 @@ export function centrerCamera(cx, cy) {
   camera.y = entre((cy + 0.5) * CELLULE - v.h / 2, b.y0, b.y1);
 }
 
+// Remet la caméra où elle était : le regard d'une partie qu'on reprend. Le
+// niveau se pose avant les bornes, puisque ce sont elles qui en dépendent — et
+// on borne quand même, parce qu'une sauvegarde peut venir d'un monde dont les
+// bords ont bougé.
+export function poserCamera(regard) {
+  camera.niveau = Math.max(0, Math.min(ZOOMS.length - 1, regard.niveau || 0));
+  const b = bornes();
+  camera.x = entre(regard.x, b.x0, b.x1);
+  camera.y = entre(regard.y, b.y0, b.y1);
+}
+
 // Aller à un niveau donné. Ce qu'on avait au milieu de l'écran y reste : on
 // recule autour de ce qu'on regardait, on ne saute pas ailleurs.
 export function reglerZoom(niveau) {
