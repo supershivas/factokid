@@ -1,5 +1,5 @@
-// Le mur qui ferme un étage : sa rangée, ce qu'il y a derrière, et ce qu'il
-// demande. Ne modifie jamais l'état — il lit le monde et la caméra.
+// Le mur qui ferme un étage : sa rangée, sa réception, et ce qu'il y a
+// derrière. Ne modifie jamais l'état — il lit le monde et la caméra.
 //
 // Trois choses à dire, et pas une de plus :
 //
@@ -8,17 +8,22 @@
 //   — **il y a quelque chose derrière** : au-dessus du mur, le monde est
 //     éteint. On voit qu'il y a un étage là sans savoir encore ce qu'il donne,
 //     exactement comme le livre des matières montre ses silhouettes ;
-//   — **voilà ce qu'il veut** : la matière qu'il réclame, et une jauge qui se
-//     remplit. Un enfant regarde la jauge monter, il n'a pas à lire un compte.
+//   — **voilà où porter, et voilà ce qu'il veut** : trois cases creusées au
+//     milieu du mur, avec la matière réclamée et une jauge qui se remplit.
+//     C'est une machine de la scène : on y trace un tapis comme ailleurs.
 //
-// La plaque suit le milieu de l'écran : le mur fait quarante-deux cases de
-// large et la fenêtre en montre sept — une jauge posée une fois pour toutes
-// serait hors de vue neuf fois sur dix.
+// Le mur fait quarante-deux cases et la fenêtre en montre sept : sa réception
+// est donc presque toujours hors de vue. Une **flèche au bord de la zone
+// sûre** dit alors de quel côté elle est — c'est le seul repère du jeu qui
+// désigne un endroit du monde depuis l'écran.
 
-import { PALETTE, CELLULE, PIXEL, TUILE_PX, COLONNES } from '../design.js';
-import { coinCellule } from '../sim/grid.js';
-import { murCourant, avancementMur } from '../sim/mur.js';
-import { camera, vue } from '../camera.js';
+import {
+  PALETTE, CELLULE, PIXEL, TUILE_PX, COLONNES, LARGEUR_VUE, HAUTEUR_VUE,
+  GRILLE_X, GRILLE_Y, ZONE_SURE,
+} from '../design.js';
+import { coinCellule, centreCellule } from '../sim/grid.js';
+import { murCourant, avancementMur, recepteurDuMur } from '../sim/mur.js';
+import { versEcran } from '../camera.js';
 import { spriteItem } from './sprites.js';
 
 // Ce que le monde fermé garde de lumière. Assez pour qu'on distingue les
@@ -67,37 +72,106 @@ export function dessinerMur(ctx, monde, f) {
   }
 
   if (mur.cy < f.cy0 || mur.cy > f.cy1) return;
+  const recepteur = recepteurDuMur(monde);
+  const sienne = new Set((recepteur ? recepteur.cellules : []).map((c) => c.cx));
   for (let cx = f.cx0; cx <= f.cx1; cx++) {
+    if (sienne.has(cx)) continue;
     const coin = coinCellule(cx, mur.cy);
     ctx.drawImage(tuileMur, coin.x, coin.y, CELLULE, CELLULE);
   }
-  if (mur.etage.mur) dessinerDemande(ctx, monde, mur);
+  if (recepteur) dessinerRecepteur(ctx, monde, recepteur);
 }
 
-// Ce que le mur demande, posé sur lui, au milieu de ce qu'on regarde.
-const PLAQUE = { l: 96, h: 28 };
-const IMAGE = 18;   // la matière, à l'échelle 2 : neuf pixels d'art en font 18
-const JAUGE = { l: 54, h: 8 };
+// --- la réception ----------------------------------------------------------
 
-function dessinerDemande(ctx, monde, mur) {
-  const milieu = camera.x + vue().l / 2;
-  const coin = coinCellule(0, mur.cy);
-  // Sur la grille du pixel d'art : une plaque à cheval sur deux pixels serait
-  // floue à l'endroit précis où l'œil s'arrête.
-  const x = Math.round((milieu - PLAQUE.l / 2) / PIXEL) * PIXEL;
-  const y = coin.y + (CELLULE - PLAQUE.h) / 2;
+const IMAGE = 18;            // la matière : neuf pixels d'art à l'échelle 2
+const JAUGE = { h: 10 };
+const MARGE = 8;
+
+// Trois cases creusées dans le mur : un fond noir, une arête d'ardoise, la
+// matière réclamée et sa jauge. Les chevrons du bas disent par où ça entre —
+// c'est la seule chose qu'un enfant a besoin de comprendre ici.
+function dessinerRecepteur(ctx, monde, recepteur) {
+  const cellules = [...recepteur.cellules].sort((a, b) => a.cx - b.cx);
+  const coin = coinCellule(cellules[0].cx, cellules[0].cy);
+  const l = cellules.length * CELLULE;
 
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(x, y, PLAQUE.l, PLAQUE.h);
+  ctx.fillRect(coin.x, coin.y, l, CELLULE);
+  ctx.fillStyle = PALETTE.ardoise;
+  ctx.fillRect(coin.x, coin.y, l, PIXEL);
+  ctx.fillRect(coin.x, coin.y + CELLULE - PIXEL, l, PIXEL);
 
-  const image = spriteItem(mur.etage.mur.item);
-  if (image) ctx.drawImage(image, x + 6, y + (PLAQUE.h - IMAGE) / 2, IMAGE, IMAGE);
+  const image = spriteItem(recepteur.item);
+  if (image) ctx.drawImage(image, coin.x + MARGE, coin.y + (CELLULE - IMAGE) / 2, IMAGE, IMAGE);
 
-  const jx = x + 30;
-  const jy = y + (PLAQUE.h - JAUGE.h) / 2;
+  const jx = coin.x + MARGE + IMAGE + MARGE;
+  const jl = l - (jx - coin.x) - MARGE;
+  const jy = coin.y + (CELLULE - JAUGE.h) / 2;
   ctx.fillStyle = PALETTE.profond;
-  ctx.fillRect(jx, jy, JAUGE.l, JAUGE.h);
+  ctx.fillRect(jx, jy, jl, JAUGE.h);
   ctx.fillStyle = PALETTE.vert;
-  const part = avancementMur(monde);
-  ctx.fillRect(jx, jy, Math.round(JAUGE.l * part / PIXEL) * PIXEL, JAUGE.h);
+  ctx.fillRect(jx, jy, Math.round(jl * avancementMur(monde) / PIXEL) * PIXEL, JAUGE.h);
+
+  // Par où ça entre : trois chevrons qui montent, sur le bord du bas.
+  ctx.fillStyle = PALETTE.brume;
+  for (const c of cellules) {
+    const centre = coinCellule(c.cx, c.cy).x + CELLULE / 2;
+    for (let i = 0; i < 3; i++) {
+      ctx.fillRect(centre - PIXEL * (i + 1), coin.y + CELLULE - PIXEL * (2 + i), PIXEL, PIXEL);
+      ctx.fillRect(centre + PIXEL * i, coin.y + CELLULE - PIXEL * (2 + i), PIXEL, PIXEL);
+    }
+  }
+}
+
+// --- la flèche -------------------------------------------------------------
+
+// Dessinée en unités d'écran, hors du cadre du monde : elle appartient à
+// l'incrustation, pas à la carte. Elle ne sort donc jamais de la zone sûre.
+const FLECHE = { taille: 14, marge: 20, ecart: 6 };
+
+export function dessinerRepereMur(ctx, monde) {
+  const recepteur = recepteurDuMur(monde);
+  if (!recepteur) return;
+
+  const cible = versEcran(centreCellule(recepteur.cx, recepteur.cy));
+  const zone = {
+    x0: GRILLE_X + FLECHE.marge,
+    y0: GRILLE_Y + ZONE_SURE.haut + FLECHE.marge,
+    x1: GRILLE_X + LARGEUR_VUE - FLECHE.marge,
+    y1: GRILLE_Y + HAUTEUR_VUE - ZONE_SURE.bas - FLECHE.marge,
+  };
+  // Elle est sous les yeux : rien à montrer.
+  if (cible.x >= zone.x0 && cible.x <= zone.x1 && cible.y >= zone.y0 && cible.y <= zone.y1) return;
+
+  const x = Math.max(zone.x0, Math.min(zone.x1, cible.x));
+  const y = Math.max(zone.y0, Math.min(zone.y1, cible.y));
+  const dx = cible.x - x;
+  const dy = cible.y - y;
+  const norme = Math.hypot(dx, dy) || 1;
+  const ux = dx / norme;
+  const uy = dy / norme;
+
+  // La matière derrière la pointe : la flèche dit où, l'image dit quoi.
+  const image = spriteItem(recepteur.item);
+  if (image) {
+    ctx.drawImage(
+      image,
+      Math.round(x - ux * (FLECHE.taille + FLECHE.ecart + IMAGE / 2) - IMAGE / 2),
+      Math.round(y - uy * (FLECHE.taille + FLECHE.ecart + IMAGE / 2) - IMAGE / 2),
+      IMAGE, IMAGE,
+    );
+  }
+
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.atan2(uy, ux));
+  ctx.fillStyle = PALETTE.creme;
+  ctx.beginPath();
+  ctx.moveTo(FLECHE.taille / 2, 0);
+  ctx.lineTo(-FLECHE.taille / 2, -FLECHE.taille / 2);
+  ctx.lineTo(-FLECHE.taille / 2, FLECHE.taille / 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }

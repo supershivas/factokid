@@ -53,6 +53,23 @@ export const MACHINES = {
     vapeur: true,       // souffle en sortant son bonbon
     capacite: 8,
   },
+  // La réception du mur : trois cases au milieu de sa rangée, qui prennent ce
+  // qu'il réclame. Elle ne se construit pas et ne se détruit pas — elle
+  // appartient au mur, elle arrive et repart avec lui.
+  //
+  // Elle n'est pas la livraison : celle-ci achète et remplit la caisse, la
+  // réception avale et ne paie rien. Deux endroits, deux rôles — c'est ce qui
+  // fait qu'ouvrir un mur se décide, et se tire au tapis.
+  recepteur: {
+    id: 'recepteur',
+    description: 'le mur réclame {matiere}, et ne paie rien',
+    nom: 'réception du mur',
+    a: 'à la ',
+    recepteur: true,
+    largeur: 3,        // en cellules, à cheval sur le milieu du mur
+    capacite: 8,
+    ticksParItem: 6,   // elle avale vite : ce n'est pas elle le goulot
+  },
   livraison: {
     id: 'livraison',
     description: 'achète le {caramel}, la {pastille} et les {bonbon|bonbons}',

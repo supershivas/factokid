@@ -118,19 +118,34 @@ function peutPrendre(machine, convoyeur) {
 // pendant de la règle inverse — un extracteur posé devant un tapis s'y
 // raccorde tout seul — et sans lui, poser une machine devant un tapis qui la
 // visait déjà donnait le même tapis branché pour l'œil et mort pour elle.
-function raccorderCeQuiVise(scene, machine) {
+function raccorderCeQuiVise(scene, machine, cellules = [machine]) {
   if (maxEntrees(machine) === 0) return;
-  const voisines = [
-    { cx: machine.cx, cy: machine.cy - 1 }, { cx: machine.cx + 1, cy: machine.cy },
-    { cx: machine.cx, cy: machine.cy + 1 }, { cx: machine.cx - 1, cy: machine.cy },
-  ];
-  for (const c of voisines) {
-    const convoyeur = convoyeurEn(scene, c.cx, c.cy);
-    if (!convoyeur || !vise(convoyeur, machine.cx, machine.cy)) continue;
-    if (!peutPrendre(machine, convoyeur)) continue;
-    machine.entrees.push(convoyeur);
-    reconstruire(convoyeur, convoyeur.chemin, machine);
+  for (const cellule of cellules) {
+    const voisines = [
+      { cx: cellule.cx, cy: cellule.cy - 1 }, { cx: cellule.cx + 1, cy: cellule.cy },
+      { cx: cellule.cx, cy: cellule.cy + 1 }, { cx: cellule.cx - 1, cy: cellule.cy },
+    ];
+    for (const c of voisines) {
+      const convoyeur = convoyeurEn(scene, c.cx, c.cy);
+      if (!convoyeur || !vise(convoyeur, cellule.cx, cellule.cy)) continue;
+      if (!peutPrendre(machine, convoyeur)) continue;
+      machine.entrees.push(convoyeur);
+      reconstruire(convoyeur, convoyeur.chemin, machine);
+    }
   }
+}
+
+// Une machine plus large qu'une cellule : elle en occupe d'autres, et chacune
+// se touche comme la première. C'est la réception du mur, et c'est tout pour
+// l'instant — une machine ordinaire tient dans sa case, et c'est ce qui rend
+// la grille simple.
+//
+// La grille rend la même machine pour chacune de ses cellules : le tracé, le
+// raccord et le rendu n'ont donc rien appris de neuf.
+export function etendreMachine(scene, machine, cellules) {
+  for (const c of cellules) poser(scene.grille, c.cx, c.cy, { genre: 'machine', machine });
+  machine.cellules = [{ cx: machine.cx, cy: machine.cy }, ...cellules];
+  raccorderCeQuiVise(scene, machine, machine.cellules);
 }
 
 // Un tapis raccourci se raccorde à la machine qu'il vise désormais.

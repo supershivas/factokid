@@ -510,6 +510,9 @@ export function dessinerScene(ctx, monde, trace, dessinerParticules) {
   dessinerGisements(ctx, monde, f);
   dessinerConvoyeurs(ctx, scene, f);
   for (const machine of scene.machines) {
+    // La réception du mur appartient au mur : c'est lui qui la dessine, et
+    // elle occupe trois cases, ce qu'une machine ordinaire ne sait pas faire.
+    if (machine.def.recepteur) continue;
     if (celluleVisible(machine.cx, machine.cy, f)) dessinerMachine(ctx, machine);
   }
   // Les particules aussi vivent dans le monde : fumée et éclats restent sur la

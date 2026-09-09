@@ -142,6 +142,17 @@ export function versMonde(p) {
   };
 }
 
+// Point du monde -> point de l'écran. C'est l'inverse exact de `versMonde` :
+// le rendu s'en sert pour poser une incrustation en face de quelque chose qui
+// vit dans le monde — la flèche qui montre où est la réception du mur.
+export function versEcran(p) {
+  const z = echelle();
+  return {
+    x: GRILLE_X + (p.x - GRILLE_X - camera.x) * z,
+    y: GRILLE_Y + (p.y - GRILLE_Y - camera.y) * z,
+  };
+}
+
 // Le seul endroit qui sait à quelle échelle le monde est dessiné : tout le
 // reste du rendu travaille en unités du monde et n'a rien appris du zoom.
 // À rendre par un `ctx.restore()`.

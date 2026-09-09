@@ -138,9 +138,18 @@ export function destinations(convoyeur) {
 
 // La cellule par laquelle on entre dans une destination : la case de la
 // machine, ou la première du tapis.
-function celluleVisee(destination) {
+//
+// Une machine plus large qu'une cellule — la réception d'un mur en fait trois —
+// est visée par celle de ses cases que le tapis touche, jamais par son ancre :
+// sinon la polyligne file vers le milieu de la machine et les items sautent
+// par-dessus le vide pour y arriver.
+export function celluleVisee(destination, bout) {
   if (!destination) return null;
   if (destination.chemin) return destination.chemin[0];
+  if (destination.cellules && bout) {
+    const proche = destination.cellules.find((c) => adjacentes(c, bout));
+    if (proche) return proche;
+  }
   return { cx: destination.cx, cy: destination.cy };
 }
 
@@ -169,7 +178,7 @@ export function majGeometrie(convoyeur) {
   // celle à qui le prochain item revient — pas la première de la liste. Sinon
   // l'item file dans une direction puis saute dans une autre à la livraison.
   const dests = destinations(convoyeur);
-  const visees = dests.map(celluleVisee).filter(Boolean);
+  const visees = dests.map((d) => celluleVisee(d, derniere)).filter(Boolean);
   const tour = dests.length > 0 ? convoyeur.tour % dests.length : 0;
   const prochaine = visees[tour];
   convoyeur.celluleSortie = (adjacentes(prochaine, derniere) && prochaine)

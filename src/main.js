@@ -13,6 +13,7 @@ import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
 import { oublierSol } from './render/biome.js';
 import { oublierMiniCarte } from './render/minicarte.js';
+import { dessinerRepereMur } from './render/mur.js';
 import { dessinerChoix } from './render/choix.js';
 import { dessinerHalo, dessinerBandeau } from './render/tutoriel.js';
 import { creerDemarrage, avancerDemarrage, dessinerDemarrage } from './render/demarrage.js';
@@ -267,6 +268,8 @@ demarrerBoucle(
     ctx.fillStyle = PALETTE.noir;
     ctx.fillRect(0, 0, LARGEUR_LOGIQUE, HAUTEUR_LOGIQUE);
     dessinerScene(ctx, jeu.monde, interfaceJeu.trace, dessinerParticules);
+    // Où porter ce que le mur réclame, quand sa réception est hors de vue.
+    dessinerRepereMur(ctx, jeu.monde);
     const etape = etapeCourante(jeu.tutoriel);
     dessinerHalo(ctx, etape, jeu.tutoriel ? jeu.tutoriel.age : 0);
     dessinerBandeau(ctx, etape, avancement(jeu.tutoriel));

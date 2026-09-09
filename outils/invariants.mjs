@@ -9,7 +9,7 @@
 // Ne dépend que de la simulation : pas de navigateur, pas d'état global.
 
 import { lire } from '../src/sim/grid.js';
-import { destinations, majGeometrie } from '../src/sim/belt.js';
+import { destinations, majGeometrie, celluleVisee } from '../src/sim/belt.js';
 import { CELLULE } from '../src/design.js';
 import { MACHINES } from '../src/data/machines.js';
 
@@ -36,7 +36,7 @@ export function problemes(scene) {
     if (!adj(bout, c.celluleSortie)) pbs.push('sortie non adjacente ' + q + ' -> ' + cle(c.celluleSortie));
     if (!adj(c.chemin[0], c.celluleEntree)) pbs.push('entrée non adjacente ' + q);
     for (const d of destinations(c)) {
-      const e = d.chemin ? d.chemin[0] : d;
+      const e = celluleVisee(d, bout);
       if (!adj(bout, e)) pbs.push('destination hors de portée ' + q + ' -> ' + cle(e));
     }
     if (c.longueur !== c.chemin.length * CELLULE) pbs.push('longueur fausse ' + q);

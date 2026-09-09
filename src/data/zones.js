@@ -39,10 +39,14 @@ export const ETAGES = [
     // Le mur demande le produit de l'étage qu'il ferme. Le caramel vaut 1 à la
     // livraison : le total livré au mur, lui, ne se dépense pas.
     //
-    // Cent, mesuré (`node outils/mur.mjs`) : l'usine des trois branches que le
-    // tutoriel bâtit l'ouvre en une minute quarante, une branche seule en près
-    // de cinq. L'écart est le message — on n'attend pas, on agrandit.
-    mur: { item: 'caramel', combien: 100 },
+    // Cinquante, mesuré (`node outils/mur.mjs`) : un tapis détourné vers la
+    // réception ouvre le premier mur en deux minutes vingt, deux tapis en une
+    // minute dix. L'écart est le message — on n'attend pas, on double.
+    //
+    // Il en demandait cent quand la livraison comptait pour lui. Depuis qu'il
+    // a sa réception, ce qu'on lui porte n'est plus vendu : le seuil se paie
+    // deux fois, et le premier mur n'est pas l'endroit où faire attendre.
+    mur: { item: 'caramel', combien: 50 },
   },
   {
     n: 2,

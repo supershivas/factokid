@@ -20,8 +20,10 @@
 
 import { COLONNES } from '../design.js';
 import { ETAGES, OUVERT_AU_DEPART } from '../data/zones.js';
+import { MACHINES } from '../data/machines.js';
 import { rangeesDe } from './carte.js';
 import { poser, lire } from './grid.js';
+import { ajouterMachine, retirerMachine, etendreMachine } from './scene.js';
 
 // L'étage le plus haut qu'on ait ouvert, et donc celui dont le mur nous
 // arrête. Le dernier du monde n'a pas de mur : c'est le bord du monde qui le
@@ -47,14 +49,31 @@ export function constructible(monde, cy) {
   return !mur || cy > mur.cy;
 }
 
-// Ce que la livraison a reçu de la matière que ce mur réclame. Elle le compte
-// déjà, matière par matière : le mur n'ajoute aucun compteur.
+// La réception du mur : trois cases au milieu de sa rangée, où l'on apporte ce
+// qu'il réclame. C'est une machine de la scène comme une autre — on y trace un
+// tapis, elle a un stock, elle se remplit — et c'est ce qui fait qu'ouvrir un
+// mur est un geste et non une attente.
+//
+// Elle n'est pas la livraison. Celle-ci achète et remplit la caisse ; la
+// réception avale et ne paie rien. Deux endroits, deux rôles.
+export function recepteurDuMur(monde) {
+  return monde.scene.machines.find((m) => m.def.recepteur) || null;
+}
+
+// Les trois cellules de la réception, la sienne au milieu.
+function cellulesRecepteur(cy) {
+  const milieu = Math.floor(COLONNES / 2);
+  const large = Math.floor(MACHINES.recepteur.largeur / 2);
+  const cellules = [];
+  for (let d = -large; d <= large; d++) cellules.push({ cx: milieu + d, cy });
+  return cellules;
+}
+
+// Ce que la réception a reçu. Elle le compte déjà, matière par matière : le
+// mur n'ajoute aucun compteur.
 export function livreAuMur(monde, item) {
-  let n = 0;
-  for (const machine of monde.scene.machines) {
-    if (machine.def.entrees) n += machine.recus[item] || 0;
-  }
-  return n;
+  const recepteur = recepteurDuMur(monde);
+  return recepteur ? (recepteur.recus[item] || 0) : 0;
 }
 
 // Où en est le mur, de 0 à 1. C'est ce que le rendu montre, et rien d'autre :
@@ -71,12 +90,35 @@ export function avancementMur(monde) {
 export function poserMur(monde) {
   const mur = murCourant(monde);
   if (!mur) return;
+  const cellules = mur.etage.mur ? cellulesRecepteur(mur.cy) : [];
+  const prise = new Set(cellules.map((c) => c.cx));
   for (let cx = 0; cx < COLONNES; cx++) {
+    if (prise.has(cx)) continue;
     poser(monde.scene.grille, cx, mur.cy, { genre: 'mur' });
   }
+  // Un mur sans seuil ne réclame rien : il n'a pas de réception, et il est
+  // plein sur toute sa longueur. C'est le cas des étages qu'on n'a pas encore
+  // décidés — le jeu s'arrête là, et ça se voit.
+  if (cellules.length === 0) return;
+  const milieu = cellules[Math.floor(cellules.length / 2)];
+  // Une partie relue a déjà sa réception : elle est une machine de la scène,
+  // et la sauvegarde l'a rendue comme les autres. On ne lui en pose pas une
+  // seconde — on lui redonne seulement ses cellules, que la grille ne garde
+  // pas.
+  const recepteur = recepteurDuMur(monde) || ajouterMachine(
+    monde.scene, 'recepteur', milieu.cx, milieu.cy, { item: mur.etage.mur.item },
+  );
+  etendreMachine(monde.scene, recepteur, cellules.filter((c) => c.cx !== recepteur.cx));
 }
 
 function retirerMur(monde, cy) {
+  const recepteur = recepteurDuMur(monde);
+  if (recepteur) {
+    // Les tapis qui la nourrissaient restent posés : ils perdent seulement où
+    // ils allaient. Rien ne disparaît tout seul de la grille.
+    for (const c of recepteur.cellules || [recepteur]) poser(monde.scene.grille, c.cx, c.cy, null);
+    retirerMachine(monde.scene, recepteur);
+  }
   for (let cx = 0; cx < COLONNES; cx++) {
     const c = lire(monde.scene.grille, cx, cy);
     if (c && c.genre === 'mur') poser(monde.scene.grille, cx, cy, null);
