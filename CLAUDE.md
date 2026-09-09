@@ -127,7 +127,9 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   livraison, trois éléments, et ça rapporte. Le bonbon est ce qu'on fait pour
   gagner plus, pas le péage d'entrée. L'écart est franc — un, trois, dix —
   parce que c'est lui qui dit qu'il vaut mieux aller au bout de la chaîne :
-  mesuré sur cinq minutes, le noyau rapporte 108 et la chaîne complète 1060.
+  mesuré sur cinq minutes, le noyau rapporte 108. La chaîne complète rapportait
+  1060, et ce chiffre-là attend les étages : elle demande quatre matières, donc
+  quatre étages, et on ne peut plus la bâtir au pied du monde.
 - **Le bonbon paie la construction.** On livre pour bâtir, et bâtir fait livrer
   plus : c'est la boucle du jeu. Une tuile de tapis coûte 1, un extracteur 3,
   un trieur 8, une scierie ou une chaufferie 10, une confiserie ou une plieuse
@@ -138,7 +140,7 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   pas non plus : il cesse de grandir sous le doigt, et ce qu'on a tiré reste.
   Une touche trop chère **s'éteint et porte son prix en rouge** : c'est le seul
   « non » du jeu, et il ne gronde pas. La carte nue commence avec 120 ; le
-  tutoriel en coûte 92, et `outils/tutoriel.mjs` relit ce compte pour qu'une
+  tutoriel en coûte 51, et `outils/tutoriel.mjs` relit ce compte pour qu'une
   étape de plus reste payable. L'économie vit dans le geste, jamais dans la
   simulation : une machine ne sait pas ce qu'elle a coûté.
 - **Le livre des matières.** Une page du menu pause montre les dix matières —
@@ -186,9 +188,9 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   rien.
   **Les files compressées sont écrites telles quelles** : des écarts, pas des
   positions, et un tapis relu est le tapis d'avant, jamais un tapis retracé qui
-  lui ressemble. La carte, elle, est écrite en clair — régions et gisements —
-  et non rejouée depuis sa graine : une partie doit survivre au jour où le
-  tirage changera.
+  lui ressemble. La carte, elle, est écrite en clair — ses gisements — et non
+  rejouée depuis sa graine : une partie doit survivre au jour où le tirage
+  changera. Le sol, lui, ne s'écrit pas : il se déduit de la rangée.
   **Une sauvegarde porte un numéro de format**, et ce qui ne porte pas le bon
   est illisible. Une sauvegarde illisible est **écartée** : mise de côté sous
   une clé à part plutôt qu'écrasée, et annoncée par le bandeau — ce message-là
@@ -210,13 +212,22 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   s'ouvre donc toujours sur ses trois essais, et reprendre reste un geste
   demandé : commencer un essai efface la partie en cours, et l'enfant l'a
   voulu.
+  **Le bac à sable ouvre tous les étages** : c'est ce qu'un bac à sable veut
+  dire, et on n'y fait pas attendre pour essayer une plieuse. C'est une entrée
+  de `data/scenarios.js`, pas une exception dans le code.
 - **Le tutoriel mène jusqu'à une usine qui tourne.** C'est un système de plus,
   assumé : il ne sert qu'à la première partie et ne connaît que le résultat
-  d'un geste, jamais le geste. Dix-sept étapes dans `data/tutoriel.js`, un halo
+  d'un geste, jamais le geste. Treize étapes dans `data/tutoriel.js`, un halo
   sur les cellules à toucher, l'image de ce qu'il y a à poser, et une barre qui
-  dit ce qu'il en reste. À la dernière, le premier bonbon est livré : ce qu'on
-  obtient est exactement la chaîne de l'essai « usine qui tourne ». La fenêtre
-  suit l'étape quand elle sort du cadre.
+  dit ce qu'il en reste. Ce qu'on obtient au bout est exactement la chaîne de
+  l'essai « usine qui tourne ». La fenêtre suit l'étape quand elle sort du
+  cadre.
+  **Il se joue au pied du monde**, à l'étage 1 : il n'a plus à enseigner les
+  quatre matières d'un coup — ce sont les murs qui les présentent une par une —
+  et il a rétréci d'autant. Ce qu'il montre tient en une phrase : *une branche,
+  puis la même deux fois de plus.* Extracteur, chaufferie, livraison, et le
+  premier caramel vendu à la cinquième étape ; le reste du jeu n'est que ça, en
+  plus grand.
   Quatre épreuves seulement — un extracteur posé, une machine à sa case, des
   tapis qui relient deux machines, un bonbon livré — et une étape de plus est
   une entrée de plus. **Un bouton le passe** : on ne guide plus, et rien n'est
@@ -264,29 +275,34 @@ des voiles. Sans ce débord elle bute sur le bord du monde avant d'en avoir
 sorti sa première et sa dernière rangée : cent soixante-huit cellules
 restaient à l'écran sans jamais se laisser regarder. Pas un pouce de plus — le
 vide autour du monde n'est pas un endroit où aller. `outils/lisibilite.mjs`
-tient la règle : toute cellule du monde doit pouvoir venir dans la zone sûre.
+tient la règle : toute cellule **ouverte** doit pouvoir venir dans la zone
+sûre, à chacun des cinq étages, la rangée du mur comprise — c'est en la
+regardant qu'on voit ce qu'il réclame.
 
 **Le sol dit ce qu'il donne.** La carte est faite de biomes — plaines de sucre,
 terre, champs de fraises, champs de menthe — et chaque gisement porte la
 matière de son biome. On sait donc où aller chercher quoi rien qu'à la couleur
-du sol, de loin, sans savoir lire. Seule la clairière de départ a un peu de
-tout : c'est ce qui permet de faire un bonbon avant d'avoir traversé quoi que
-ce soit.
+du sol, de loin, sans savoir lire.
 
-**La carte est tirée au sort, sauf son cœur.** Régions et gisements sont
-engendrés à la création de la partie, depuis une graine (`sim/carte.js`) :
-écrire à la main les cent gisements de trente-six fenêtres revenait à dessiner
-la même carte pour tout le monde, à jamais. Les gisements sont semés par
-**bouquets** — un arbre seul n'est pas une forêt, et c'est un bosquet qu'on
-veut trouver au bout d'un tapis — et chaque bouquet porte la matière du biome
-où tombe son cœur.
+**Le biome d'une cellule est donné par sa rangée** : le monde se lit en étages
+(voir la section suivante), et chacun porte un biome et une matière. Il n'y a
+plus de régions tirées au hasard dans le plan, plus de garanties par matière,
+plus de plancher de rattrapage : il ne peut pas manquer de sucre dans le monde
+du sucre. Le sol est donc une fonction de la cellule, et rien de plus — le
+rendu n'a rien à recevoir, seulement un cache à oublier quand une partie
+commence.
 
-**La clairière, elle, ne change jamais** : sa région est de terre, elle est au
-centre du monde, ses quatre gisements sont écrits dans `data/monde.js`, et
-rien n'est tiré dans son rayon. C'est ce qui permet au tutoriel de nommer des
-cellules précises et à l'usine de départ d'être posée d'avance — la carte
-change autour d'eux, jamais sous eux. Un scénario porte sa graine : fixe pour
-le tutoriel et l'usine qui tourne, tirée pour le bac à sable.
+**Ce que la carte invente encore, c'est où tombent les gisements.** Ils sont
+semés à la graine (`sim/carte.js`) par **bouquets** — un arbre seul n'est pas
+une forêt, et c'est un bosquet qu'on veut trouver au bout d'un tapis —, chacun
+dans l'étage où il naît, et il en porte donc la matière.
+
+**Le pied du monde, lui, ne change jamais** : le centre de l'étage 1, ses trois
+gisements de sucre écrits dans `data/monde.js`, et rien de tiré dans son rayon.
+C'est ce qui permet au tutoriel de nommer des cellules précises et à l'usine de
+départ d'être posée d'avance — la carte change autour d'eux, jamais sous eux.
+Un scénario porte sa graine : fixe pour le tutoriel et l'usine qui tourne,
+tirée pour le bac à sable.
 
 Un biome est une **couleur posée sur le noir à une transparence basse**, en
 trois nuances — de seize à vingt-huit pour cent. Elles ont doublé : à huit pour
@@ -303,7 +319,7 @@ répétait les mêmes points dans chaque case à quarante-huit unités d'interva
 ardoise, pleine couleur sur un sol à dix pour cent, qui dessinait un
 quadrillage de points brillants (il est passé à la teinte de la texture) ; et
 une formule de nuance qui faisait des rayures en diagonale (c'est un bruit doux
-à trois échelles). La frontière entre deux régions ondule au lieu de suivre une
+à trois échelles). La frontière entre deux étages ondule au lieu de suivre une
 droite. Rien n'est tiré au moment de dessiner : tout est fonction de la
 cellule, sinon le sol scintillerait d'une image à l'autre.
 
@@ -352,9 +368,13 @@ dépend jamais de ce qu'on regarde. Un seul endroit du rendu connaît l'échelle
 
 ### Les étages, et les murs qui les séparent
 
-**Décidé, pas encore écrit.** Rien de ce qui suit n'existe dans le code : c'est
-la forme que le jeu doit prendre, et elle est arrêtée. Ce qui est déjà bâti —
-la carte, les biomes, l'économie — n'est pas jeté : c'est ce qui la porte.
+**Écrit, et jouable sur deux étages.** La forme est arrêtée depuis longtemps ;
+elle est maintenant dans le code — `data/zones.js`, `sim/mur.js`,
+`render/mur.js`. **Deux étages sont jouables**, le temps de voir si la
+mécanique tient : le monde du sucre et celui des fraises. Les trois du dessus
+existent — le monde fait toujours soixante rangées, et son sol se peint jusqu'en
+haut — mais leur mur ne s'ouvre pas, et ce qu'ils contiennent reste à décider.
+Ce qui manque encore est dit en fin de section.
 
 **On ne progresse que vers le haut.** Le monde se lit en **étages**, des bandes
 horizontales de douze rangées sur les quarante-deux de large. Cinq étages
@@ -387,32 +407,49 @@ arbitrage à expliquer.
 **Un mur ouvert redevient du sol ordinaire.** Pas de porte, pas de goulot d'une
 case où les tapis s'étranglent : ouvert veut dire franchi, on n'y pense plus.
 
+**Ce qu'un mur montre, et pas un mot** : une rangée de blocs en ardoise, ce
+qu'il y a derrière éteint, et sur lui une plaque qui porte la matière réclamée
+et une jauge qui se remplit. La plaque suit le milieu de l'écran — le mur fait
+quarante-deux cases et la fenêtre en montre sept, une jauge posée une fois pour
+toutes serait hors de vue neuf fois sur dix.
+
+**Le premier mur demande cent caramels**, et c'est mesuré (`node
+outils/mur.mjs`) : l'usine des trois branches que le tutoriel bâtit l'ouvre en
+une minute quarante, une branche seule en près de cinq. L'écart est le
+message — on n'attend pas, on agrandit. À quarante, il tombait en
+quarante-trois secondes sans qu'on ait rien à faire.
+
 **Ce que le mur coûte vraiment**, et c'est peu : une rangée où l'on ne peut pas
 bâtir, un plafond sur les bornes de la caméra qui remonte quand il tombe, et un
 seuil. Le monde ne grandit pas — il fait toujours 42 × 60 — c'est ce qu'on peut
 atteindre qui grandit, et le scroll s'allonge tout seul.
 
-**Chaque étage apporte une mécanique**, pas seulement une matière : le trieur,
-le tapis rapide, les trois bonbons. C'est ce qui donne à un mur une récompense
-au-delà de « une case de plus à récolter », et c'est là que le jeu grossira
-sans grossir en systèmes — un étage est une entrée de table.
+**Chaque étage apporte une mécanique**, pas seulement une matière : l'étage 1
+ouvre l'extracteur et la chaufferie, l'étage 2 le trieur — deux matières sur la
+carte, donc une raison d'en avoir un. C'est ce qui donne à un mur une
+récompense au-delà de « une case de plus à récolter », et c'est là que le jeu
+grossira sans grossir en systèmes — un étage est une entrée de table.
+
+**Ce qui n'est pas ouvert n'est pas montré.** Le menu de construction ne porte
+que ce que les murs ont donné : au pied du monde, un extracteur et une
+chaufferie, et c'est tout ce qu'il y a à comprendre. Une touche éteinte dirait
+qu'il y a autre chose, et c'est déjà ce que dit le mur — il n'y a pas deux
+façons de dire la même chose à un enfant.
 
 **La mini-carte montre les étages fermés en éteint**, comme le livre des
 matières montre les silhouettes de ce qu'on n'a pas trouvé : on voit qu'il y a
 quelque chose là sans savoir encore quoi. Elle devient la barre de progression
 du jeu entier.
 
-**Ce que cela retire.** La clairière disparaît : son rôle — un peu de tout au
-centre, pour faire un bonbon sans traverser quoi que ce soit — est repris par
-l'étage 1, qui se suffit à lui-même. Le tutoriel rétrécit d'autant : il n'a
-plus à enseigner les quatre matières d'un coup, ce sont les murs qui les
-présentent une par une.
+**Ce que cela a retiré.** La clairière du centre : son rôle — un peu de tout au
+milieu, pour faire un bonbon sans traverser quoi que ce soit — est repris par
+l'étage 1, qui se suffit à lui-même. Le tutoriel a rétréci d'autant, de
+dix-sept étapes à treize.
 
-**Ce que cela simplifie.** `sim/carte.js` tire aujourd'hui vingt-six régions au
-hasard dans le plan, avec des garanties par matière et un plancher de
-rattrapage. Des bandes d'une matière chacune, c'est moins : le biome est donné
-par la rangée, les bouquets se sèment dedans, et le plancher disparaît — il ne
-peut pas manquer de sucre dans le monde du sucre.
+**Ce que cela a simplifié.** `sim/carte.js` tirait vingt-six régions au hasard
+dans le plan, avec des garanties par matière et un plancher de rattrapage. Des
+bandes d'une matière chacune, c'est moins : le biome est donné par la rangée,
+les bouquets se sèment dedans, et le plancher a disparu.
 
 **Deux chiffres mesurés, qui disent que ça tient.** Un tapis porte au plus
 3,56 items par seconde, un extracteur en sort 0,36 : **un seul tapis monte donc
@@ -420,9 +457,22 @@ la récolte de dix extracteurs**. Le sucre de l'étage 1 n'aura pas besoin de
 quatre tapis parallèles sur quarante rangées — un suffit très longtemps, et le
 goulot reste les gisements, c'est-à-dire la géographie.
 
-**La sauvegarde vient avant.** Perdre quatre étages à un rechargement de page
+**La sauvegarde venait avant.** Perdre quatre étages à un rechargement de page
 est intolérable. Elle est faite : la partie s'écrit et se reprend (section 1,
-`save/run.js`), et ce qui bloquait les étages ne les bloque plus.
+`save/run.js`), et l'étage ouvert en fait partie.
+
+### Ce qui manque encore aux étages
+
+À décider, et rien n'est codé dans ce sens :
+
+- **ce que réclame le mur de l'étage 2.** La fraise seule ne fabrique rien — la
+  pastille demande aussi la menthe —, et on ne réclame jamais ce qu'on ne sait
+  pas encore faire. Son mur ne s'ouvre donc pas : le jeu s'arrête là.
+- **ce qu'est le cinquième étage.** Il y a quatre matières et cinq bandes. La
+  cinquième porte pour l'instant le biome de terre et aucun gisement.
+- **les trois bonbons et le papier**, qui demandent la forêt et la menthe :
+  l'étage 3 ouvre la confiserie et l'étage 4 la scierie et la plieuse, mais
+  aucun des deux murs n'a de seuil.
 
 ### Règle de croissance
 
@@ -686,13 +736,15 @@ tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
-Cinq outils gardent le jeu, et ils tournent avant toute livraison :
+Six outils gardent le jeu, et ils tournent avant toute livraison :
 `outils/tapis.mjs` pour les convoyeurs, `outils/lisibilite.mjs` pour ce qui se
-lit, `outils/tutoriel.mjs` qui joue les dix-sept étapes du premier contact,
-vérifie qu'au bout l'usine livre et que le tutoriel reste payable avec la mise
-de départ, `outils/carte.mjs` qui tire trois cents cartes et relit ce qu'elles
-promettent — clairière intacte, aucune matière qui manque, rien hors de la
-grille —, et `outils/sauvegarde.mjs`, qui écrit des parties et les relit.
+lit, `outils/tutoriel.mjs` qui joue les treize étapes du premier contact,
+vérifie qu'au bout l'usine livre, que le tutoriel reste payable avec la mise de
+départ et qu'aucune étape ne demande une machine que l'étage ouvert ne donne
+pas, `outils/carte.mjs` qui tire trois cents cartes et relit ce qu'elles
+promettent — pied du monde intact, chaque gisement dans son étage, aucun sur
+une rangée de mur —, `outils/mur.mjs` qui bâtit l'usine de l'étage 1 et regarde
+le mur tomber, et `outils/sauvegarde.mjs`, qui écrit des parties et les relit.
 
 Ce dernier exige trois choses d'une partie relue : qu'elle soit **saine** — les
 mêmes invariants que l'originale, relus par le même juge (`outils/invariants.mjs`,
@@ -739,7 +791,8 @@ src/
     belt.js         files compressées, déplacement des items
     machine.js      production, consommation, stocks
     gisement.js     gisements, extraction, repousse
-    carte.js        régions et gisements tirés au sort, à la graine
+    carte.js        les étages, et les gisements tirés à la graine
+    mur.js          ce qui ferme un étage, et ce qu'il faut lui livrer
     world.js        état de la partie en cours
   save/
     run.js          la partie en cours, écrite et relue
@@ -747,8 +800,9 @@ src/
   data/
     items.js        table des items
     machines.js     table des machines
-    monde.js        les quatre gisements de la clairière, cadences d'extraction
-    biomes.js       biomes, régions, fondu
+    monde.js        les gisements du pied du monde, cadences d'extraction
+    biomes.js       biomes, bouquets, fondu
+    zones.js        les étages : biome, matière, ce qu'ils ouvrent, leur mur
     depart.js       dispositions de départ : usine qui tourne, carte nue
     scenarios.js    les trois essais de la bêta
     tutoriel.js     étapes du premier contact
@@ -759,6 +813,7 @@ src/
     canvas.js       mise à l'échelle
     biome.js        la teinte de chaque cellule
     minicarte.js    le monde entier, dans le voile du haut
+    mur.js          la rangée du mur, ce qu'il demande, et ce qu'il cache
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
@@ -783,13 +838,9 @@ src/
 `data/` ne contient que des tables. Aucune logique. C'est là que le jeu grossit.
 
 **Ce qui n'existe pas encore, et qu'on ne prétend pas avoir.** Ce fichier a
-longtemps décrit trois modules qui n'ont jamais été écrits. `save/run.js` et
-`save/meta.js` sont écrits depuis ; il en reste un, nommé ici, à sa place, et
-rien d'autre :
-
-- `data/zones.js` — les étages, leur biome, leur seuil, ce qu'ils ouvrent.
-  **N'existe pas.** C'est la table qui portera les étages décrits en section 1,
-  et `data/progression.js` n'a plus lieu d'être : un palier *est* un mur.
+longtemps décrit trois modules qui n'ont jamais été écrits — `save/run.js`,
+`save/meta.js`, `data/zones.js`. Ils le sont tous les trois, et la liste est
+vide. `data/progression.js` n'a plus lieu d'être : un palier *est* un mur.
 
 Rien de ce qui n'existe pas ne doit être décrit ailleurs dans ce fichier comme
 s'il existait. C'est arrivé pendant des semaines : trois modules fantômes y
