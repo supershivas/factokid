@@ -56,8 +56,8 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   que l'autre : leur donner chacun son fruit demanderait un troisième tapis
   jusqu'à la plieuse, et donc de réécrire le tutoriel.
 - **La livraison les reçoit tous les trois** et les compte séparément : c'est
-  la vitrine. L'écran garde son unique compteur — le total — et c'est au livre
-  des matières que le détail se lit, sous chaque bonbon. Elle en accepte
+  la vitrine. L'écran garde son unique compteur — la caisse — et c'est au livre
+  des matières que le détail se lit, sous chaque chose qu'elle achète. Elle en accepte
   **quatre tapis** et non trois : une machine réserve un côté à sa sortie, et
   la livraison ne sort nulle part.
 - **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
@@ -116,8 +116,31 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **La destruction retire un élément à la fois.** Détruire une tuile de
   convoyeur n'enlève que celle-là : l'amont et l'aval restent posés. Rien ne
   disparaît tout seul de la grille, même un tapis que plus rien n'alimente.
-- **Un seul compteur à l'écran** : les bonbons finis. Le reste se lit sur la
-  grille, dans les jauges des machines et dans ce qui circule.
+- **Un seul compteur à l'écran** : la caisse. Il ne compte plus des bonbons
+  mais ce qu'ils valent — la livraison achète aussi le caramel et la pastille.
+  Le reste se lit sur la grille, dans les jauges des machines et dans ce qui
+  circule.
+- **La livraison achète, elle ne collectionne pas.** Elle prend le caramel (1),
+  la pastille (3) et les trois bonbons (10). La plus petite chaîne qui
+  rapportait quelque chose faisait quatre extracteurs et quatre machines : huit
+  poses avant le premier retour. C'est maintenant extracteur → chaufferie →
+  livraison, trois éléments, et ça rapporte. Le bonbon est ce qu'on fait pour
+  gagner plus, pas le péage d'entrée. L'écart est franc — un, trois, dix —
+  parce que c'est lui qui dit qu'il vaut mieux aller au bout de la chaîne :
+  mesuré sur cinq minutes, le noyau rapporte 108 et la chaîne complète 1060.
+- **Le bonbon paie la construction.** On livre pour bâtir, et bâtir fait livrer
+  plus : c'est la boucle du jeu. Une tuile de tapis coûte 1, un extracteur 3,
+  un trieur 8, une scierie ou une chaufferie 10, une confiserie ou une plieuse
+  20 (`data/outils.js`). Doubler une branche coûte une vingtaine de secondes de
+  production au début, et de moins en moins ensuite.
+  **Rien n'est jamais perdu** : détruire rembourse le prix entier — un enfant a
+  le droit de se tromper de case. Un tracé qui dépasse la caisse ne s'annule
+  pas non plus : il cesse de grandir sous le doigt, et ce qu'on a tiré reste.
+  Une touche trop chère **s'éteint et porte son prix en rouge** : c'est le seul
+  « non » du jeu, et il ne gronde pas. La carte nue commence avec 120 ; le
+  tutoriel en coûte 92, et `outils/tutoriel.mjs` relit ce compte pour qu'une
+  étape de plus reste payable. L'économie vit dans le geste, jamais dans la
+  simulation : une machine ne sait pas ce qu'elle a coûté.
 - **Le livre des matières.** Une page du menu pause montre les huit matières :
   celles qu'on a tenues une fois sont en couleur, les autres gardent leur
   silhouette éteinte — on voit qu'il y a quelque chose là sans savoir encore
