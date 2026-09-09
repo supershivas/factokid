@@ -15,7 +15,9 @@ import {
 import { celluleMiniCarte } from '../render/minicarte.js';
 import { analyserTexte, disposerMots } from '../render/texte.js';
 import { passerTutoriel } from '../tutoriel.js';
-import { OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES } from '../data/outils.js';
+import {
+  OUTILS, CONSTRUCTIBLES, MACHINES_CONSTRUCTIBLES, cout,
+} from '../data/outils.js';
 import { ITEMS } from '../data/items.js';
 import { MACHINES } from '../data/machines.js';
 import { RECETTES } from '../data/recipes.js';
@@ -114,8 +116,29 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   const indexOutil = (id) => OUTILS.findIndex((o) => o.id === id);
 
+  // --- la caisse ----------------------------------------------------------
+  //
+  // On livre pour bâtir, et bâtir fait livrer plus : c'est la boucle du jeu.
+  // Elle vit ici, dans le geste, et non dans la simulation — une machine ne
+  // sait pas ce qu'elle a coûté, elle sait ce qu'elle fait.
+  //
+  // Rien n'est jamais perdu : détruire rembourse le prix entier. Un enfant a
+  // le droit de se tromper de case.
+  const caisse = () => (jeu.monde ? jeu.monde.caisse : 0);
+  const abordable = (id) => caisse() >= cout(id);
+  function payer(id) {
+    if (!jeu.monde) return false;
+    if (jeu.monde.caisse < cout(id)) return false;
+    jeu.monde.caisse -= cout(id);
+    return true;
+  }
+  function rembourser(id, combien = 1) {
+    if (jeu.monde) jeu.monde.caisse += cout(id) * combien;
+  }
+
   function majBoutons() {
     const outils = OUTILS.map((o) => ({
+      id: o.id,
       icone: o.icone,
       couleur: o.couleur,
       actif: o.id === etat.outil,
@@ -138,7 +161,17 @@ export function brancherPointeur(canvas, vue, jeu) {
     }));
     // Pas de bouton retour sur une carte : on revient en touchant son
     // téléporteur, comme on y est venu. Un geste, pas deux chemins.
-    etat.boutons = outils.map((o) => ({ icone: o.icone, couleur: o.couleur, actif: o.actif }));
+    etat.boutons = outils.map((o) => ({
+      icone: o.icone,
+      couleur: o.couleur,
+      actif: o.actif,
+      // Le prix de l'outil, quand il en a un : le convoyeur se paie à la
+      // tuile, les trois autres ne coûtent rien — regarder, ouvrir une liste
+      // et détruire sont toujours permis. C'est le rendu qui compare ce prix à
+      // la caisse, à chaque image : une touche éteinte se rallume au moment où
+      // la livraison paie, sans que rien ait à le lui dire.
+      prix: cout(o.id),
+    }));
     actionsBoutons = outils.map((o) => o.action);
   }
 
@@ -147,7 +180,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     etat.ancre = rectBouton(indexAncre);
     etat.ancreIndex = indexAncre;
     etat.bulles = contenu.map((c) => ({
-      icone: c.icone, nom: c.nom, grise: c.grise, choisie: c.choisie,
+      icone: c.icone, nom: c.nom, prix: c.prix, grise: c.grise, choisie: c.choisie,
     }));
     actionsBulles = contenu.map((c) => c.action);
     animMenu = viser('menu', 1, animMenu);
@@ -166,8 +199,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     return CONSTRUCTIBLES.map((c) => ({
       icone: c.icone,
       nom: MACHINES[c.id].nom,
+      prix: cout(c.id),
       choisie: c.id === etat.constructible,
       action: () => {
+        if (!abordable(c.id)) return;
         etat.constructible = c.id;
         etat.outil = 'construction';
         fermerMenu();
@@ -619,6 +654,10 @@ export function brancherPointeur(canvas, vue, jeu) {
       }
       return;
     }
+    // Une tuile de tapis se paie. Quand la caisse est vide, le tracé cesse de
+    // grandir sous le doigt : il ne s'annule pas, il s'arrête — ce qu'on a
+    // déjà tiré reste, et c'est ce qu'on voit.
+    if (trace.chemin.length >= caisse()) return;
     trace.contact = null;
     trace.chemin.push(c);
   }
@@ -652,7 +691,9 @@ export function brancherPointeur(canvas, vue, jeu) {
   // élément — qui met fin au mode.
   function batirExtracteur(c) {
     const g = gisementEn(monde(), c.cx, c.cy);
-    if (!g || g.extracteur || !poserExtracteur(monde(), c.cx, c.cy)) return false;
+    if (!g || g.extracteur || !abordable('extracteur')) return false;
+    if (!poserExtracteur(monde(), c.cx, c.cy)) return false;
+    payer('extracteur');
     marquerConstruit([c]);
     etat.panneau = null;
     rendreLaMain();
@@ -663,6 +704,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   // choisie : dix confiseries se posent en dix appuis.
   function batirMachine(c, type) {
     if (!celluleLibre(scene(), c.cx, c.cy)) return false;
+    if (!payer(type)) return false;
     ajouterMachine(scene(), type, c.cx, c.cy, {});
     marquerConstruit([c]);
     etat.panneau = null;
@@ -686,6 +728,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
     if (convoyeur) {
       couperConvoyeur(scene(), convoyeur, c.cx, c.cy);
+      rembourser('convoyeur');
       marquerDetruit([c]);
       return;
     }
@@ -694,11 +737,16 @@ export function brancherPointeur(canvas, vue, jeu) {
     // téléporteur et la livraison restent en place quoi qu'il arrive.
     if (machine && MACHINES_CONSTRUCTIBLES.includes(machine.def.id)) {
       retirerMachine(scene(), machine);
+      rembourser(machine.def.id);
       marquerDetruit([c]);
       return;
     }
     const g = gisementEn(monde(), c.cx, c.cy);
-    if (g && g.extracteur) { retirerExtracteur(monde(), c.cx, c.cy); marquerDetruit([c]); }
+    if (g && g.extracteur) {
+      retirerExtracteur(monde(), c.cx, c.cy);
+      rembourser('extracteur');
+      marquerDetruit([c]);
+    }
   }
 
   // --- gestes -------------------------------------------------------------
@@ -932,6 +980,9 @@ export function brancherPointeur(canvas, vue, jeu) {
       etat.panneau = null;
       fermerSurmodale();
       marquerConstruit(trace.chemin);
+      // Le tapis se paie à la tuile, au moment où il est posé : le tracé n'a
+      // rien débité tant qu'il n'était qu'un doigt en l'air.
+      if (jeu.monde) jeu.monde.caisse -= cout('convoyeur') * trace.chemin.length;
       let pose;
       if (trace.branche) {
         pose = brancherConvoyeur(scene(), trace.branche.tronc, trace.branche.cellule, trace.chemin, cible);

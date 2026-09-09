@@ -15,6 +15,7 @@ import { poserExtracteur } from '../src/sim/gisement.js';
 import { ajouterMachine, poserConvoyeur, machineEn } from '../src/sim/scene.js';
 import { creerTutoriel, majTutoriel, etapeCourante } from '../src/tutoriel.js';
 import { TUTORIEL } from '../src/data/tutoriel.js';
+import { cout } from '../src/data/outils.js';
 
 const monde = creerMonde(DEPART_NU);
 const tuto = creerTutoriel();
@@ -66,8 +67,30 @@ for (let i = 0; i < GESTES.length; i++) {
   if (!passee) echecs++;
 }
 
+// Le tutoriel doit rester payable. Depuis que bâtir coûte, une étape ajoutée à
+// la table peut faire dépasser la mise de départ — et on bloquerait un enfant
+// devant une touche éteinte au milieu d'une leçon. On relit donc le compte à
+// chaque fois plutôt que de le supposer.
+{
+  let du = 0;
+  for (const e of TUTORIEL) {
+    if (e.epreuve === 'extracteur') du += cout('extracteur');
+    else if (e.epreuve === 'machine') du += cout(e.machine);
+    // Les deux bouts d'un lien portent une machine : ce sont les cellules du
+    // milieu qui deviennent des tuiles de tapis.
+    else if (e.epreuve === 'lien') du += cout('convoyeur') * (e.cibles.length - 2);
+  }
+  const mise = DEPART_NU.caisse;
+  console.log(`\nle tutoriel coûte ${du}, la mise de départ est de ${mise}`);
+  if (du > mise) {
+    echecs++;
+    console.log('  ✗ le tutoriel demande plus que la mise de départ');
+  }
+}
+
 const livraison = monde.scene.machines.find((m) => m.def.entrees);
-console.log('\nbonbons livrés :', livraison.consommes);
+console.log('livré :', livraison.consommes, 'pièces, soit', ''
+  + Object.entries(livraison.recus).map(([k, n]) => `${n} ${k}`).join(', '));
 console.log('tutoriel fini :', tuto.etape >= TUTORIEL.length);
 if (livraison.consommes === 0) { echecs++; console.log('  ✗ l’usine ne livre pas'); }
 console.log(echecs === 0 ? '\n✓ le tutoriel mène à une usine qui tourne' : `\n✗ ${echecs} problème(s)`);

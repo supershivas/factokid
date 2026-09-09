@@ -11,6 +11,11 @@ export const DEPART = {
   // La fenêtre s'ouvre ici : la livraison est au milieu de l'écran.
   regard: { cx: 21, cy: 30 },
 
+  // La caisse de départ. L'usine qui tourne n'en a pas besoin : elle produit
+  // déjà, et sa première livraison arrive avant qu'on ait eu le temps de
+  // vouloir bâtir.
+  caisse: 0,
+
   extracteurs: [
     { cx: 13, cy: 27 },   // sucre
     { cx: 19, cy: 23 },    // fraise
@@ -77,6 +82,16 @@ export const DEPART = {
 // s'ouvre plus à l'ouest, du côté du premier gisement de sucre.
 export const DEPART_NU = {
   regard: { cx: 16, cy: 28 },
+
+  // La mise de départ : de quoi bâtir la première chaîne sans rien avoir
+  // livré. Le tutoriel coûte 92 — quatre extracteurs, cinq machines et une
+  // vingtaine de tuiles — et `outils/tutoriel.mjs` relit ce compte à chaque
+  // fois : une étape de plus dans la table doit rester payable.
+  //
+  // La marge est volontairement large. On ne bloque jamais un enfant devant
+  // une touche éteinte pendant qu'on lui montre quoi faire.
+  caisse: 120,
+
   extracteurs: [],
   machines: [
     { type: 'livraison', cx: 21, cy: 33 },

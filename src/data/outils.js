@@ -38,3 +38,27 @@ export const CONSTRUCTIBLES = [
 export const MACHINES_CONSTRUCTIBLES = CONSTRUCTIBLES
   .filter((c) => c.machine)
   .map((c) => c.machine);
+
+// Ce que coûte chaque élément, en caisse. C'est la boucle du jeu : on livre
+// pour bâtir, et bâtir fait livrer plus.
+//
+// L'échelle est réglée sur ce que la livraison paie — un caramel vaut 1, un
+// bonbon 10. Doubler une branche coûte donc une vingtaine de secondes de
+// production au début, et de moins en moins à mesure que l'usine grossit.
+// C'est l'intervalle qu'on cherche : assez long pour qu'on ait envie, assez
+// court pour qu'on n'attende pas.
+//
+// Rien n'est jamais perdu : détruire rembourse le prix entier. Un enfant a le
+// droit de se tromper de case, et un tapis mal tracé ne coûte que le temps de
+// le retirer.
+export const COUTS = {
+  convoyeur: 1,   // par tuile
+  extracteur: 3,
+  trieur: 8,
+  scierie: 10,
+  chaufferie: 10,
+  confiserie: 20,
+  plieuse: 20,
+};
+
+export const cout = (id) => COUTS[id] || 0;

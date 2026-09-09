@@ -29,7 +29,7 @@ export function creerMonde(disposition = DEPART, graine = 1) {
     // La caisse : ce que la livraison a payé. C'est le seul compteur de
     // l'écran, et il ne compte plus des bonbons mais ce qu'ils valent — la
     // livraison achète aussi le caramel et la pastille, pour bien moins.
-    caisse: 0,
+    caisse: disposition.caisse || 0,
     gisements: creerGisements(carte),
   };
 

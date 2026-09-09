@@ -15,7 +15,14 @@ import { dessinerTouche, dessinerPilule, teinteDe, SOMBRE, PART_ITEM } from './p
 import { dessinerMiniCarte } from './minicarte.js';
 import { auPlusLoin } from '../camera.js';
 import { dessinerMenu } from './menu.js';
-import { dessinerMotCentre, dessinerMots, dessinerNombre } from './texte.js';
+import {
+  dessinerMotCentre, dessinerMots, dessinerNombre, largeurNombre, hauteurTexte,
+} from './texte.js';
+
+// Ce qu'une touche éteinte garde de sa lumière. La même valeur que la matière
+// qu'on n'a pas encore trouvée, au livre : ce qui est hors de portée s'efface
+// sans disparaître — on voit qu'il y a quelque chose là.
+const ETEINTE = 0.4;
 
 // L'image en grand d'une modale : ce dont elle parle. Elle se pose comme dans
 // une touche, à l'échelle entière — une matière de neuf pixels d'art étirée
@@ -86,11 +93,11 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   });
   dessinerMiniCarte(ctx, monde);
 
-  dessinerOutils(ctx, interfaceJeu);
+  dessinerOutils(ctx, interfaceJeu, monde);
 
   // Le menu de construction passe au-dessus de la barre et du bandeau : rien
   // ne doit rester allumé derrière un choix ouvert.
-  dessinerRangees(ctx, interfaceJeu);
+  dessinerRangees(ctx, interfaceJeu, monde);
   dessinerPanneau(ctx, interfaceJeu);
 
   // Le menu pause passe par-dessus tout, y compris la barre d'outils.
@@ -147,18 +154,19 @@ function dessinerSurmodale(ctx, interfaceJeu) {
 // La sélection reste un enfoncement : l'outil en cours est la touche restée au
 // fond, son bombé retourné. Pas de cadre, pas de contour, pas de couleur en
 // plus — la couleur, elle, ne bouge jamais.
-function dessinerOutils(ctx, interfaceJeu) {
+function dessinerOutils(ctx, interfaceJeu, monde) {
   for (let i = 0; i < interfaceJeu.boutons.length; i++) {
     const b = interfaceJeu.boutons[i];
     dessinerTouche(ctx, rectBouton(i), b.icone, {
       teinte: teinteDe(b.couleur),
       enfonce: enfoncement('outil:' + i, b.actif ? 1 : 0),
+      alpha: b.prix > monde.caisse ? ETEINTE : 1,
     });
   }
 }
 
 // Les rangées du menu de construction, quand il est ouvert.
-function dessinerRangees(ctx, interfaceJeu) {
+function dessinerRangees(ctx, interfaceJeu, monde) {
   if (interfaceJeu.menu <= 0 || !interfaceJeu.ancre) return;
 
   // Le voile couvre tout l'écran, barre d'outils comprise : tant qu'un choix
@@ -187,16 +195,33 @@ function dessinerRangees(ctx, interfaceJeu) {
     // de l'élément et son nom. Celle qui est choisie reste enfoncée — le même
     // signe que dans la barre d'outils.
     const enfonce = enfoncement('rangee:' + j, bulle.choisie ? 1 : 0);
-    const dy = dessinerPilule(ctx, { x, y, l: r.l, h: r.h }, { teinte: SOMBRE, enfonce, alpha });
+    // Ce qu'on ne peut pas payer s'éteint : la rangée entière s'efface, prix
+    // compris. C'est le seul « non » du jeu, et il ne gronde pas — on voit ce
+    // que ça coûte, on voit la caisse, et on attend que l'usine travaille.
+    const tropCher = bulle.prix > monde.caisse;
+    const vif = alpha * (tropCher ? ETEINTE : 1);
+    const dy = dessinerPilule(
+      ctx, { x, y, l: r.l, h: r.h }, { teinte: SOMBRE, enfonce, alpha: vif },
+    );
 
-    ctx.globalAlpha = alpha * (bulle.choisie ? 1 : 0.75);
+    ctx.globalAlpha = vif * (bulle.choisie ? 1 : 0.75);
     ctx.drawImage(INTERFACE[bulle.icone], x + 4, y + dy + 4, BULLE - 8, BULLE - 8);
     ctx.globalAlpha = 1;
     if (bulle.nom) {
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = vif;
       dessinerMotCentre(
         ctx, bulle.nom, x + BULLE + 6, y + dy + r.h / 2, TEXTE_PETIT, PALETTE.creme,
       );
+      // Le prix, au bout de la rangée. C'est un nombre, et il se lit sans
+      // savoir lire : c'est le même que celui du compteur, en plus petit.
+      if (bulle.prix) {
+        dessinerNombre(
+          ctx, bulle.prix,
+          x + r.l - 12 - largeurNombre(bulle.prix, TEXTE_PETIT),
+          y + dy + (r.h - hauteurTexte(TEXTE_PETIT)) / 2,
+          TEXTE_PETIT, tropCher ? PALETTE.rouge : PALETTE.jaune,
+        );
+      }
       ctx.globalAlpha = 1;
     }
   }
