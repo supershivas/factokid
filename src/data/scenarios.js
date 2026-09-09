@@ -7,8 +7,12 @@
 //
 // `graine` nulle veut dire « tire-la » : le bac à sable a une carte différente
 // à chaque fois. Les deux autres en portent une, fixe — le tutoriel montre des
-// cellules précises, et l'usine de départ y est posée d'avance. La clairière
-// du milieu, elle, ne change jamais, quelle que soit la graine.
+// cellules précises, et l'usine de départ y est posée d'avance. Le pied du
+// monde, lui, ne change jamais, quelle que soit la graine.
+//
+// `etageOuvert` dit jusqu'où les murs sont déjà tombés. On commence en bas —
+// c'est le jeu — sauf au bac à sable, qui ouvre tout : c'est ce qu'un bac à
+// sable veut dire, et on n'y fait pas attendre pour essayer une plieuse.
 
 import { DEPART, DEPART_NU } from './depart.js';
 
@@ -21,6 +25,7 @@ export const SCENARIOS = [
     disposition: DEPART_NU,
     tutoriel: true,
     graine: 1,
+    etageOuvert: 1,
   },
   {
     id: 'usine',
@@ -30,6 +35,7 @@ export const SCENARIOS = [
     disposition: DEPART,
     tutoriel: false,
     graine: 1,
+    etageOuvert: 1,
   },
   {
     id: 'bac',
@@ -39,5 +45,6 @@ export const SCENARIOS = [
     disposition: DEPART_NU,
     tutoriel: false,
     graine: null, // une carte neuve à chaque essai
+    etageOuvert: 5, // tout est ouvert : c'est un bac à sable
   },
 ];

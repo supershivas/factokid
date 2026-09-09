@@ -30,7 +30,7 @@ import {
   prolongerConvoyeur, brancherConvoyeur, raccorderA, ajouterMachine, retirerMachine,
 } from '../sim/scene.js';
 import { gisementEn, poserExtracteur, retirerExtracteur } from '../sim/gisement.js';
-import { constructible } from '../sim/mur.js';
+import { constructible, ouverts } from '../sim/mur.js';
 import {
   camera, deplacerCamera, centrerCamera, versMonde, zoomer, reglerZoom,
 } from '../camera.js';
@@ -196,8 +196,13 @@ export function brancherPointeur(canvas, vue, jeu) {
   // Le menu ne montre plus que les bâtiments : le convoyeur a sa propre
   // touche. Depuis qu'il n'y a plus qu'une carte, tout se pose partout — plus
   // rien n'est grisé, et l'extracteur demande seulement un gisement sous lui.
+  //
+  // Il ne montre que ce que les murs ont ouvert : une machine arrive avec son
+  // étage. Au pied du monde on pose un extracteur et une chaufferie, et c'est
+  // tout ce qu'il y a à comprendre.
   function bullesConstructibles() {
-    return CONSTRUCTIBLES.map((c) => ({
+    const ouvert = jeu.monde ? ouverts(jeu.monde) : new Set();
+    return CONSTRUCTIBLES.filter((c) => ouvert.has(c.id)).map((c) => ({
       icone: c.icone,
       nom: MACHINES[c.id].nom,
       prix: cout(c.id),

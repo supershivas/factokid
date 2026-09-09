@@ -19,7 +19,7 @@
 // pense plus.
 
 import { COLONNES } from '../design.js';
-import { ETAGES } from '../data/zones.js';
+import { ETAGES, OUVERT_AU_DEPART } from '../data/zones.js';
 import { rangeesDe } from './carte.js';
 import { poser, lire } from './grid.js';
 
@@ -96,4 +96,20 @@ export function majMur(monde) {
   monde.etageOuvert++;
   monde.murTombe = ETAGES[monde.etageOuvert - 1];
   poserMur(monde);
+}
+
+// Ce qu'on peut bâtir, à cet étage-là. Chaque étage apporte une mécanique et
+// pas seulement une matière : c'est ce qui donne à un mur une récompense
+// au-delà d'une case de plus à récolter, et c'est là que le jeu grossira sans
+// grossir en systèmes — un étage est une entrée de table.
+//
+// Ce qui n'est pas ouvert n'est pas montré. Une touche éteinte dirait qu'il y
+// a autre chose, et c'est déjà ce que dit le mur : il n'y a pas deux façons de
+// dire la même chose à un enfant.
+export function ouverts(monde) {
+  const ids = new Set(OUVERT_AU_DEPART);
+  for (let n = 1; n <= Math.min(monde.etageOuvert, ETAGES.length); n++) {
+    for (const id of ETAGES[n - 1].ouvre) ids.add(id);
+  }
+  return ids;
 }

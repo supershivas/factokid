@@ -16,7 +16,7 @@
 import { creerMonde, majMonde } from '../src/sim/world.js';
 import { DEPART, DEPART_NU } from '../src/data/depart.js';
 import { ETAGES } from '../src/data/zones.js';
-import { murCourant, plafond, constructible, livreAuMur } from '../src/sim/mur.js';
+import { murCourant, plafond, constructible, livreAuMur, ouverts } from '../src/sim/mur.js';
 import { rangeesDe } from '../src/sim/carte.js';
 import { celluleLibre, ajouterMachine, poserConvoyeur, machineEn } from '../src/sim/scene.js';
 import { poserExtracteur } from '../src/sim/gisement.js';
@@ -43,6 +43,13 @@ const veut = (condition, quoi) => {
   veut(!constructible(monde, mur.cy), 'on ne bâtit pas sur le mur');
   veut(!constructible(monde, mur.cy - 1), 'ni derrière');
   veut(constructible(monde, mur.cy + 1), 'mais bien juste devant');
+
+  // Au pied du monde, on pose un extracteur et une chaufferie, et c'est tout
+  // ce qu'il y a à comprendre.
+  const ouvert = ouverts(monde);
+  veut(ouvert.has('extracteur') && ouvert.has('chaufferie'), 'l’étage 1 ouvre le noyau');
+  veut(ouvert.has('convoyeur'), 'et le tapis est là depuis toujours');
+  veut(!ouvert.has('trieur') && !ouvert.has('confiserie'), 'le reste attend son étage');
 
   // Un tapis ne le traverse pas : la grille refuse la case, et poserConvoyeur
   // ne pose rien du tout.
@@ -85,6 +92,12 @@ const veut = (condition, quoi) => {
     veut(!celluleLibre(monde.scene, 21, apres.cy), 'et sa rangée occupe la grille');
     veut(plafond(monde) === apres.cy, 'la caméra monte d’un étage');
     veut(problemes(monde.scene).length === 0, 'la scène reste saine');
+
+    // Chaque étage apporte une mécanique, pas seulement une matière.
+    const apresOuvert = ouverts(monde);
+    for (const id of ETAGES[1].ouvre) veut(apresOuvert.has(id), `l’étage 2 ouvre le ${id}`);
+    for (const id of ETAGES[0].ouvre) veut(apresOuvert.has(id), `et garde le ${id}`);
+    veut(!apresOuvert.has('plieuse'), 'la plieuse attend encore son étage');
 
     console.log(
       `  l'usine des trois branches ouvre le premier mur en ${ouvertA.toFixed(0)} s`

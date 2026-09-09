@@ -16,6 +16,7 @@ import { ajouterMachine, poserConvoyeur, machineEn } from '../src/sim/scene.js';
 import { creerTutoriel, majTutoriel, etapeCourante } from '../src/tutoriel.js';
 import { TUTORIEL } from '../src/data/tutoriel.js';
 import { cout } from '../src/data/outils.js';
+import { ouverts } from '../src/sim/mur.js';
 
 const monde = creerMonde(DEPART_NU);
 const tuto = creerTutoriel();
@@ -85,6 +86,21 @@ for (let i = 0; i < GESTES.length; i++) {
   if (du > mise) {
     echecs++;
     console.log('  ✗ le tutoriel demande plus que la mise de départ');
+  }
+}
+
+// Le tutoriel ne montre jamais une touche qui n'existe pas. Depuis qu'une
+// machine s'ouvre avec son étage, le menu de construction ne porte au pied du
+// monde que ce que l'étage 1 a ouvert : une étape qui demanderait une
+// confiserie enverrait l'enfant chercher un bouton absent.
+{
+  const ouvert = ouverts(monde);
+  for (const e of TUTORIEL) {
+    const veut = e.epreuve === 'machine' ? e.machine : e.epreuve === 'extracteur' ? 'extracteur' : null;
+    if (veut && !ouvert.has(veut)) {
+      echecs++;
+      console.log(`  ✗ ${e.id} demande ${veut}, que l'étage ouvert ne donne pas`);
+    }
   }
 }
 

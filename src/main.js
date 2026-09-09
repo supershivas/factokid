@@ -50,7 +50,7 @@ const jeu = {
     // Une graine nulle veut dire « tire-la » : le bac à sable a une carte
     // neuve à chaque fois, les deux autres gardent la leur.
     const graine = scenario.graine === null ? (Date.now() & 0x7fffffff) : scenario.graine;
-    jeu.monde = creerMonde(scenario.disposition, graine);
+    jeu.monde = creerMonde(scenario.disposition, graine, scenario.etageOuvert);
     // Le sol se déduit de la rangée, mais il reste en cache : le rendu oublie
     // celui de la partie précédente.
     oublierSol();

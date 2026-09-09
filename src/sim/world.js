@@ -19,7 +19,7 @@ import { poserMur, majMur } from './mur.js';
 // Le sol, lui, n'appartient plus à la partie : le biome d'une cellule est
 // donné par sa rangée, le monde se lisant en étages. Il n'y a donc plus de
 // régions à porter.
-export function creerMonde(disposition = DEPART, graine = 1) {
+export function creerMonde(disposition = DEPART, graine = 1, etageOuvert = 1) {
   const carte = creerCarte(graine);
   const monde = {
     // La graine de sa carte : le monde la garde parce que c'est elle qui le
@@ -38,8 +38,9 @@ export function creerMonde(disposition = DEPART, graine = 1) {
     gisements: creerGisements(carte),
     // On ne progresse que vers le haut : au premier instant, seul l'étage du
     // bas est ouvert. Un mur ferme les autres, et il demande le produit de
-    // l'étage qu'il ferme.
-    etageOuvert: 1,
+    // l'étage qu'il ferme. Un essai peut en ouvrir davantage — le bac à sable
+    // les ouvre tous.
+    etageOuvert,
     // Ce qu'un mur vient d'ouvrir, que le monde pose et que l'écran relève —
     // comme la caisse et le livre. La simulation ne fait rien savoir
     // elle-même.
