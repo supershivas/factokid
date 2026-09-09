@@ -356,6 +356,35 @@ export const INTERFACE = {
   bulleTrieur, bulleChaufferie, bulleConfiserie, bulliePlieuse, bulleScierie,
 };
 
+// Tout ce que le jeu peint, nommé une fois. C'est l'inventaire de son dessin :
+// `labo/sprites.html` s'en sert pour les montrer et les exporter en PNG, à leur
+// résolution native, de quoi les reprendre dans un éditeur de pixel art et les
+// rendre au jeu.
+//
+// C'est une fonction et non une table : les toiles sont peintes à l'import du
+// module, et une table figée ici obligerait à connaître l'ordre des imports.
+export function planche() {
+  const tout = {
+    'tapis-droit': convoyeurDroit,
+    'tapis-virage': convoyeurVirage,
+    'tapis-t': convoyeurT,
+    'tapis-croix': convoyeurCroix,
+    chevron: chevronOrdinaire,
+    'chevron-vif': chevronVif,
+    'gisement-vide': gisementVide,
+    arbre,
+  };
+  for (const [nom, image] of Object.entries(ICONES)) tout[nom] = image;
+  for (const [nom, image] of Object.entries(INTERFACE)) {
+    tout[nom.replace(/^bull(?:e|ie)/, 'bulle-').toLowerCase()] = image;
+  }
+  for (const item of Object.values(ITEMS)) {
+    tout['gisement-' + item.id] = spritesGisements[item.id];
+    tout['matiere-' + item.id] = spritesItems[item.id];
+  }
+  return tout;
+}
+
 // Une icône peut venir de l'interface, des machines ou des items : on la
 // cherche là où elle est, pour que les tables n'aient pas à dire d'où elle
 // sort.

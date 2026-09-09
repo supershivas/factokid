@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les sprites du jeu</title>
+<style>
+  :root { --noir:#1a1c2c; --ardoise:#566c86; --creme:#f4f4f4; --brume:#94b0c2;
+          --rouge:#b13e53; --jaune:#ffcd75; --anis:#a7f070; --bleu:#41a6f6; }
+  html,body{margin:0;background:#0e0f1a;color:var(--creme);
+            font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .enveloppe{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+  h1{font-size:22px;margin:0 0 6px}
+  h2{font-size:15px;margin:32px 0 2px;color:var(--jaune)}
+  a{color:var(--bleu)}
+  .note{color:var(--brume);max-width:72ch;margin:0 0 10px}
+  .grille{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-top:14px}
+  .carte{background:#141626;border:1px solid #262a42;border-radius:10px;padding:12px;
+         display:flex;flex-direction:column;align-items:center;gap:8px}
+  /* Le damier dit où le sprite est transparent : sur un fond plein, un contour
+     noir et un vide se ressemblent. */
+  .damier{background:repeating-conic-gradient(#22263c 0% 25%,#1a1d2f 0% 50%) 0 0/12px 12px;
+          border-radius:6px;padding:6px;line-height:0}
+  canvas{image-rendering:pixelated;display:block}
+  .nom{font-size:12px;color:var(--creme);text-align:center;overflow-wrap:anywhere}
+  .taille{font-size:11px;color:var(--ardoise)}
+  .telecharger{font-size:11px;color:var(--bleu);text-decoration:none;border:1px solid #262a42;
+               border-radius:4px;padding:3px 8px}
+  .telecharger:hover{border-color:var(--bleu)}
+  .barre{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 0}
+  button{font:inherit;font-size:12px;padding:6px 12px;border-radius:4px;border:1px solid #262a42;
+         background:var(--noir);color:var(--brume);cursor:pointer}
+  button:hover{color:var(--creme);border-color:var(--ardoise)}
+</style>
+</head>
+<body>
+<div class="enveloppe">
+  <h1>Les sprites du jeu</h1>
+  <p class="note">
+    Tout ce que le jeu peint aujourd’hui, à sa résolution native — vingt-quatre
+    pixels d’art pour une tuile, neuf pour une matière. Ce ne sont pas des
+    copies : la page les prend au code qui les dessine, elle est donc toujours
+    à jour.
+    <a href="./index.html">l’atelier</a> ·
+    <a href="./touches.html">les touches</a> ·
+    <a href="./sols.html">les sols</a>
+  </p>
+  <p class="note">
+    Chaque vignette se télécharge en PNG, transparence comprise, prête à ouvrir
+    dans un éditeur de pixel art. La <b>planche</b> les met toutes sur une
+    seule image, dans l’ordre affiché ici.
+  </p>
+  <div class="barre">
+    <button id="planche">télécharger la planche</button>
+    <button id="tout">télécharger un par un</button>
+  </div>
+  <div id="sections"></div>
+</div>
+<script type="module" src="./sprites.js"></script>
+</body>
+</html>

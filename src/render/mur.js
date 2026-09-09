@@ -33,7 +33,7 @@ const ETEINT = 0.62;
 
 // Une tuile de mur, peinte une fois. Des blocs décalés d'une assise à
 // l'autre : c'est ce qui fait lire un mur plutôt qu'une grille.
-const tuileMur = (() => {
+export const tuileMur = (() => {
   const c = document.createElement('canvas');
   c.width = TUILE_PX;
   c.height = TUILE_PX;

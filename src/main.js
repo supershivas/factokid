@@ -17,6 +17,7 @@ import { dessinerRepereMur } from './render/mur.js';
 import { dessinerChoix } from './render/choix.js';
 import { dessinerHalo, dessinerBandeau } from './render/tutoriel.js';
 import { creerDemarrage, avancerDemarrage, dessinerDemarrage } from './render/demarrage.js';
+import { poserFavicon } from './render/favicon.js';
 import { spriteItem } from './render/sprites.js';
 import { creerMonde, majMonde } from './sim/world.js';
 import { plafond } from './sim/mur.js';
@@ -35,6 +36,10 @@ import { majToast, dessinerToast, annoncer } from './render/toast.js';
 
 const canvas = document.getElementById('jeu');
 const vue = creerVue(canvas);
+
+// L'icône de l'onglet est le bonbon du jeu, peint par le même code : il n'y a
+// pas d'image rangée à côté qui pourrait dériver.
+poserFavicon();
 
 // Une seule préparation : l'atlas des tuiles, déjà peint à l'import de
 // sprites.js. Le monde, lui, attend qu'un essai soit choisi.

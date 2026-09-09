@@ -197,6 +197,13 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   s'adresse à l'adulte, pas à l'enfant. On ne devine jamais une partie à
   moitié.
   **Changer d'essai efface la partie** : elle est abandonnée, pas mise de côté.
+- **L'icône du jeu est son bonbon**, peint par le code qui le peint, agrandi
+  d'un nombre entier de fois et posé sur le noir (`render/favicon.js`). Ce
+  n'est pas un fichier rangé à côté : une image de plus aurait été une seconde
+  vérité, qui aurait dérivé le jour où le bonbon change de forme. Deux tailles,
+  deux usages — trente-deux pour l'onglet, cent quatre-vingts pour l'écran
+  d'accueil d'un téléphone, et cent quatre-vingts fait exactement vingt fois
+  les neuf pixels d'art du bonbon.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
@@ -669,6 +676,17 @@ Elle se calcule.
 Les huit premières propositions, en pixels, sont dans `labo/boutons.html` ; les
 dix suivantes, hors du pixel art, dans `labo/touches.html`.
 
+### Les sprites se reprennent, ils ne se refont pas
+
+`labo/sprites.html` montre **tout ce que le jeu peint**, à sa résolution
+native, et l'exporte en PNG — une image par sprite, ou une planche entière.
+Ce ne sont pas des copies rangées à côté : la page les prend au code qui les
+dessine (`planche()` dans `render/sprites.js`), elle est donc toujours à jour,
+et un sprite ajouté au jeu y apparaît sans qu'on y pense.
+
+C'est ce qui permet de reprendre un dessin dans un éditeur de pixel art plutôt
+que de le refaire : on exporte, on modifie, on rend au jeu.
+
 ### Lisibilité : elle se vérifie, elle ne se suppose pas
 
 `node outils/lisibilite.mjs` relit le design system hors du navigateur et
@@ -843,6 +861,7 @@ src/
     motifs.js       les matières en pixels d'art, table pure
     signes.js       les signes de l'interface, en courbes
     plaque.js       les touches : forme, ombre, enfoncement
+    favicon.js      l'icône de l'onglet, peinte comme le reste
     demarrage.js    barre de chargement
     particules.js   fumée et étoiles
     vapeurs.js      les souffles des machines, table de formes
