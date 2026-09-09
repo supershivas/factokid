@@ -5,6 +5,7 @@
 import { planche, ICONES } from '../src/render/sprites.js';
 import { tuileMur } from '../src/render/mur.js';
 import { MATIERE_DE } from '../src/data/biomes.js';
+import { PALETTE } from '../src/design.js';
 
 // Le zoom d'affichage : un nombre entier, comme partout ailleurs. Une image de
 // pixel art à ×5,5 n'a plus des pixels de même largeur.
@@ -120,4 +121,45 @@ document.getElementById('tout').addEventListener('click', () => {
   ordre.forEach((nom, i) => {
     setTimeout(() => telecharger(nom, tout[nom]), i * 220);
   });
+});
+
+// --- la palette, pour l'éditeur ---------------------------------------------
+//
+// Un dessin fait avec d'autres couleurs que les seize se fait rapprocher des
+// seize, et ce rapprochement est un hasard heureux au mieux. Le vrai remède
+// est en amont : charger la palette dans l'éditeur, et n'y prendre que ce
+// qu'elle donne. Deux formats, parce que les éditeurs ne lisent pas les mêmes.
+//
+// Elle n'est pas rangée dans un fichier du dépôt : elle est écrite depuis
+// `design.js`, comme tout le reste. Une palette copiée à côté finirait par
+// mentir le jour où une couleur change.
+const SEIZE = [
+  'noir', 'prune', 'rouge', 'orange', 'jaune', 'anis', 'vert', 'sarcelle',
+  'nuit', 'outremer', 'bleu', 'cyan', 'creme', 'brume', 'ardoise', 'profond',
+];
+
+function telechargerTexte(nom, texte) {
+  const a = document.createElement('a');
+  a.download = nom;
+  a.href = URL.createObjectURL(new Blob([texte], { type: 'text/plain' }));
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+document.getElementById('palette-hex').addEventListener('click', () => {
+  telechargerTexte('sweetie16.hex', SEIZE.map((n) => PALETTE[n].slice(1).toUpperCase()).join('\n') + '\n');
+});
+
+document.getElementById('palette-gpl').addEventListener('click', () => {
+  const lignes = ['GIMP Palette', 'Name: Sweetie 16', 'Columns: 8', '#'];
+  for (const nom of SEIZE) {
+    const hex = PALETTE[nom];
+    const r = parseInt(hex.slice(1, 3), 16);
+    const v = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    lignes.push(
+      String(r).padStart(3) + ' ' + String(v).padStart(3) + ' ' + String(b).padStart(3) + '\t' + nom,
+    );
+  }
+  telechargerTexte('sweetie16.gpl', lignes.join('\n') + '\n');
 });

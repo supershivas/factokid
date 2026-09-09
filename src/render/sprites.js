@@ -9,6 +9,7 @@ import { cadrerMonde, fenetre, celluleVisible } from '../camera.js';
 import { tuileSol } from './biome.js';
 import { ITEMS } from '../data/items.js';
 import { FORMES as formes } from './motifs.js';
+import { TUILES, peindreTuile } from './tuiles.js';
 import { REPOUSSE_TICKS } from '../data/monde.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
@@ -172,16 +173,11 @@ const confiserie = toile(TUILE_PX, (rect) => {
   formes.bonbon(decale(rect, 8, 15), PALETTE.orange);
 });
 
-// La chaufferie : une cuve sur un feu, où le sucre fond en caramel.
-const chaufferie = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 24, 24, PALETTE.noir);
-  rect(2, 2, 21, 21, PALETTE.ardoise);
-  rect(5, 5, 15, 9, PALETTE.noir);
-  rect(6, 8, 12, 4, PALETTE.jaune);
-  rect(6, 6, 12, 2, PALETTE.creme);
-  for (let i = 0; i < 3; i++) rect(6 + i * 5, 17, 3, 4, PALETTE.orange);
-  rect(5, 21, 15, 2, PALETTE.rouge);
-});
+// La chaufferie : elle vient de `render/tuiles.js`, une table de lettres, une
+// par couleur de la palette. C'est le premier sprite du jeu qui ne soit pas
+// écrit en rectangles — dessiné dans un éditeur de pixel art, rendu au jeu par
+// l'atelier des sprites.
+const chaufferie = toile(TUILE_PX, peindreTuile(TUILES.chaufferie));
 
 // La plieuse : deux volets qui se referment sur une feuille de papier.
 const plieuse = toile(TUILE_PX, (rect) => {

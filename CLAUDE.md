@@ -685,7 +685,18 @@ dessine (`planche()` dans `render/sprites.js`), elle est donc toujours à jour,
 et un sprite ajouté au jeu y apparaît sans qu'on y pense.
 
 C'est ce qui permet de reprendre un dessin dans un éditeur de pixel art plutôt
-que de le refaire : on exporte, on modifie, on rend au jeu.
+que de le refaire : on exporte, on modifie, on rend au jeu. La même page donne
+**la palette au format d'un éditeur** (.gpl, .hex), écrite depuis `design.js` :
+un dessin fait avec d'autres couleurs se fait rapprocher des seize, et ce
+rapprochement est un hasard heureux au mieux.
+
+**Ce qui revient est une table, pas une image.** Un sprite rendu au jeu devient
+une entrée de `render/tuiles.js` : une matrice de lettres, une par couleur de
+la palette, le point pour le vide. C'est la même discipline que
+`render/motifs.js` pour les matières, et pour les mêmes raisons — une table se
+relit hors du navigateur, se compare, se corrige à l'œil dans le source, et ne
+peut porter aucune couleur qui ne soit pas des seize. La chaufferie est la
+première : elle n'est plus écrite en rectangles.
 
 ### Lisibilité : elle se vérifie, elle ne se suppose pas
 
@@ -859,6 +870,7 @@ src/
     toast.js        le bandeau qui annonce et s'en va
     texte.js        fonte bitmap 5 × 7, texte explicable
     motifs.js       les matières en pixels d'art, table pure
+    tuiles.js       les machines en pixels d'art, table pure
     signes.js       les signes de l'interface, en courbes
     plaque.js       les touches : forme, ombre, enfoncement
     favicon.js      l'icône de l'onglet, peinte comme le reste
