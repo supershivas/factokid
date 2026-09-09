@@ -17,7 +17,7 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   Rien ne progresse en revanche quand l'app est fermée : pas d'idle, pas de
   production hors ligne. **Seule exception : le menu pause**, où le temps
   s'arrête parce que le joueur l'a demandé.
-- **Une mini-carte, toujours visible**, dans le bandeau haut : le monde entier
+- **Une mini-carte, toujours visible**, dans le voile du haut : le monde entier
   à une unité par cellule, avec le cadre de la fenêtre. La toucher y emmène
   la vue — un geste, pas deux. Elle en occupait deux quand le monde était
   quatre fois plus petit : la carte a grandi, la vignette non.
@@ -141,7 +141,8 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   tutoriel en coûte 92, et `outils/tutoriel.mjs` relit ce compte pour qu'une
   étape de plus reste payable. L'économie vit dans le geste, jamais dans la
   simulation : une machine ne sait pas ce qu'elle a coûté.
-- **Le livre des matières.** Une page du menu pause montre les huit matières :
+- **Le livre des matières.** Une page du menu pause montre les dix matières —
+  les quatre brutes, le papier, le caramel, la pastille et les trois bonbons :
   celles qu'on a tenues une fois sont en couleur, les autres gardent leur
   silhouette éteinte — on voit qu'il y a quelque chose là sans savoir encore
   quoi, et le jour où on l'obtient c'est la couleur qui arrive. Un compte dit
@@ -197,10 +198,12 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 ### Une seule carte, plus grande que l'écran
 
 Il n'y a plus d'écran d'usine ni de carte de minage : **une seule grille**, où
-l'on mine et où l'on construit au même endroit. Elle fait trente-six fenêtres
-— 42 × 60 cellules pour une fenêtre de 7 × 10 — et la caméra s'y promène. Elle
-en faisait neuf : la distance est la ressource, et neuf fenêtres se traversent
-trop vite pour que ce soit vrai longtemps.
+l'on mine et où l'on construit au même endroit. Elle fait **42 × 60 cellules**
+— vingt-cinq fenêtres pleines, la fenêtre en montrant 7,5 × 13,3 — et la caméra
+s'y promène. Elle en faisait neuf : la distance est la ressource, et neuf
+fenêtres se traversent trop vite pour que ce soit vrai longtemps.
+
+Le monde est donc **plus haut que large**, dans un rapport de un à un et demi.
 
 C'est le seul système que la carte générale ajoute, et il ne touche pas à la
 simulation : déplacer la vue ne change rien à ce qui circule. Tout le jeu
@@ -400,7 +403,8 @@ gris. La couleur est une confirmation, jamais l'unique porteuse d'information.
 C'est la **silhouette colorée** qui porte la forme, pas le contour : sur un sol
 sombre, le noir du contour disparaît, et il ne reste que la couleur. Un rond
 dont seul le contour est rond se lit comme une croix. Les items sont donc des
-matrices de 9 × 9 pixels d'art (`MOTIFS` dans `render/sprites.js`), où la
+matrices de 9 × 9 pixels d'art (`MOTIFS` dans `render/motifs.js`, table pure
+que l'outil de lisibilité relit hors du navigateur), où la
 couleur remplit la forme et le noir la cerne.
 
 **Dérogation validée : les sols des biomes.** Composer une couleur de la
@@ -503,9 +507,10 @@ qu'il tient :
 - **Le contraste** de chaque paire de couleurs qu'on pose l'une sur l'autre,
   au rapport WCAG : 4,5 pour du texte, 3 pour un signe. Les paires sont
   déclarées dans l'outil — une nouvelle s'y ajoute le jour où on la dessine.
-  Ce qui détache une matière du tapis n'est pas sa couleur (quatre des huit ne
-  peuvent pas y trancher sans sortir de la palette) mais **le noir qui la
-  cerne** : c'est lui qui est mesuré.
+  Ce qui détache une matière du tapis n'est pas sa couleur — depuis que la
+  bande est bleue, cinq matières sur dix ne tranchent plus dessus — mais **le
+  noir qui la cerne** : c'est lui qui est mesuré, et l'outil nomme celles qui
+  ne tiennent que par là.
 - **Les silhouettes** : deux matières ne peuvent pas avoir la même forme en
   niveaux de gris, et aucune ne peut être peinte à même le sol — chaque pixel
   de couleur doit toucher du noir ou de la couleur, jamais le vide.
@@ -582,10 +587,11 @@ exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
 Quatre outils gardent le jeu, et ils tournent avant toute livraison :
 `outils/tapis.mjs` pour les convoyeurs, `outils/lisibilite.mjs` pour ce qui se
-lit, `outils/tutoriel.mjs` qui joue les dix-sept étapes du premier contact et
-vérifie qu'au bout l'usine livre, `outils/carte.mjs` qui tire trois cents
-cartes et relit ce qu'elles promettent — clairière intacte, aucune matière qui
-manque, rien hors de la grille.
+lit, `outils/tutoriel.mjs` qui joue les dix-sept étapes du premier contact,
+vérifie qu'au bout l'usine livre et que le tutoriel reste payable avec la mise
+de départ, `outils/carte.mjs` qui tire trois cents cartes et relit ce qu'elles
+promettent — clairière intacte, aucune matière qui manque, rien hors de la
+grille.
 
 Toute vérification visuelle passe d'abord par `node outils/lisibilite.mjs`,
 puis produit **les deux captures, systématiquement** :
@@ -634,13 +640,12 @@ src/
     scenarios.js    les trois essais de la bêta
     tutoriel.js     étapes du premier contact
     version.js      le numéro de version, et rien d'autre
-    outils.js       outils et éléments constructibles
+    outils.js       outils, éléments constructibles, et ce qu'ils coûtent
     recipes.js      table des recettes
-    progression.js  paliers de déblocage, courbe
   render/
     canvas.js       mise à l'échelle
     biome.js        la teinte de chaque cellule
-    minicarte.js    le monde entier dans le bandeau haut
+    minicarte.js    le monde entier, dans le voile du haut
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
@@ -648,20 +653,32 @@ src/
     texte.js        fonte bitmap 5 × 7, texte explicable
     motifs.js       les matières en pixels d'art, table pure
     signes.js       les signes de l'interface, en courbes
-    plaque.js       les touches : forme, épaisseur, enfoncement
+    plaque.js       les touches : forme, ombre, enfoncement
     demarrage.js    barre de chargement
     particules.js   fumée et étoiles
+    vapeurs.js      les souffles des machines, table de formes
+    pose.js         la cellule qu'on vient de poser, et son éclat
+    chevron.js      les chevrons qui défilent le long d'un tapis
+    alerte.js       la bulle « !!! » d'un bouchon qui dure
     sprites.js      atlas, dessin des tuiles
     bouton.js       l'appui d'une touche, par clé
     hud.js          compteurs, boutons
   input/
-    pointer.js      gestes unifiés, tracé
-  save/
-    run.js          état de la partie en cours
-    meta.js         état permanent (prestige)
+    pointer.js      gestes unifiés, tracé, et la caisse
 ```
 
 `data/` ne contient que des tables. Aucune logique. C'est là que le jeu grossit.
+
+**Ce qui n'existe pas encore, et qu'on ne prétend pas avoir.** Ce fichier a
+longtemps décrit trois modules qui n'ont jamais été écrits ; ils sont nommés
+ici, à leur place, et rien d'autre :
+
+- `data/progression.js` — les paliers de déblocage. **N'existe pas.** Il n'y a
+  aujourd'hui aucun palier : bâtir coûte, mais rien ne s'ouvre.
+- `save/run.js` et `save/meta.js` — la sauvegarde de la partie et l'état
+  permanent. **N'existent pas.** Rien n'est sauvegardé : recharger la page
+  perd l'usine, et c'est ce qui oblige la mise à jour à ne jamais s'appliquer
+  sous les doigts du joueur.
 
 ---
 
@@ -703,9 +720,10 @@ Rien d'autre que ceci tant que ce n'est pas validé :
 Depuis, le lot a grossi sur décision : deuxième matière et première recette
 (a + b = c), gisements et trieur, la chaîne complète du bonbon, la
 construction des trieurs et des transformateurs, puis la carte générale — une
-seule grille de neuf fenêtres, où l'on mine et où l'on construit au même
-endroit. La bêta y ajoute ses trois essais et le tutoriel du premier contact.
-Ces ajouts sont décrits en section 1.
+seule grille de 42 × 60 cellules, où l'on mine et où l'on construit au même
+endroit. La bêta y ajoute ses trois essais et le tutoriel du premier contact,
+et l'économie ses prix : la livraison achète, et bâtir coûte. Ces ajouts sont
+décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
 Remesuré depuis, avec l'espacement à 27, le cran de recul et la carte qui
