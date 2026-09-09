@@ -400,24 +400,45 @@ noyau à trois machines qui existe déjà : l'étage 1 ne coûte pas une donnée
 **Un mur demande le produit de l'étage qu'il ferme** — du caramel pour le
 premier, le bonbon à la fraise pour le deuxième. On ne réclame jamais ce qu'on
 ne sait pas encore faire, et le but est toujours « fais ce que tu viens
-d'apprendre, en plus grand ». Le total livré au mur ne se dépense pas : il
-monte pendant que la caisse, elle, se dépense. Deux nombres, deux rôles, aucun
-arbitrage à expliquer.
+d'apprendre, en plus grand ». Le total porté au mur ne se dépense pas : il
+monte pendant que la caisse, elle, se dépense.
+
+**On le lui porte : le mur a sa réception.** Trois cases creusées au milieu de
+sa rangée, une machine de la scène comme une autre, où l'on trace un tapis.
+Elle n'est pas la livraison — celle-ci achète et remplit la caisse, la
+réception avale et ne paie rien. Deux endroits, deux rôles : ouvrir un mur,
+c'est cesser de vendre une partie de ce qu'on produit, et ce choix se tire au
+tapis. Sans elle, il n'y avait rien à faire pour ouvrir un mur qu'attendre.
+Elle n'accepte que ce que le mur réclame ; le reste s'accumule sur le tapis et
+le joueur le voit — on ne jette rien en silence.
+
+**Une flèche au bord de la zone sûre** dit de quel côté elle est quand elle
+sort du cadre, avec la matière qu'elle attend : le mur fait quarante-deux cases
+et la fenêtre en montre sept. C'est le seul repère du jeu qui désigne un
+endroit du monde depuis l'écran.
+
+**Une machine peut occuper plusieurs cellules**, et la réception est la
+première — la seule pour l'instant. La grille rend la même machine pour
+chacune de ses cases, si bien que le tracé, le raccord et le rendu n'ont rien
+appris de neuf ; ce qu'un tapis vise est alors **la case qu'il touche**, jamais
+l'ancre de la machine.
 
 **Un mur ouvert redevient du sol ordinaire.** Pas de porte, pas de goulot d'une
 case où les tapis s'étranglent : ouvert veut dire franchi, on n'y pense plus.
 
 **Ce qu'un mur montre, et pas un mot** : une rangée de blocs en ardoise, ce
-qu'il y a derrière éteint, et sur lui une plaque qui porte la matière réclamée
-et une jauge qui se remplit. La plaque suit le milieu de l'écran — le mur fait
-quarante-deux cases et la fenêtre en montre sept, une jauge posée une fois pour
-toutes serait hors de vue neuf fois sur dix.
+qu'il y a derrière éteint, et sa réception au milieu — la matière réclamée, une
+jauge qui se remplit, et trois chevrons qui disent par où ça entre.
 
-**Le premier mur demande cent caramels**, et c'est mesuré (`node
-outils/mur.mjs`) : l'usine des trois branches que le tutoriel bâtit l'ouvre en
-une minute quarante, une branche seule en près de cinq. L'écart est le
-message — on n'attend pas, on agrandit. À quarante, il tombait en
-quarante-trois secondes sans qu'on ait rien à faire.
+**Le premier mur demande cinquante caramels**, et c'est mesuré (`node
+outils/mur.mjs`) : un tapis détourné vers la réception l'ouvre en deux minutes
+vingt, deux tapis en une minute treize. L'écart est le message — on n'attend
+pas, on double. Il en demandait cent quand la livraison comptait pour lui ;
+depuis qu'il a sa réception, ce qu'on lui porte n'est plus vendu, et le seuil
+se paie deux fois.
+
+**Un mur sans seuil n'a pas de réception** : il est plein sur toute sa
+longueur, et c'est ce qui dit que le jeu s'arrête là.
 
 **Ce que le mur coûte vraiment**, et c'est peu : une rangée où l'on ne peut pas
 bâtir, un plafond sur les bornes de la caméra qui remonte quand il tombe, et un
@@ -792,7 +813,7 @@ src/
     machine.js      production, consommation, stocks
     gisement.js     gisements, extraction, repousse
     carte.js        les étages, et les gisements tirés à la graine
-    mur.js          ce qui ferme un étage, et ce qu'il faut lui livrer
+    mur.js          ce qui ferme un étage, sa réception, et son seuil
     world.js        état de la partie en cours
   save/
     run.js          la partie en cours, écrite et relue
@@ -813,7 +834,7 @@ src/
     canvas.js       mise à l'échelle
     biome.js        la teinte de chaque cellule
     minicarte.js    le monde entier, dans le voile du haut
-    mur.js          la rangée du mur, ce qu'il demande, et ce qu'il cache
+    mur.js          la rangée du mur, sa réception, et la flèche qui l'indique
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
