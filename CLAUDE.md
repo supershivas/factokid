@@ -323,6 +323,79 @@ arrive, et un tapis avance toujours à 96 unités par seconde : le débit ne
 dépend jamais de ce qu'on regarde. Un seul endroit du rendu connaît l'échelle,
 `cadrerMonde()` dans `camera.js` ; tout le reste dessine en unités du monde.
 
+### Les étages, et les murs qui les séparent
+
+**Décidé, pas encore écrit.** Rien de ce qui suit n'existe dans le code : c'est
+la forme que le jeu doit prendre, et elle est arrêtée. Ce qui est déjà bâti —
+la carte, les biomes, l'économie — n'est pas jeté : c'est ce qui la porte.
+
+**On ne progresse que vers le haut.** Le monde se lit en **étages**, des bandes
+horizontales de douze rangées sur les quarante-deux de large. Cinq étages
+tiennent dans les soixante rangées du monde, et un étage fait presque un écran
+de haut : quand on est à son pied, on voit le mur qui le ferme.
+
+**Un étage, un biome, une matière.** Le monde du sucre, celui des fraises,
+celui de la menthe, la forêt. C'est ce qui rend le mur *nécessaire* et non
+décoratif : l'étage du dessus ne peut rien faire de neuf sans ce que produit
+celui du dessous. La chaîne doit donc **traverser le mur**, et l'usine d'en bas
+continue de tourner pour toujours. On ne recommence jamais : on rallonge.
+
+**L'étage 1 est le monde du sucre, et son sucre entre dans toutes les
+recettes, jusqu'au dernier étage.** Il ne devient donc jamais un souvenir : à
+chaque mur ouvert, la demande sur lui augmente. C'est la boucle du jeu —
+ouvrir un mur, voir l'étage 1 étouffer, redescendre l'élargir. Redescendre
+n'est pas une corvée de réparation, c'est le jeu.
+
+C'est le sucre et non la fraise parce qu'il y a du sucre dans tous les bonbons,
+qu'un enfant le sait, et que `sucre → chaufferie → livraison` est exactement le
+noyau à trois machines qui existe déjà : l'étage 1 ne coûte pas une donnée.
+
+**Un mur demande le produit de l'étage qu'il ferme** — du caramel pour le
+premier, le bonbon à la fraise pour le deuxième. On ne réclame jamais ce qu'on
+ne sait pas encore faire, et le but est toujours « fais ce que tu viens
+d'apprendre, en plus grand ». Le total livré au mur ne se dépense pas : il
+monte pendant que la caisse, elle, se dépense. Deux nombres, deux rôles, aucun
+arbitrage à expliquer.
+
+**Un mur ouvert redevient du sol ordinaire.** Pas de porte, pas de goulot d'une
+case où les tapis s'étranglent : ouvert veut dire franchi, on n'y pense plus.
+
+**Ce que le mur coûte vraiment**, et c'est peu : une rangée où l'on ne peut pas
+bâtir, un plafond sur les bornes de la caméra qui remonte quand il tombe, et un
+seuil. Le monde ne grandit pas — il fait toujours 42 × 60 — c'est ce qu'on peut
+atteindre qui grandit, et le scroll s'allonge tout seul.
+
+**Chaque étage apporte une mécanique**, pas seulement une matière : le trieur,
+le tapis rapide, les trois bonbons. C'est ce qui donne à un mur une récompense
+au-delà de « une case de plus à récolter », et c'est là que le jeu grossira
+sans grossir en systèmes — un étage est une entrée de table.
+
+**La mini-carte montre les étages fermés en éteint**, comme le livre des
+matières montre les silhouettes de ce qu'on n'a pas trouvé : on voit qu'il y a
+quelque chose là sans savoir encore quoi. Elle devient la barre de progression
+du jeu entier.
+
+**Ce que cela retire.** La clairière disparaît : son rôle — un peu de tout au
+centre, pour faire un bonbon sans traverser quoi que ce soit — est repris par
+l'étage 1, qui se suffit à lui-même. Le tutoriel rétrécit d'autant : il n'a
+plus à enseigner les quatre matières d'un coup, ce sont les murs qui les
+présentent une par une.
+
+**Ce que cela simplifie.** `sim/carte.js` tire aujourd'hui vingt-six régions au
+hasard dans le plan, avec des garanties par matière et un plancher de
+rattrapage. Des bandes d'une matière chacune, c'est moins : le biome est donné
+par la rangée, les bouquets se sèment dedans, et le plancher disparaît — il ne
+peut pas manquer de sucre dans le monde du sucre.
+
+**Deux chiffres mesurés, qui disent que ça tient.** Un tapis porte au plus
+3,56 items par seconde, un extracteur en sort 0,36 : **un seul tapis monte donc
+la récolte de dix extracteurs**. Le sucre de l'étage 1 n'aura pas besoin de
+quatre tapis parallèles sur quarante rangées — un suffit très longtemps, et le
+goulot reste les gisements, c'est-à-dire la géographie.
+
+**La sauvegarde vient avant.** Perdre quatre étages à un rechargement de page
+est intolérable, et rien n'est sauvegardé aujourd'hui. Elle se fait d'abord.
+
 ### Règle de croissance
 
 Le jeu grossit par **ajout de données**, jamais par ajout de systèmes. Une
@@ -673,12 +746,19 @@ src/
 longtemps décrit trois modules qui n'ont jamais été écrits ; ils sont nommés
 ici, à leur place, et rien d'autre :
 
-- `data/progression.js` — les paliers de déblocage. **N'existe pas.** Il n'y a
-  aujourd'hui aucun palier : bâtir coûte, mais rien ne s'ouvre.
 - `save/run.js` et `save/meta.js` — la sauvegarde de la partie et l'état
   permanent. **N'existent pas.** Rien n'est sauvegardé : recharger la page
   perd l'usine, et c'est ce qui oblige la mise à jour à ne jamais s'appliquer
-  sous les doigts du joueur.
+  sous les doigts du joueur. **C'est le prochain lot**, et il bloque les
+  étages : on ne demande pas à un enfant de rebâtir quatre étages parce qu'il a
+  rechargé une page.
+- `data/zones.js` — les étages, leur biome, leur seuil, ce qu'ils ouvrent.
+  **N'existe pas.** C'est la table qui portera les étages décrits en section 1,
+  et `data/progression.js` n'a plus lieu d'être : un palier *est* un mur.
+
+Rien de ce qui n'existe pas ne doit être décrit ailleurs dans ce fichier comme
+s'il existait. C'est arrivé pendant des semaines : trois modules fantômes y
+étaient documentés au présent.
 
 ---
 
