@@ -301,7 +301,61 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   for (const suite of t.sorties) veut(suite !== t, 'aucune sortie ne revient au tapis');
 }
 
-// ————— 11. martelage : on construit et on détruit au hasard, en vérifiant
+// ————— 11. une branche ne détruit jamais le tapis d'où elle part
+//
+// Tracer une branche vers une machine déjà pleine d'entrées lui fait de la
+// place : elle retire la plus ancienne. Quand la plus ancienne était le tapis
+// d'où part le tracé, la branche naissait alimentée par un tapis qui venait
+// d'être détruit — dessinée, branchée pour l'œil, et vide pour toujours.
+{
+  const s = creerScene();
+  const four = ajouterMachine(s, 'chaufferie', 6, 5);
+  const ouest = ajouterMachine(s, 'extracteur', 1, 5, { item: 'sucre' });
+  const est = ajouterMachine(s, 'extracteur', 10, 5, { item: 'sucre' });
+  const sud = ajouterMachine(s, 'extracteur', 6, 10, { item: 'sucre' });
+  const a = poserConvoyeur(s, ligne(2, 5, 4, 1, 0), ouest, four);
+  poserConvoyeur(s, ligne(9, 5, 3, -1, 0), est, four);
+  poserConvoyeur(s, ligne(6, 9, 4, 0, -1), sud, four);
+  veut(four.entrees.length === 3, 'la chaufferie est pleine : trois entrées');
+
+  // La quatrième arrive par le nord, et elle part du tapis de l'ouest.
+  const branche = poserConvoyeur(s, [{ cx: 5, cy: 4 }, { cx: 6, cy: 4 }], a, four);
+  verifier(s, 'branche vers une machine pleine');
+  veut(s.convoyeurs.includes(a), 'le tapis d’où part la branche est toujours là');
+  veut(branche && branche.source === a, 'la branche est alimentée par lui');
+  veut(a.sorties.includes(branche), 'et il la connaît');
+  veut(four.entrees.length === 3, 'la chaufferie en tient toujours trois');
+
+  // Et la branche livre pour de bon : c'est tout ce qui manquait.
+  const avant = four.stocks.sucre + four.produits;
+  for (let k = 0; k < 900; k++) {
+    if (peutAccepter(a)) pousser(a, 'sucre');
+    majScene(s, 1 / 60);
+  }
+  veut(branche.items.length > 0 || four.stocks.sucre + four.produits > avant, 'la branche porte quelque chose');
+}
+
+// ————— 12. on ne se raccorde pas à un tapis qu'on vient de détruire
+//
+// Un extracteur n'a qu'une sortie : retracer depuis lui remplace le tapis qui
+// en partait déjà. Quand le nouveau tracé venait buter sur ce même tapis, il
+// se raccordait à un mort — un tapis retiré de la scène, que rien ne fait plus
+// avancer et que rien ne dessine, mais qui restait la source du nouveau.
+{
+  const s = creerScene();
+  const mine = ajouterMachine(s, 'extracteur', 1, 5, { item: 'sucre' });
+  const four = ajouterMachine(s, 'chaufferie', 5, 5);
+  const ancien = poserConvoyeur(s, ligne(2, 5, 3, 1, 0), mine, four);
+  const neuf = raccorderConvoyeur(
+    s, [{ cx: 1, cy: 6 }, { cx: 2, cy: 6 }], mine, ancien, { cx: 2, cy: 5 },
+  );
+  verifier(s, 'raccord sur un tapis que la pose a remplacé');
+  veut(!s.convoyeurs.includes(ancien), 'l’extracteur n’a gardé qu’une sortie');
+  veut(neuf && s.convoyeurs.includes(neuf), 'le nouveau tapis est bien posé');
+  veut(neuf.sorties.length === 0, 'il ne se déverse pas dans un tapis détruit');
+}
+
+// ————— 13. martelage : on construit et on détruit au hasard, en vérifiant
 // tous les invariants après chaque geste.
 {
   // Un générateur reproductible et correctement mélangé : les bits de poids

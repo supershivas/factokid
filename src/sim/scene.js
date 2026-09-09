@@ -81,6 +81,10 @@ export function couperConvoyeur(scene, convoyeur, cx, cy) {
       const s = suite.sources.indexOf(convoyeur);
       if (s >= 0) suite.sources.splice(s, 1);
       if (suite.source === convoyeur) suite.source = suite.sources[0] || null;
+      // Elle n'est plus alimentée par personne : sa géométrie change avec ses
+      // sources, et sans ça elle gardait l'entrée d'un tapis qui ne la touche
+      // plus — ses items entraient par un bord qui n'existait plus.
+      majGeometrie(suite);
     }
   }
 
@@ -216,7 +220,7 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
   if (cible) {
     const dejaLa = cible.entrees.find((c) => c.source === convoyeur.source && c.role === convoyeur.role);
     if (dejaLa && dejaLa !== convoyeur) retirerConvoyeur(scene, dejaLa);
-    liberer(scene, cible.entrees, maxEntrees(cible));
+    liberer(scene, cible.entrees, maxEntrees(cible), convoyeur);
     cible.entrees.push(convoyeur);
   }
   reconstruire(convoyeur, convoyeur.chemin.concat(cellules), cible);
@@ -320,7 +324,9 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   if (cible) {
     const dejaLa = cible.entrees.find((c) => c.source === source && c.role === role);
     if (dejaLa) retirerConvoyeur(scene, dejaLa);
-    liberer(scene, cible.entrees, maxEntrees(cible));
+    // Le tapis d'où part le tracé peut être une des entrées de la cible : lui
+    // faire de la place en le détruisant ferait naître la branche orpheline.
+    liberer(scene, cible.entrees, maxEntrees(cible), estMachine(source) ? null : source);
   }
   const convoyeur = creerConvoyeur(chemin, source, cible);
   scene.convoyeurs.push(convoyeur);
@@ -436,6 +442,12 @@ export function raccorderConvoyeur(scene, chemin, source, hote, cellule) {
 // n'ont aucune case à sauter au passage de la jonction.
 export function raccorderA(scene, nouveau, hote, cellule) {
   if (!nouveau || nouveau === hote) return;
+  // Ni l'un ni l'autre ne doit avoir disparu entre-temps. Poser un tapis en
+  // détruit parfois un autre — une machine n'a qu'une sortie, et retracer
+  // depuis elle remplace ce qui partait déjà —, et ce qu'on croyait raccorder
+  // n'est alors plus là : on se serait déversé dans un tapis mort, qui
+  // n'avance plus et que rien ne dessine.
+  if (!scene.convoyeurs.includes(nouveau) || !scene.convoyeurs.includes(hote)) return;
   // Le bout du nouveau venu doit toucher la jonction : sans cela il déverserait
   // à distance, et ses items traverseraient le vide pour y arriver.
   const bout = nouveau.chemin[nouveau.chemin.length - 1];
@@ -485,18 +497,26 @@ export function raccorderAuVoisinage(scene, machine) {
 // Fait de la place dans une liste de tapis : on retire les plus anciens
 // jusqu'à ce qu'il en reste moins que la limite.
 //
-// La liste elle-même est raccourcie, sans faire confiance à ce que
-// retirerConvoyeur en enlèvera : un tapis déjà retiré de la scène y resterait
-// sinon pour toujours, et la boucle ne se terminerait jamais. C'est le genre
-// de blocage qui fige la page et oblige à recharger.
-function liberer(scene, liste, limite) {
+// `epargner` est le tapis qu'on s'apprête à brancher : il ne doit jamais être
+// celui qu'on retire. Tracer une branche depuis un tapis qui nourrissait déjà
+// la machine visée le faisait pourtant — la place se libérait en détruisant la
+// source du tracé en cours, et la branche naissait alimentée par un tapis qui
+// n'existait plus. Rien ne le disait à l'écran : elle restait dessinée,
+// définitivement vide.
+function liberer(scene, liste, limite, epargner) {
   // Une limite nulle — une machine qui n'accepte rien — ne doit pas faire
   // tourner la boucle à vide : sans la première condition, elle ne s'arrête
   // jamais et la page se fige.
   while (liste.length > 0 && liste.length >= limite) {
-    const premier = liste[0];
+    const premier = liste.find((c) => c !== epargner);
+    // Il ne reste que celui qu'on épargne : il n'y a plus de place à faire.
+    if (!premier) return;
     retirerConvoyeur(scene, premier);
-    if (liste[0] === premier) liste.shift();
+    // La liste elle-même est raccourcie, sans faire confiance à ce que
+    // retirerConvoyeur en enlèvera : un tapis déjà retiré de la scène y
+    // resterait sinon pour toujours, et la boucle ne se terminerait jamais.
+    const i = liste.indexOf(premier);
+    if (i >= 0) liste.splice(i, 1);
   }
 }
 

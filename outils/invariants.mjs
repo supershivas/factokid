@@ -9,7 +9,7 @@
 // Ne dépend que de la simulation : pas de navigateur, pas d'état global.
 
 import { lire } from '../src/sim/grid.js';
-import { destinations } from '../src/sim/belt.js';
+import { destinations, majGeometrie } from '../src/sim/belt.js';
 import { CELLULE } from '../src/design.js';
 import { MACHINES } from '../src/data/machines.js';
 
@@ -46,7 +46,28 @@ export function problemes(scene) {
       else if (!s.sources.includes(c)) pbs.push('branche non réciproque ' + q);
     }
     for (const s of c.sources) if (!(s.sorties || []).includes(c)) pbs.push('source non réciproque ' + q);
+    // Ce qui alimente un tapis doit être dans la scène. La réciprocité ne
+    // suffit pas à le dire : un tapis retiré peut garder ses liens des deux
+    // côtés, et ne plus rien alimenter tout en restant l'entrée dessinée de
+    // son aval.
+    const present = (x) => scene.convoyeurs.includes(x) || scene.machines.includes(x);
+    if (c.source && !present(c.source)) pbs.push('source hors de la scène ' + q);
+    for (const s of c.sources) if (!present(s)) pbs.push('amont hors de la scène ' + q);
+    if (c.cible && !scene.machines.includes(c.cible)) pbs.push('cible hors de la scène ' + q);
     if (c.cible && !c.cible.entrees.includes(c)) pbs.push('cible sans entrée ' + q);
+
+    // La géométrie se déduit du graphe : entrée, sortie et polyligne ne sont
+    // que des conséquences des sources, de la cible et des branches. La
+    // recalculer ne doit donc rien changer — un tapis qui garde l'entrée d'une
+    // source qu'il a perdue est un tapis dessiné d'après un passé qui n'existe
+    // plus, et c'est ce qui rendait une scène impossible à sauvegarder :
+    // relue, elle se serait dessinée autrement.
+    const avant = cle(c.celluleEntree) + '>' + cle(c.celluleSortie);
+    majGeometrie(c);
+    if (cle(c.celluleEntree) + '>' + cle(c.celluleSortie) !== avant) {
+      pbs.push('géométrie périmée ' + q + ' : ' + avant + ' au lieu de '
+        + cle(c.celluleEntree) + '>' + cle(c.celluleSortie));
+    }
     let somme = 0;
     for (const it of c.items) somme += it.ecart;
     if (Math.abs(somme - c.queue) > 1e-6) pbs.push('queue fausse ' + q);
