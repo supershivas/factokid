@@ -170,10 +170,31 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   dix secondes et à chaque retour sur l'onglet, et un bandeau annonce ce qui
   change. C'est un système de plus, assumé : sans lui, un téléphone qui a
   ouvert la page une fois garde la version d'hier.
-  **Jamais sous les doigts du joueur** : il n'y a pas encore de sauvegarde, donc
-  la mise à jour ne s'applique que quand personne ne joue — sur l'écran des
-  essais, ou dès que l'onglet passe à l'arrière-plan. Le jour où la partie se
-  sauvegarde, cette prudence n'aura plus lieu d'être.
+  **Jamais sous les doigts du joueur** : la mise à jour ne s'applique que quand
+  personne ne joue — sur l'écran des essais, ou dès que l'onglet passe à
+  l'arrière-plan, la partie étant alors écrite juste avant. Cette prudence
+  datait de l'époque où rien n'était sauvegardé ; **la sauvegarde existe
+  maintenant, et la lever est une décision qui reste à prendre.** Rien ne
+  change tant qu'elle ne l'est pas.
+- **La partie se sauvegarde toute seule.** Elle s'écrit toutes les cinq
+  secondes et à chaque fois que l'onglet part à l'arrière-plan ; au lancement,
+  l'écran des essais gagne une quatrième touche en tête, *reprendre*, quand une
+  partie attend. Rien n'est demandé à l'enfant : il n'y a ni bouton
+  « sauvegarder », ni emplacements, ni question à la fermeture. Ce qui est
+  écrit, c'est la partie en cours (`save/run.js`) ; l'état permanent est une
+  autre structure, sauvegardée à part (`save/meta.js`), et il ne porte encore
+  rien.
+  **Les files compressées sont écrites telles quelles** : des écarts, pas des
+  positions, et un tapis relu est le tapis d'avant, jamais un tapis retracé qui
+  lui ressemble. La carte, elle, est écrite en clair — régions et gisements —
+  et non rejouée depuis sa graine : une partie doit survivre au jour où le
+  tirage changera.
+  **Une sauvegarde porte un numéro de format**, et ce qui ne porte pas le bon
+  est illisible. Une sauvegarde illisible est **écartée** : mise de côté sous
+  une clé à part plutôt qu'écrasée, et annoncée par le bandeau — ce message-là
+  s'adresse à l'adulte, pas à l'enfant. On ne devine jamais une partie à
+  moitié.
+  **Changer d'essai efface la partie** : elle est abandonnée, pas mise de côté.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
@@ -183,6 +204,12 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   Un essai n'est qu'une disposition de départ plus le tutoriel ou non — c'est
   une entrée de `data/scenarios.js`. Le menu pause y ramène, le temps de la
   bêta.
+  **Une quatrième touche s'y ajoute, en tête, quand une partie attend** :
+  *reprendre*. Ce n'est pas un essai de plus — elle ne bâtit rien, elle
+  retrouve — et elle n'est pas là quand il n'y a rien à reprendre. L'écran
+  s'ouvre donc toujours sur ses trois essais, et reprendre reste un geste
+  demandé : commencer un essai efface la partie en cours, et l'enfant l'a
+  voulu.
 - **Le tutoriel mène jusqu'à une usine qui tourne.** C'est un système de plus,
   assumé : il ne sert qu'à la première partie et ne connaît que le résultat
   d'un geste, jamais le geste. Dix-sept étapes dans `data/tutoriel.js`, un halo
@@ -394,7 +421,8 @@ quatre tapis parallèles sur quarante rangées — un suffit très longtemps, et
 goulot reste les gisements, c'est-à-dire la géographie.
 
 **La sauvegarde vient avant.** Perdre quatre étages à un rechargement de page
-est intolérable, et rien n'est sauvegardé aujourd'hui. Elle se fait d'abord.
+est intolérable. Elle est faite : la partie s'écrit et se reprend (section 1,
+`save/run.js`), et ce qui bloquait les étages ne les bloque plus.
 
 ### Règle de croissance
 
@@ -658,13 +686,22 @@ tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
 
-Quatre outils gardent le jeu, et ils tournent avant toute livraison :
+Cinq outils gardent le jeu, et ils tournent avant toute livraison :
 `outils/tapis.mjs` pour les convoyeurs, `outils/lisibilite.mjs` pour ce qui se
 lit, `outils/tutoriel.mjs` qui joue les dix-sept étapes du premier contact,
 vérifie qu'au bout l'usine livre et que le tutoriel reste payable avec la mise
 de départ, `outils/carte.mjs` qui tire trois cents cartes et relit ce qu'elles
 promettent — clairière intacte, aucune matière qui manque, rien hors de la
-grille.
+grille —, et `outils/sauvegarde.mjs`, qui écrit des parties et les relit.
+
+Ce dernier exige trois choses d'une partie relue : qu'elle soit **saine** — les
+mêmes invariants que l'originale, relus par le même juge (`outils/invariants.mjs`,
+partagé avec `outils/tapis.mjs` : deux listes d'invariants finissent toujours
+par diverger) ; qu'elle soit **la même** — la comparaison porte sur les objets
+vivants et non sur ce que la sauvegarde a écrit, si bien qu'un champ oublié se
+voit ; et qu'elle **se comporte pareil** — les deux parties tournent dix
+secondes de plus et doivent encore être identiques. C'est la vraie preuve :
+une partie qui se relit puis dérive n'est pas sauvegardée.
 
 Toute vérification visuelle passe d'abord par `node outils/lisibilite.mjs`,
 puis produit **les deux captures, systématiquement** :
@@ -704,6 +741,9 @@ src/
     gisement.js     gisements, extraction, repousse
     carte.js        régions et gisements tirés au sort, à la graine
     world.js        état de la partie en cours
+  save/
+    run.js          la partie en cours, écrite et relue
+    meta.js         l'état permanent, séparé — et vide
   data/
     items.js        table des items
     machines.js     table des machines
@@ -743,15 +783,10 @@ src/
 `data/` ne contient que des tables. Aucune logique. C'est là que le jeu grossit.
 
 **Ce qui n'existe pas encore, et qu'on ne prétend pas avoir.** Ce fichier a
-longtemps décrit trois modules qui n'ont jamais été écrits ; ils sont nommés
-ici, à leur place, et rien d'autre :
+longtemps décrit trois modules qui n'ont jamais été écrits. `save/run.js` et
+`save/meta.js` sont écrits depuis ; il en reste un, nommé ici, à sa place, et
+rien d'autre :
 
-- `save/run.js` et `save/meta.js` — la sauvegarde de la partie et l'état
-  permanent. **N'existent pas.** Rien n'est sauvegardé : recharger la page
-  perd l'usine, et c'est ce qui oblige la mise à jour à ne jamais s'appliquer
-  sous les doigts du joueur. **C'est le prochain lot**, et il bloque les
-  étages : on ne demande pas à un enfant de rebâtir quatre étages parce qu'il a
-  rechargé une page.
 - `data/zones.js` — les étages, leur biome, leur seuil, ce qu'ils ouvrent.
   **N'existe pas.** C'est la table qui portera les étages décrits en section 1,
   et `data/progression.js` n'a plus lieu d'être : un palier *est* un mur.
