@@ -6,13 +6,13 @@
 // il ne le modifie jamais.
 
 import {
-  CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, MINICARTE, ZOOMS,
+  CELLULE, GRILLE_X, GRILLE_Y, LARGEUR_VUE, HAUTEUR_VUE, PANNEAU, ZOOMS,
   BOUTON_PAUSE, BOUTON_ZOOM, PANNEAU_TEXTE, SURMODALE, SURMODALE_TEXTE, TEXTE_PETIT,
   boitePanneau, boiteSurmodale,
   rectBouton, rectRangee, rectOption, rectMenu, rectChoix,
   rectFermer, rectSecondaire, rectPasserTuto, rectCollection, dansRect,
 } from '../design.js';
-import { celluleMiniCarte } from '../render/minicarte.js';
+import { celluleMiniCarte, cadreMiniCarte } from '../render/minicarte.js';
 import { analyserTexte, disposerMots } from '../render/texte.js';
 import { passerTutoriel } from '../tutoriel.js';
 import {
@@ -599,8 +599,8 @@ export function brancherPointeur(canvas, vue, jeu) {
     // bouton du bandeau qui ne fait que déplacer le regard.
     if (dansRect(BOUTON_ZOOM, p.x, p.y)) { presser('zoom'); zoomer(); return true; }
     // Un doigt sur la mini-carte y emmène la fenêtre : un geste, pas deux.
-    if (dansRect(MINICARTE, p.x, p.y)) {
-      const c = celluleMiniCarte(p);
+    if (dansRect(cadreMiniCarte(monde()), p.x, p.y)) {
+      const c = celluleMiniCarte(p, monde());
       centrerCamera(c.cx, c.cy);
       return true;
     }

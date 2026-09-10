@@ -1,8 +1,16 @@
-// La mini-carte : le monde entier dans le bandeau haut, à deux unités par
+// La mini-carte : le monde ouvert dans le voile du haut, à une unité par
 // cellule. Ne modifie jamais l'état — elle lit le monde et la caméra.
 //
-// Elle sert deux choses à la fois : ne pas se perdre dans neuf écrans, et y
-// aller d'un doigt. Le cadre montre où est la fenêtre.
+// Elle sert deux choses à la fois : ne pas se perdre dans trente-six écrans,
+// et y aller d'un doigt. Le cadre montre où est la fenêtre.
+//
+// **Elle ne montre que la partie en cours.** Elle éteignait les étages fermés
+// pour en garder la silhouette ; une silhouette dit « il y a quelque chose
+// là », et c'est déjà ce que dit le mur, qu'on a sous les yeux. Deux façons de
+// dire la même chose à un enfant, c'est une de trop. Elle commence donc à la
+// taille d'un étage et **grandit à chaque mur qui tombe** : c'est elle, la
+// barre de progression du jeu entier — non plus un voile qui se retire, mais
+// une carte qui s'allonge.
 
 import { PALETTE, MINICARTE, MINICARTE_PAS, CELLULE, COLONNES, LIGNES } from '../design.js';
 import { ITEMS } from '../data/items.js';
@@ -36,47 +44,51 @@ function preparerFond() {
   return c;
 }
 
+// Le cadre de la mini-carte : sa place à l'écran, et la première rangée du
+// monde qu'elle montre. Elle est accrochée par le haut du voile et descend
+// d'autant de rangées qu'on en a ouvertes.
+export function cadreMiniCarte(monde) {
+  const mur = monde ? murCourant(monde) : null;
+  const cy0 = mur ? mur.cy : 0;
+  return {
+    x: MINICARTE.x, y: MINICARTE.y, l: MINICARTE.l,
+    h: (LIGNES - cy0) * P,
+    cy0,
+  };
+}
+
 export function dessinerMiniCarte(ctx, monde) {
   if (!fond) fond = preparerFond();
+  const cadre = cadreMiniCarte(monde);
+  const { x, y, l, h, cy0 } = cadre;
   ctx.fillStyle = PALETTE.noir;
-  ctx.fillRect(MINICARTE.x - 2, MINICARTE.y - 2, MINICARTE.l + 4, MINICARTE.h + 4);
-  ctx.drawImage(fond, MINICARTE.x, MINICARTE.y, MINICARTE.l, MINICARTE.h);
+  ctx.fillRect(x - 2, y - 2, l + 4, h + 4);
+  ctx.drawImage(fond, 0, cy0, COLONNES, LIGNES - cy0, x, y, l, h);
   ctx.strokeStyle = PALETTE.ardoise;
   ctx.lineWidth = 1;
-  ctx.strokeRect(MINICARTE.x - 1.5, MINICARTE.y - 1.5, MINICARTE.l + 3, MINICARTE.h + 3);
+  ctx.strokeRect(x - 1.5, y - 1.5, l + 3, h + 3);
 
   // Les gisements d'abord : ce sont eux qu'on cherche.
   for (const g of monde.gisements) {
+    if (g.cy < cy0) continue;
     ctx.fillStyle = g.present ? PALETTE[ITEMS[g.item].couleur] : PALETTE.ardoise;
-    ctx.fillRect(MINICARTE.x + g.cx * P, MINICARTE.y + g.cy * P, P, P);
+    ctx.fillRect(x + g.cx * P, y + (g.cy - cy0) * P, P, P);
   }
 
   // Puis ce qu'on a bâti : les tapis en gris, les machines en clair.
   ctx.fillStyle = PALETTE.ardoise;
   for (const convoyeur of monde.scene.convoyeurs) {
     for (const c of convoyeur.chemin) {
-      ctx.fillRect(MINICARTE.x + c.cx * P, MINICARTE.y + c.cy * P, P, P);
+      if (c.cy < cy0) continue;
+      ctx.fillRect(x + c.cx * P, y + (c.cy - cy0) * P, P, P);
     }
   }
   ctx.fillStyle = PALETTE.creme;
   for (const m of monde.scene.machines) {
-    ctx.fillRect(MINICARTE.x + m.cx * P, MINICARTE.y + m.cy * P, P, P);
-  }
-
-  // Les étages fermés s'éteignent, comme le livre des matières montre les
-  // silhouettes de ce qu'on n'a pas trouvé : on voit qu'il y a quelque chose
-  // là sans savoir encore quoi. C'est ce qui fait de la mini-carte la barre de
-  // progression du jeu entier — et le voile passe par-dessus les gisements,
-  // parce qu'un gisement qu'on ne peut pas atteindre n'est pas une adresse.
-  const mur = murCourant(monde);
-  if (mur) {
-    ctx.fillStyle = PALETTE.noir;
-    ctx.globalAlpha = 0.7;
-    ctx.fillRect(MINICARTE.x, MINICARTE.y, MINICARTE.l, mur.cy * P);
-    ctx.globalAlpha = 1;
-    // L'arête du mur : la ligne qu'on est en train de pousser vers le haut.
-    ctx.fillStyle = PALETTE.brume;
-    ctx.fillRect(MINICARTE.x, MINICARTE.y + mur.cy * P, MINICARTE.l, 1);
+    for (const c of m.cellules || [m]) {
+      if (c.cy < cy0) continue;
+      ctx.fillRect(x + c.cx * P, y + (c.cy - cy0) * P, P, P);
+    }
   }
 
   // Le cadre de la fenêtre : où l'on regarde, dans tout ça. La caméra déborde
@@ -85,21 +97,22 @@ export function dessinerMiniCarte(ctx, monde) {
   // il dit ce qu'on voit *du monde*, et il n'y a rien à montrer au-delà.
   const v = vue();
   const x0 = Math.max(0, Math.min(COLONNES, camera.x / CELLULE));
-  const y0 = Math.max(0, Math.min(LIGNES, camera.y / CELLULE));
+  const y0 = Math.max(cy0, Math.min(LIGNES, camera.y / CELLULE));
   const x1 = Math.max(0, Math.min(COLONNES, (camera.x + v.l) / CELLULE));
-  const y1 = Math.max(0, Math.min(LIGNES, (camera.y + v.h) / CELLULE));
+  const y1 = Math.max(cy0, Math.min(LIGNES, (camera.y + v.h) / CELLULE));
   ctx.strokeStyle = PALETTE.creme;
   ctx.strokeRect(
-    MINICARTE.x + Math.round(x0 * P) + 0.5,
-    MINICARTE.y + Math.round(y0 * P) + 0.5,
+    x + Math.round(x0 * P) + 0.5,
+    y + Math.round((y0 - cy0) * P) + 0.5,
     Math.round((x1 - x0) * P), Math.round((y1 - y0) * P),
   );
 }
 
 // La cellule visée par un doigt posé sur la mini-carte.
-export function celluleMiniCarte(p) {
+export function celluleMiniCarte(p, monde) {
+  const cadre = cadreMiniCarte(monde);
   return {
-    cx: Math.floor((p.x - MINICARTE.x) / P),
-    cy: Math.floor((p.y - MINICARTE.y) / P),
+    cx: Math.floor((p.x - cadre.x) / P),
+    cy: cadre.cy0 + Math.floor((p.y - cadre.y) / P),
   };
 }
