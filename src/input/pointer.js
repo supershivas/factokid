@@ -762,12 +762,30 @@ export function brancherPointeur(canvas, vue, jeu) {
     return true;
   }
 
-  // Pose une machine sur une cellule libre. Comme l'extracteur, elle reste
-  // choisie : dix confiseries se posent en dix appuis.
+  // Pose une machine. La case doit être libre — ou ne porter qu'une tuile de
+  // tapis, qui cède la place : **poser un bâtiment sur un convoyeur enlève le
+  // convoyeur**, et jamais l'inverse. C'est le sens du geste : le doigt vise
+  // une case et dit ce qu'il veut y voir. Refuser en silence donnait une
+  // machine qui n'apparaît pas et un prix qui ne bouge pas, et un enfant n'en
+  // apprend rien.
+  //
+  // Une tuile seulement, comme la croix : l'amont et l'aval restent posés, et
+  // la machine reprend au passage le tapis qui la vise désormais. Le connecteur
+  // d'un mur, lui, ne cède jamais sa case — il appartient au mur.
   function batirMachine(c, type) {
     if (!constructible(monde(), c.cy)) return false;
+    const tapis = convoyeurEn(scene(), c.cx, c.cy);
+    if (tapis && tapis.connecteur) return false;
+    if (!tapis && !celluleLibre(scene(), c.cx, c.cy)) return false;
+    if (caisse() < cout(type)) return false;
+    // La tuile retirée est rendue : rien n'est jamais perdu. Le geste porte
+    // donc un seul prix, celui qu'il coûte vraiment — deux nombres qui montent
+    // de la même case ne se liraient pas.
+    const rendu = tapis ? cout('convoyeur') : 0;
+    if (tapis) couperConvoyeur(scene(), tapis, c.cx, c.cy);
     if (!celluleLibre(scene(), c.cx, c.cy)) return false;
-    if (!payer(type, c)) return false;
+    jeu.monde.caisse -= cout(type) - rendu;
+    marquerCout(c, -(cout(type) - rendu));
     ajouterMachine(scene(), type, c.cx, c.cy, {});
     marquerConstruit([c]);
     etat.panneau = null;
@@ -932,7 +950,12 @@ export function brancherPointeur(canvas, vue, jeu) {
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
     if (convoyeur) {
       const bout = convoyeur.chemin[convoyeur.chemin.length - 1];
-      const auBout = bout.cx === c.cx && bout.cy === c.cy;
+      // Un connecteur du mur ne se prolonge pas : il fait une case, il est
+      // rouge, et il appartient au mur. Le prolonger emmenait sa couleur — et
+      // son indestructibilité — dans tout l'étage du dessus. On en fait donc
+      // toujours partir une branche : un tapis neuf, bleu, que le connecteur
+      // alimente.
+      const auBout = !convoyeur.connecteur && bout.cx === c.cx && bout.cy === c.cy;
       // Au bout d'un tapis inachevé : on reprend le tracé là où il s'est
       // arrêté. Sur un tapis qui distribue déjà, ou en plein milieu : on en
       // fait partir une branche de plus.
@@ -980,6 +1003,11 @@ export function brancherPointeur(canvas, vue, jeu) {
     // Le moindre déplacement fait d'un appui un tracé : on annule l'attente,
     // et on referme le panneau s'il avait déjà eu le temps de sortir.
     if (departPoint && Math.hypot(p.x - departPoint.x, p.y - departPoint.y) > SEUIL_GLISSE) {
+      // Un doigt qui glisse veut promener le monde, et c'est vrai de tous les
+      // outils sauf un : le tracé est le geste du convoyeur, et de lui seul.
+      // Le glissé rend donc la main — poser ne se fait pas en glissant, et
+      // détruire une case à la fois se fait au doigt levé.
+      if (!glisse && etat.outil !== 'convoyeur') rendreLaMain();
       glisse = true;
       clearTimeout(minuterie);
       minuterie = null;
@@ -1000,7 +1028,8 @@ export function brancherPointeur(canvas, vue, jeu) {
 
     const c = cellule(p);
     if (!c) return;
-    if (etat.outil === 'destruction') { detruire(c); return; }
+    // La destruction ne se traîne plus : le glissé a rendu la main avant
+    // d'arriver ici. On retire une case au doigt posé, jamais une traînée.
     if (trace.actif && !machineEn(scene(), c.cx, c.cy)) relier(c);
   }
 

@@ -203,11 +203,14 @@ function mene(depart, cherche) {
 }
 
 // Le pendant : un tapis qu'on vient de poser prend au passage ceux qui le
-// visaient déjà. C'est la même règle vue de l'autre côté — « ce qu'un tapis
+// visaient déjà. C'est aussi ce dont un connecteur a besoin quand son mur
+// s'ouvre : les tapis qui montaient à la réception visent désormais un tapis
+// rouge, et sans ce raccord ils resteraient pleins et muets au pied du mur
+// qu'ils viennent d'ouvrir. C'est la même règle vue de l'autre côté — « ce qu'un tapis
 // vise, il l'alimente, quel que soit l'ordre des gestes » — et sans elle, un
 // tapis tracé avant celui qu'il devait nourrir restait plein et muet : branché
 // pour l'œil, mort pour la simulation.
-function raccorderCeQuiViseLeTapis(scene, nouveau) {
+export function raccorderCeQuiViseLeTapis(scene, nouveau) {
   // Un raccord coupe l'hôte en deux : les cellules suivantes appartiennent
   // alors à la suite, pas au tapis qu'on vient de poser. On retient donc les
   // cellules, et on redemande à la grille à qui chacune est maintenant.

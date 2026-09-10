@@ -119,6 +119,14 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **La destruction retire un élément à la fois.** Détruire une tuile de
   convoyeur n'enlève que celle-là : l'amont et l'aval restent posés. Rien ne
   disparaît tout seul de la grille, même un tapis que plus rien n'alimente.
+- **Poser un bâtiment sur un convoyeur enlève le convoyeur**, et jamais
+  l'inverse. Le doigt vise une case et dit ce qu'il veut y voir ; refuser en
+  silence donnait une machine qui n'apparaît pas et un prix qui ne bouge pas,
+  et un enfant n'en apprend rien. Une tuile seulement, comme la croix : l'amont
+  et l'aval restent posés, et l'amont se raccorde à la machine qu'il vise
+  désormais. La tuile est rendue, donc le geste ne porte qu'un prix, celui
+  qu'il coûte vraiment. **Le connecteur d'un mur ne cède jamais sa case** : il
+  appartient au mur, et rien ne s'y bâtit.
 - **Un seul compteur à l'écran** : la caisse. Il ne compte plus des bonbons
   mais ce qu'ils valent — la réception achète aussi le caramel et la pastille.
   Le reste se lit sur la grille, dans les jauges des machines et dans ce qui
@@ -189,8 +197,11 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   la case qu'on vise. **Poser et détruire s'en tiennent à l'écart** : ce sont
   des outils qu'on garde le temps d'en poser dix ou d'en retirer trois. Un
   bâtiment posé rend toujours la main, et non le convoyeur : c'est le geste
-  d'après qui décide de la suite. Et tirer la carte n'est pas un appui court —
-  un doigt qui a glissé n'a rien touché.
+  d'après qui décide de la suite.
+  **Et le glissé rend la main**, quel que soit l'outil — sauf le convoyeur, où
+  glisser est le geste même. Tirer la carte n'est donc jamais un appui court,
+  et c'est vrai aussi de la destruction : on retire une case au doigt posé,
+  jamais une traînée sous un doigt qui promène la vue.
 - **Un bâtiment posé rend la main.** C'est l'inverse de ce qui était décidé —
   « l'élément choisi le reste », pour en poser dix d'affilée — et c'est une
   décision qui a changé : on pose un bâtiment, puis on tire ses tapis, et
@@ -497,10 +508,27 @@ en tout point comme un tapis. Deux choses seulement les distinguent : ils sont
 peints dans la famille du rouge (bande rouge, crans orange, chevrons prune,
 `TAPIS_CONNECTEUR` dans le design system), et **ils ne se détruisent pas** — ni
 à la croix, ni par le jeu de place qu'un tracé fait parfois pour se brancher.
-Un tapis d'une seule case n'a pas de direction à lui : `sens` la lui donne, et
-un connecteur monte, comme le jeu. C'est par là que la chaîne d'en bas rejoint
-l'étage du dessus, et l'usine du dessous continue de tourner pour toujours.
-Trois cases pour quarante-deux, donc un passage à viser, et c'est voulu.
+Un tapis d'une seule case n'a pas de direction à lui. Trois choses la lui
+donnent, dans cet ordre : son `sens`, quand il en porte un — c'est le
+connecteur, et il monte comme le jeu ; ce qui l'alimente sinon, car on continue
+par où l'on est entré ; l'est enfin, faute de mieux. Sans le deuxième cas, une
+tuile nourrie par en dessous visait la droite : elle ne se raccordait pas à la
+machine qu'on posait au-dessus.
+C'est par là que la chaîne d'en bas rejoint l'étage du dessus, et l'usine du
+dessous continue de tourner pour toujours. Trois cases pour quarante-deux, donc
+un passage à viser, et c'est voulu.
+
+**Le rouge s'arrête au mur.** Un connecteur ne se prolonge jamais : tirer un
+tapis depuis lui en fait naître un neuf, bleu, qu'il alimente. Le prolonger
+emmenait sa couleur — et son indestructibilité — dans tout l'étage du dessus,
+alors que le rouge ne dit qu'une chose : ceci appartient au mur.
+
+**Un mur qui s'ouvre ne coupe pas la chaîne.** Ce qui montait à sa réception
+monte par ses connecteurs, tout seul : les trois tapis visaient déjà ces cases,
+et la règle du jeu veut que ce qu'un tapis vise, il l'alimente, quel que soit
+l'ordre des gestes. Sans ce raccord, l'usine d'en bas s'arrêtait net au moment
+même où elle venait de gagner le droit de passer, et il fallait retracer trois
+tapis pour rien.
 
 **Ils se voient avant de s'ouvrir.** Un mur fermé laisse dépasser ses trois
 amorces rouges de quelques pixels, sous sa rangée : le passage existe avant

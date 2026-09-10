@@ -123,7 +123,23 @@ function jusquAuMur(monde, item, plafondSecondes = 1800) {
     for (const c of connecteurs) {
       veut(convoyeurEn(monde.scene, c.chemin[0].cx, avant.cy) === c, 'chacun tient sa case');
       veut(c.celluleSortie.cy === avant.cy - 1, 'et il monte à l’étage du dessus');
+      // Un mur qui s'ouvre ne coupe pas la chaîne : les trois branches qui
+      // montaient à sa réception montent maintenant par ses connecteurs, sans
+      // qu'on ait à retracer quoi que ce soit.
+      veut(c.sources.length > 0, `le tapis qui visait la case ${c.chemin[0].cx} le nourrit`);
     }
+    // Et la matière franchit vraiment le mur : dix secondes de plus, et ce que
+    // l'usine d'en bas produit est passé de l'autre côté.
+    const dessus = poserConvoyeur(
+      monde.scene,
+      [{ cx: connecteurs[0].chemin[0].cx, cy: avant.cy - 1 },
+        { cx: connecteurs[0].chemin[0].cx, cy: avant.cy - 2 }],
+      connecteurs[0], null,
+    );
+    veut(dessus !== null && !dessus.connecteur, 'ce qui repart du connecteur est un tapis ordinaire');
+    for (let k = 0; k < 60 * 30; k++) majMonde(monde, 1 / 60);
+    veut(dessus.items.length > 0, 'et les matières montent à l’étage du dessus');
+
     veut(!celluleLibre(monde.scene, 0, avant.cy), 'sa rangée reste debout');
     veut(!celluleLibre(monde.scene, 41, avant.cy), 'd’un bout à l’autre');
     veut(constructible(monde, avant.cy), 'on bâtit au-delà');

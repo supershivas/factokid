@@ -14,11 +14,21 @@ const ESPACEMENT = MACHINES.convoyeur.espacement;
 
 // Cellule qui suit la dernière, dans le sens de circulation. Sert de point de
 // fuite quand le convoyeur ne débouche sur rien : les items s'y arrêtent.
-function apres(chemin, sens) {
+//
+// Un tapis d'une seule case n'a pas de direction à lui. Trois choses la lui
+// donnent, dans cet ordre : son `sens`, quand il en porte un — c'est le
+// connecteur d'un mur, et il monte quoi qu'il arrive ; ce qui l'alimente,
+// sinon — on continue par où l'on est entré, et c'est ce que l'œil attend ;
+// l'est enfin, faute de mieux. Sans le deuxième cas, une tuile alimentée par
+// en dessous visait la droite : elle ne se raccordait pas à la machine qu'on
+// posait au-dessus, et ses chevrons partaient de travers.
+function apres(chemin, sens, entree) {
   const n = chemin.length;
   const avant = n >= 2
     ? chemin[n - 2]
-    : { cx: chemin[0].cx - (sens ? sens.dx : 1), cy: chemin[0].cy - (sens ? sens.dy : 0) };
+    : sens ? { cx: chemin[0].cx - sens.dx, cy: chemin[0].cy - sens.dy }
+      : entree && adjacentes(entree, chemin[0]) ? entree
+        : { cx: chemin[0].cx - 1, cy: chemin[0].cy };
   return {
     cx: chemin[n - 1].cx + (chemin[n - 1].cx - avant.cx),
     cy: chemin[n - 1].cy + (chemin[n - 1].cy - avant.cy),
@@ -195,7 +205,7 @@ export function majGeometrie(convoyeur) {
   const prochaine = visees[tour];
   convoyeur.celluleSortie = (adjacentes(prochaine, derniere) && prochaine)
     || premiereAdjacente(visees, derniere)
-    || apres(chemin, convoyeur.sens);
+    || apres(chemin, convoyeur.sens, convoyeur.celluleEntree);
 
   convoyeur.points = polyligne(convoyeur.chemin, convoyeur.celluleEntree, convoyeur.celluleSortie);
 }

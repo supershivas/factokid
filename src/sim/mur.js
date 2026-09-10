@@ -32,8 +32,11 @@ import { ETAGES, OUVERT_AU_DEPART } from '../data/zones.js';
 import { MACHINES } from '../data/machines.js';
 import { rangeesDe } from './carte.js';
 import { poser } from './grid.js';
-import { ajouterMachine, retirerMachine, etendreMachine } from './scene.js';
-import { creerConvoyeur, majGeometrie } from './belt.js';
+import {
+  ajouterMachine, retirerMachine, etendreMachine, raccorderCeQuiViseLeTapis,
+  raccorderA,
+} from './scene.js';
+import { creerConvoyeur, majGeometrie, adjacentes } from './belt.js';
 
 // L'étage le plus haut qu'on ait ouvert, et donc celui dont le mur nous
 // arrête. Le dernier du monde en a un aussi, tout en haut : sans seuil, il ne
@@ -185,6 +188,13 @@ function poserConnecteurs(monde, cellules) {
     majGeometrie(connecteur);
     monde.scene.convoyeurs.push(connecteur);
     poser(monde.scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur: connecteur });
+    // Ce qui montait à la réception monte maintenant par le connecteur. Le mur
+    // vient de s'ouvrir sous des tapis pleins qui visaient sa case : sans ce
+    // raccord, l'usine d'en bas s'arrête net au moment même où elle a gagné le
+    // droit de passer, et il faudrait retracer trois tapis pour rien. C'est la
+    // règle du jeu, prise à l'envers — ce qu'un tapis vise, il l'alimente,
+    // quel que soit l'ordre des gestes.
+    raccorderCeQuiViseLeTapis(monde.scene, connecteur);
   }
 }
 
@@ -197,9 +207,32 @@ function ouvrirMur(monde) {
   // Les tapis qui la nourrissaient restent posés : ils perdent seulement où
   // ils allaient. Rien ne disparaît tout seul de la grille.
   const cellules = [...(recepteur.cellules || [recepteur])];
+  // Ce qui montait à la réception montera par le connecteur qui prend sa
+  // place : on retient donc qui la nourrissait, avant qu'elle ne parte.
+  const nourrissaient = [...recepteur.entrees];
   for (const c of cellules) poser(monde.scene.grille, c.cx, c.cy, null);
   retirerMachine(monde.scene, recepteur);
   poserConnecteurs(monde, cellules);
+  brancherCeQuiMontait(monde, cellules[0].cy, nourrissaient);
+}
+
+// Les tapis qui nourrissaient la réception se déversent maintenant dans le
+// connecteur qui a pris sa place. **Par leur bout, et non par leur visée** :
+// une branche qui arrive de côté et tourne dans le mur ne vise plus rien une
+// fois la machine partie — son bout regarde droit devant, c'est-à-dire le long
+// du mur. Deux des trois branches de l'usine de référence sont dans ce cas, et
+// c'est pourquoi une seule semblait passer.
+//
+// Sans cela, l'usine d'en bas s'arrête net au moment même où elle vient de
+// gagner le droit de passer, et il faut retracer trois tapis pour rien.
+function brancherCeQuiMontait(monde, cy, tapis) {
+  const connecteurs = connecteursDuMur(monde.scene, cy);
+  for (const t of tapis) {
+    if (t.cible || t.sorties.length > 0) continue;
+    const bout = t.chemin[t.chemin.length - 1];
+    const conn = connecteurs.find((c) => adjacentes(c.chemin[0], bout));
+    if (conn) raccorderA(monde.scene, t, conn, conn.chemin[0]);
+  }
 }
 
 // Le mur tombe-t-il ? On regarde à chaque pas : c'est la réception qui décide,
