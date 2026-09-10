@@ -8,9 +8,9 @@
 //   1. on ne bâtit pas derrière un mur — ni sa rangée, ni celles du dessus ;
 //   2. un tapis ne le traverse pas ;
 //   3. il tombe quand sa réception a reçu son dû, et pas avant ;
-//   4. ouvert, il reste debout : seules les trois cases de sa réception
-//      deviennent du sol — ce sont ses connecteurs — et le mur suivant a pris
-//      sa place plus haut ;
+//   4. ouvert, il reste debout : les trois cases de sa réception deviennent
+//      ses connecteurs — des bouts de convoyeur rouges qui montent, et qu'on
+//      ne détruit pas — et le mur suivant a pris sa place plus haut ;
 //   5. ce qu'il coûte en temps, mesuré : c'est le seul chiffre qui dise si le
 //      seuil est juste, et il change à chaque fois qu'on touche à l'économie.
 
@@ -20,9 +20,12 @@ import { ETAGES } from '../src/data/zones.js';
 import { COLONNES } from '../src/design.js';
 import {
   murCourant, plafond, constructible, livreAuMur, ouverts, recepteurDuMur,
+  connecteursDuMur,
 } from '../src/sim/mur.js';
 import { rangeesDe } from '../src/sim/carte.js';
-import { celluleLibre, ajouterMachine, poserConvoyeur, machineEn } from '../src/sim/scene.js';
+import {
+  celluleLibre, ajouterMachine, poserConvoyeur, machineEn, convoyeurEn, couperConvoyeur,
+} from '../src/sim/scene.js';
 import { poserExtracteur } from '../src/sim/gisement.js';
 import { peutAccepter, pousser } from '../src/sim/belt.js';
 import { problemes } from './invariants.mjs';
@@ -112,12 +115,25 @@ function jusquAuMur(monde, item, plafondSecondes = 1800) {
     veut(fin.caisse > 0, 'et la réception a payé au passage');
     veut(monde.etageOuvert === 2, 'l’étage 2 s’ouvre');
     veut(monde.murTombe === ETAGES[1], 'le monde dit ce qui vient de s’ouvrir');
-    // Un mur ouvert reste debout : seules les trois cases de son passage
-    // deviennent du sol, et c'est par là que la chaîne franchit le mur.
-    veut(celluleLibre(monde.scene, 21, avant.cy), 'son passage s’ouvre');
-    veut(!celluleLibre(monde.scene, 0, avant.cy), 'mais sa rangée reste debout');
+    // Un mur ouvert reste debout : ses trois cases de passage deviennent des
+    // connecteurs — des bouts de convoyeur d'une case, qui montent — et c'est
+    // par là que la chaîne franchit le mur.
+    const connecteurs = connecteursDuMur(monde.scene, avant.cy);
+    veut(connecteurs.length === 3, 'son passage devient trois connecteurs');
+    for (const c of connecteurs) {
+      veut(convoyeurEn(monde.scene, c.chemin[0].cx, avant.cy) === c, 'chacun tient sa case');
+      veut(c.celluleSortie.cy === avant.cy - 1, 'et il monte à l’étage du dessus');
+    }
+    veut(!celluleLibre(monde.scene, 0, avant.cy), 'sa rangée reste debout');
     veut(!celluleLibre(monde.scene, 41, avant.cy), 'd’un bout à l’autre');
-    veut(constructible(monde, avant.cy), 'on bâtit sur ce qui s’est libéré');
+    veut(constructible(monde, avant.cy), 'on bâtit au-delà');
+
+    // Un connecteur ne se détruit pas : il appartient au mur.
+    couperConvoyeur(monde.scene, connecteurs[0], connecteurs[0].chemin[0].cx, avant.cy);
+    veut(
+      connecteursDuMur(monde.scene, avant.cy).length === 3,
+      'et la destruction n’y peut rien',
+    );
     const apres = murCourant(monde);
     veut(apres && apres.cy === rangeesDe(2).mur, 'le mur suivant ferme l’étage 2');
     veut(!celluleLibre(monde.scene, 21, apres.cy), 'et sa rangée occupe la grille');

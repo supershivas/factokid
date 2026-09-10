@@ -69,6 +69,8 @@ function elaguerSorties(convoyeur) {
 // alimenté. L'outil destruction retire un convoyeur à la fois — jamais toute
 // la section sous les doigts de l'enfant.
 export function couperConvoyeur(scene, convoyeur, cx, cy) {
+  // Un connecteur du mur ne se coupe pas : il arrive et repart avec son mur.
+  if (convoyeur.connecteur) return;
   const i = convoyeur.chemin.findIndex((c) => c.cx === cx && c.cy === cy);
   if (i < 0) return;
 
@@ -523,7 +525,10 @@ function liberer(scene, liste, limite, epargner) {
   // tourner la boucle à vide : sans la première condition, elle ne s'arrête
   // jamais et la page se fige.
   while (liste.length > 0 && liste.length >= limite) {
-    const premier = liste.find((c) => c !== epargner);
+    // Un connecteur du mur ne se libère pas : il appartient au mur, pas au
+    // joueur, et faire de la place en le retirant ouvrirait un trou dans le
+    // mur que rien ne saurait refermer.
+    const premier = liste.find((c) => c !== epargner && !c.connecteur);
     // Il ne reste que celui qu'on épargne : il n'y a plus de place à faire.
     if (!premier) return;
     retirerConvoyeur(scene, premier);

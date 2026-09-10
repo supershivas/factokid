@@ -14,18 +14,25 @@ const ESPACEMENT = MACHINES.convoyeur.espacement;
 
 // Cellule qui suit la dernière, dans le sens de circulation. Sert de point de
 // fuite quand le convoyeur ne débouche sur rien : les items s'y arrêtent.
-function apres(chemin) {
+function apres(chemin, sens) {
   const n = chemin.length;
-  const avant = n >= 2 ? chemin[n - 2] : { cx: chemin[0].cx - 1, cy: chemin[0].cy };
+  const avant = n >= 2
+    ? chemin[n - 2]
+    : { cx: chemin[0].cx - (sens ? sens.dx : 1), cy: chemin[0].cy - (sens ? sens.dy : 0) };
   return {
     cx: chemin[n - 1].cx + (chemin[n - 1].cx - avant.cx),
     cy: chemin[n - 1].cy + (chemin[n - 1].cy - avant.cy),
   };
 }
 
-// La cellule qui précède le chemin, quand rien ne l'alimente encore.
-function avant(chemin) {
-  const suivante = chemin.length >= 2 ? chemin[1] : { cx: chemin[0].cx + 1, cy: chemin[0].cy };
+// La cellule qui précède le chemin, quand rien ne l'alimente encore. `sens`
+// n'est lu que pour un tapis d'une seule case, qui n'a pas de direction à
+// lui : c'est le cas des connecteurs du mur, qui montent d'un étage à l'autre
+// et doivent le montrer même quand rien n'y est encore branché.
+function avant(chemin, sens) {
+  const suivante = chemin.length >= 2
+    ? chemin[1]
+    : { cx: chemin[0].cx + (sens ? sens.dx : 1), cy: chemin[0].cy + (sens ? sens.dy : 0) };
   return {
     cx: chemin[0].cx - (suivante.cx - chemin[0].cx),
     cy: chemin[0].cy - (suivante.cy - chemin[0].cy),
@@ -80,6 +87,11 @@ export function creerConvoyeur(chemin, source, cible) {
     sorties: [],  // convoyeurs alimentés par ce bout : un embranchement
     tour: 0,      // à qui le prochain item revient
     bloque: 0,    // depuis combien de temps la tête n'avance plus
+    // Un connecteur de mur : un tapis comme les autres, mais qui appartient au
+    // mur. Il ne se détruit pas, il se peint en rouge, et son sens est écrit —
+    // une seule case n'en a pas.
+    connecteur: false,
+    sens: null,
   };
   majGeometrie(convoyeur);
   return convoyeur;
@@ -172,7 +184,7 @@ export function majGeometrie(convoyeur) {
   const amonts = convoyeur.sources.map(celluleDe).filter(Boolean);
   convoyeur.celluleEntree = premiereAdjacente(
     [celluleDe(convoyeur.source), ...amonts].filter(Boolean), premiere,
-  ) || avant(chemin);
+  ) || avant(chemin, convoyeur.sens);
 
   // Sortie : quand le bout distribue entre plusieurs destinations, il vise
   // celle à qui le prochain item revient — pas la première de la liste. Sinon
@@ -183,7 +195,7 @@ export function majGeometrie(convoyeur) {
   const prochaine = visees[tour];
   convoyeur.celluleSortie = (adjacentes(prochaine, derniere) && prochaine)
     || premiereAdjacente(visees, derniere)
-    || apres(chemin);
+    || apres(chemin, convoyeur.sens);
 
   convoyeur.points = polyligne(convoyeur.chemin, convoyeur.celluleEntree, convoyeur.celluleSortie);
 }

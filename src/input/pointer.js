@@ -754,6 +754,9 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   function detruire(c) {
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
+    // Un connecteur du mur ne se détruit pas, et ne se rembourse donc pas : il
+    // appartient au mur, comme sa réception.
+    if (convoyeur && convoyeur.connecteur) return;
     if (convoyeur) {
       couperConvoyeur(scene(), convoyeur, c.cx, c.cy);
       rembourser('convoyeur', 1, c);

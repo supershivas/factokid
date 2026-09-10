@@ -88,6 +88,11 @@ function serialiserConvoyeur(convoyeur, indiceM, indiceC) {
     queue: convoyeur.queue,
     tour: convoyeur.tour,
     role: convoyeur.role ?? null,
+    // Un connecteur du mur est un tapis comme les autres, et il s'écrit comme
+    // eux : sans ce drapeau, la partie relue lui en poserait un second par
+    // dessus, et l'ancien serait un tapis ordinaire au milieu du mur.
+    connecteur: convoyeur.connecteur || false,
+    sens: convoyeur.sens ? { ...convoyeur.sens } : null,
     bloque: convoyeur.bloque,
     source: convoyeur.source ? reference(convoyeur.source, indiceM, indiceC) : null,
     sources: convoyeur.sources.map((s) => reference(s, indiceM, indiceC)),
@@ -201,6 +206,8 @@ function relireScene(brut) {
     convoyeur.cible = c.cible === null ? null : machineDe(c.cible);
     convoyeur.sorties = c.sorties.map(convoyeurDe);
     convoyeur.role = c.role;
+    convoyeur.connecteur = Boolean(c.connecteur);
+    convoyeur.sens = c.sens ? { ...c.sens } : null;
     convoyeur.tour = c.tour;
     convoyeur.bloque = c.bloque;
     // La file compressée, telle qu'elle était : des écarts, pas des positions.

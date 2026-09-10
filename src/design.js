@@ -118,6 +118,18 @@ export const TAPIS = {
   crete: 'creme',
 };
 
+// Les connecteurs du mur sont des bouts de convoyeur comme les autres — ils
+// s'alimentent, ils se raccordent, ils portent une file — mais ils
+// appartiennent au mur, et ils sont rouges. La même rampe que le tapis bleu,
+// prise dans la famille du rouge : le corps, sa clarté aux crans, son ombre
+// aux chevrons.
+export const TAPIS_CONNECTEUR = {
+  bande: 'rouge',
+  crans: 'orange',
+  chevron: 'prune',
+  crete: 'jaune',
+};
+
 // La palette : seize couleurs, et pas dix-sept.
 //
 // Elle en portait huit, et ces huit-là n'étaient pas huit couleurs choisies :

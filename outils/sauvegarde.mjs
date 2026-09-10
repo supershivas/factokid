@@ -23,11 +23,13 @@ import { creerMonde, majMonde } from '../src/sim/world.js';
 import { DEPART, DEPART_NU } from '../src/data/depart.js';
 import {
   creerScene, ajouterMachine, poserConvoyeur, raccorderConvoyeur, raccorderA,
-  brancherConvoyeur, couperConvoyeur, retirerMachine, majScene,
+  brancherConvoyeur, couperConvoyeur, retirerMachine, majScene, celluleLibre,
 } from '../src/sim/scene.js';
 import { pousser, peutAccepter } from '../src/sim/belt.js';
 import { choisirRecette } from '../src/sim/machine.js';
 import { poserMur } from '../src/sim/mur.js';
+import { rangeesDe } from '../src/sim/carte.js';
+import { poserExtracteur } from '../src/sim/gisement.js';
 import { lire } from '../src/sim/grid.js';
 import { serialiserPartie, deserialiserPartie, FORMAT } from '../src/save/run.js';
 import { problemes } from './invariants.mjs';
@@ -199,6 +201,43 @@ const partieDe = (monde, camera, tutoriel) => ({
     partieDe(monde, { x: 300, y: 900, niveau: 1 }, { etape: 4, age: 1.5, fini: false, salut: 0 }),
     'carte nue, tutoriel en cours',
   );
+}
+
+// ————— 2 bis. un mur ouvert, ses connecteurs, et une chaîne qui les traverse
+//
+// Les connecteurs sont des tapis comme les autres, et ils s'écrivent comme
+// eux. Ce qu'on vérifie ici, c'est qu'une partie relue n'en pose pas un second
+// par-dessus : ils appartiennent au mur, et le mur les repose au chargement.
+{
+  const monde = creerMonde(DEPART_NU, 1, 2);
+  const mur = rangeesDe(1).mur;
+  const connecteurs = monde.scene.convoyeurs.filter((c) => c.connecteur);
+  veut(connecteurs.length === 3, 'le mur ouvert a ses trois connecteurs');
+
+  // Un extracteur en dessous, branché par-dessous sur le connecteur du milieu.
+  const g = monde.gisements.find((x) => x.cy > mur + 1 && x.cy < mur + 4);
+  if (g) {
+    poserExtracteur(monde, g.cx, g.cy);
+    const milieu = connecteurs[1].chemin[0];
+    const chemin = [];
+    for (let cy = g.cy - 1; cy >= mur + 1; cy--) chemin.push({ cx: g.cx, cy });
+    const pas = Math.sign(milieu.cx - g.cx);
+    for (let cx = g.cx + pas; pas !== 0 && cx !== milieu.cx + pas; cx += pas) {
+      chemin.push({ cx, cy: mur + 1 });
+    }
+    if (chemin.every((c) => celluleLibre(monde.scene, c.cx, c.cy))) {
+      const tapis = poserConvoyeur(monde.scene, chemin, g.extracteur, null);
+      raccorderA(monde.scene, tapis, connecteurs[1], milieu);
+      veut(connecteurs[1].sources.includes(tapis), 'un tapis se branche sur un connecteur');
+    }
+  }
+  for (let k = 0; k < 60 * 60; k++) majMonde(monde, 1 / 60);
+  const relu = eprouver(partieDe(monde), 'mur ouvert, connecteurs branchés');
+  if (relu) {
+    const apres = relu.relue.monde.scene.convoyeurs.filter((c) => c.connecteur);
+    veut(apres.length === 3, 'la partie relue garde trois connecteurs, pas six');
+    veut(apres.every((c) => c.sens && c.sens.dy === -1), 'et ils montent toujours');
+  }
 }
 
 // ————— 3. ce qu'un joueur a réglé : la recette d'une plieuse, la matière d'un

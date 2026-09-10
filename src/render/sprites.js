@@ -3,7 +3,7 @@
 // puis affichées à l'échelle entière PIXEL (3 unités logiques par pixel).
 
 import {
-  PALETTE, TAPIS, TUILE_PX, PIXEL, CELLULE, ALERTE_DELAI,
+  PALETTE, TAPIS, TAPIS_CONNECTEUR, TUILE_PX, PIXEL, CELLULE, ALERTE_DELAI,
 } from '../design.js';
 import { cadrerMonde, fenetre, celluleVisible } from '../camera.js';
 import { tuileSol } from './biome.js';
@@ -70,37 +70,83 @@ function cransVerticaux(rect, x, y0 = 2, y1 = 24) {
   for (let y = y0; y < y1; y += 6) rect(x, y, 1, 3, CRANS);
 }
 
-// Les deux couleurs du tapis, nommées une fois : la bande et ses crans. Elles
-// viennent du design system — le tapis est bleu électrique, et son bord
-// s'allume d'un cran de cyan.
-const BANDE = PALETTE[TAPIS.bande];
-const CRANS = PALETTE[TAPIS.crans];
+// Un jeu de tuiles de tapis, dans deux couleurs. Le tapis ordinaire est bleu
+// électrique ; les connecteurs du mur sont les mêmes bouts de convoyeur, dans
+// la famille du rouge — ils appartiennent au mur, et ça se voit sans un mot.
+// Les deux jeux sont peints une fois, à l'import.
+function jeuDeTuiles(reglage) {
+  const BANDE = PALETTE[reglage.bande];
+  const CRANS = PALETTE[reglage.crans];
 
-// Convoyeur droit : flux vers l'est.
-// La bande occupe les rangées 6 à 17 ; ses deux bords noirs, 4-5 et 18-19.
-const convoyeurDroit = toile(TUILE_PX, (rect) => {
-  rect(0, 4, 24, 2, PALETTE.noir);
-  rect(0, 6, 24, 12, BANDE);
-  rect(0, 18, 24, 2, PALETTE.noir);
-  cransHorizontaux(rect, 4);
-  cransHorizontaux(rect, 19);
-});
+  // Les crans du tapis : de petites encoches creusées dans le bord noir,
+  // jamais dans la bande. Le milieu appartient aux chevrons, qui bougent ; le
+  // bord, lui, ne bouge pas — les deux motifs ne se brouillent donc jamais.
+  const cransHorizontaux = (rect, y, x0 = 2, x1 = 24) => {
+    for (let x = x0; x < x1; x += 6) rect(x, y, 3, 1, CRANS);
+  };
+  const cransVerticaux = (rect, x, y0 = 2, y1 = 24) => {
+    for (let y = y0; y < y1; y += 6) rect(x, y, 1, 3, CRANS);
+  };
 
-// Convoyeur en virage : entre par l'ouest, sort par le sud. La bande est nue :
-// depuis que les chevrons défilent, deux motifs mobiles l'un sur l'autre se
-// brouilleraient.
-const convoyeurVirage = toile(TUILE_PX, (rect) => {
-  rect(0, 4, 20, 16, PALETTE.noir);
-  rect(4, 4, 16, 20, PALETTE.noir);
-  rect(0, 6, 18, 12, BANDE);
-  rect(6, 6, 12, 18, BANDE);
-  // Bord extérieur : le haut, puis la descente à droite. Bord intérieur : le
-  // court morceau en bas à gauche.
-  cransHorizontaux(rect, 4, 2, 18);
-  cransVerticaux(rect, 19, 8, 24);
-  cransHorizontaux(rect, 19, 0, 4);
-  cransVerticaux(rect, 4, 20, 24);
-});
+  // Convoyeur droit : flux vers l'est.
+  // La bande occupe les rangées 6 à 17 ; ses deux bords noirs, 4-5 et 18-19.
+  const droit = toile(TUILE_PX, (rect) => {
+    rect(0, 4, 24, 2, PALETTE.noir);
+    rect(0, 6, 24, 12, BANDE);
+    rect(0, 18, 24, 2, PALETTE.noir);
+    cransHorizontaux(rect, 4);
+    cransHorizontaux(rect, 19);
+  });
+
+  // Convoyeur en virage : entre par l'ouest, sort par le sud. La bande est
+  // nue : depuis que les chevrons défilent, deux motifs mobiles l'un sur
+  // l'autre se brouilleraient.
+  const virage = toile(TUILE_PX, (rect) => {
+    rect(0, 4, 20, 16, PALETTE.noir);
+    rect(4, 4, 16, 20, PALETTE.noir);
+    rect(0, 6, 18, 12, BANDE);
+    rect(6, 6, 12, 18, BANDE);
+    // Bord extérieur : le haut, puis la descente à droite. Bord intérieur : le
+    // court morceau en bas à gauche.
+    cransHorizontaux(rect, 4, 2, 18);
+    cransVerticaux(rect, 19, 8, 24);
+    cransHorizontaux(rect, 19, 0, 4);
+    cransVerticaux(rect, 4, 20, 24);
+  });
+
+  // Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les
+  // quatre rotations couvrent les quatre jonctions à trois branches.
+  const t = toile(TUILE_PX, (rect) => {
+    rect(0, 4, 24, 16, PALETTE.noir);
+    rect(4, 4, 16, 20, PALETTE.noir);
+    rect(0, 6, 24, 12, BANDE);
+    rect(6, 6, 12, 18, BANDE);
+    cransHorizontaux(rect, 4);
+    cransHorizontaux(rect, 19, 0, 4);
+    cransHorizontaux(rect, 19, 20, 24);
+    cransVerticaux(rect, 4, 20, 24);
+    cransVerticaux(rect, 19, 20, 24);
+  });
+
+  // Convoyeur en croix : les quatre bords sont reliés.
+  const croix = toile(TUILE_PX, (rect) => {
+    rect(0, 4, 24, 16, PALETTE.noir);
+    rect(4, 0, 16, 24, PALETTE.noir);
+    rect(0, 6, 24, 12, BANDE);
+    rect(6, 0, 12, 24, BANDE);
+    for (const y of [4, 19]) { cransHorizontaux(rect, y, 0, 4); cransHorizontaux(rect, y, 20, 24); }
+    for (const x of [4, 19]) { cransVerticaux(rect, x, 0, 4); cransVerticaux(rect, x, 20, 24); }
+  });
+
+  return { droit, virage, t, croix };
+}
+
+const TUILES_TAPIS = jeuDeTuiles(TAPIS);
+const TUILES_CONNECTEUR = jeuDeTuiles(TAPIS_CONNECTEUR);
+
+// Un connecteur du mur se peint en rouge, tout le reste en bleu. C'est la
+// seule chose qui les distingue : ils réagissent en tout point comme un tapis.
+const jeuDe = (convoyeur) => (convoyeur.connecteur ? TUILES_CONNECTEUR : TUILES_TAPIS);
 
 // Le chevron qui dit le sens de circulation. Il défile le long du tapis, à sa
 // vitesse (voir render/chevron.js) : un enfant voit où ça va sans attendre
@@ -122,33 +168,17 @@ function chevronTeinte(couleur) {
   });
 }
 
-const chevronOrdinaire = chevronTeinte(COULEUR_CHEVRON);
-const chevronVif = chevronTeinte(COULEUR_CRETE);
-export const spriteChevron = (vif) => (vif ? chevronVif : chevronOrdinaire);
+function jeuDeChevrons(chevron, crete) {
+  const ordinaire = chevronTeinte(chevron);
+  const vif = chevronTeinte(crete);
+  return (v) => (v ? vif : ordinaire);
+}
 
-// Convoyeur en T : arrive par l'ouest, repart vers l'est et vers le sud. Les
-// quatre rotations couvrent les quatre jonctions à trois branches.
-const convoyeurT = toile(TUILE_PX, (rect) => {
-  rect(0, 4, 24, 16, PALETTE.noir);
-  rect(4, 4, 16, 20, PALETTE.noir);
-  rect(0, 6, 24, 12, BANDE);
-  rect(6, 6, 12, 18, BANDE);
-  cransHorizontaux(rect, 4);
-  cransHorizontaux(rect, 19, 0, 4);
-  cransHorizontaux(rect, 19, 20, 24);
-  cransVerticaux(rect, 4, 20, 24);
-  cransVerticaux(rect, 19, 20, 24);
-});
-
-// Convoyeur en croix : les quatre bords sont reliés.
-const convoyeurCroix = toile(TUILE_PX, (rect) => {
-  rect(0, 4, 24, 16, PALETTE.noir);
-  rect(4, 0, 16, 24, PALETTE.noir);
-  rect(0, 6, 24, 12, BANDE);
-  rect(6, 0, 12, 24, BANDE);
-  for (const y of [4, 19]) { cransHorizontaux(rect, y, 0, 4); cransHorizontaux(rect, y, 20, 24); }
-  for (const x of [4, 19]) { cransVerticaux(rect, x, 0, 4); cransVerticaux(rect, x, 20, 24); }
-});
+export const spriteChevron = jeuDeChevrons(COULEUR_CHEVRON, COULEUR_CRETE);
+const chevronConnecteur = jeuDeChevrons(
+  PALETTE[TAPIS_CONNECTEUR.chevron], PALETTE[TAPIS_CONNECTEUR.crete],
+);
+const chevronsDe = (convoyeur) => (convoyeur.connecteur ? chevronConnecteur : spriteChevron);
 
 // Le téléporteur a disparu avec les cartes séparées : tout voyage sur des
 // tapis, du premier gisement au mur. Son sprite reviendra le jour où
@@ -356,12 +386,15 @@ export const INTERFACE = {
 // module, et une table figée ici obligerait à connaître l'ordre des imports.
 export function planche() {
   const tout = {
-    'tapis-droit': convoyeurDroit,
-    'tapis-virage': convoyeurVirage,
-    'tapis-t': convoyeurT,
-    'tapis-croix': convoyeurCroix,
-    chevron: chevronOrdinaire,
-    'chevron-vif': chevronVif,
+    'tapis-droit': TUILES_TAPIS.droit,
+    'tapis-virage': TUILES_TAPIS.virage,
+    'tapis-t': TUILES_TAPIS.t,
+    'tapis-croix': TUILES_TAPIS.croix,
+    'connecteur-droit': TUILES_CONNECTEUR.droit,
+    'connecteur-virage': TUILES_CONNECTEUR.virage,
+    chevron: spriteChevron(false),
+    'chevron-vif': spriteChevron(true),
+    'chevron-connecteur': chevronConnecteur(false),
     'gisement-vide': gisementVide,
     arbre,
   };
@@ -440,7 +473,7 @@ function memesBords(a, b) {
 function orientation(entree, sortie) {
   if (memeSens(entree, sortie)) {
     for (let q = 0; q < 4; q++) {
-      if (memeSens(tourner(EST, q), sortie)) return { sprite: convoyeurDroit, quarts: q };
+      if (memeSens(tourner(EST, q), sortie)) return { tuile: 'droit', quarts: q };
     }
   }
   // Un virage ne relie que deux bords de la cellule. Le sens de circulation ne
@@ -450,10 +483,10 @@ function orientation(entree, sortie) {
   const bords = [oppose(entree), sortie];
   for (let q = 0; q < 4; q++) {
     if (memesBords([tourner(OUEST, q), tourner(SUD, q)], bords)) {
-      return { sprite: convoyeurVirage, quarts: q };
+      return { tuile: 'virage', quarts: q };
     }
   }
-  return { sprite: convoyeurDroit, quarts: 0 };
+  return { tuile: 'droit', quarts: 0 };
 }
 
 // Une jonction relie trois bords, parfois quatre : la tuile se choisit sur
@@ -479,13 +512,13 @@ function bordsCardinaux(liste) {
 }
 
 function orientationJonction(bords) {
-  if (bords.length >= 4) return { sprite: convoyeurCroix, quarts: 0 };
+  if (bords.length >= 4) return { tuile: 'croix', quarts: 0 };
   for (let q = 0; q < 4; q++) {
     if (memeEnsemble(BASE_T.map((v) => tourner(v, q)), bords)) {
-      return { sprite: convoyeurT, quarts: q };
+      return { tuile: 't', quarts: q };
     }
   }
-  return { sprite: convoyeurCroix, quarts: 0 };
+  return { tuile: 'croix', quarts: 0 };
 }
 
 function sens(depuis, vers) {
@@ -603,18 +636,18 @@ export function dessinerConvoyeurs(ctx, scene, f) {
         const cardinaux = bordsCardinaux(bords);
         if (cardinaux.length >= 3) {
           const j = orientationJonction(cardinaux);
-          tuile(ctx, j.sprite, chemin[i].cx, chemin[i].cy, j.quarts);
+          tuile(ctx, jeuDe(convoyeur)[j.tuile], chemin[i].cx, chemin[i].cy, j.quarts);
           continue;
         }
       }
 
       const o = orientation(sens(avant, chemin[i]), sens(chemin[i], apres));
-      tuile(ctx, o.sprite, chemin[i].cx, chemin[i].cy, o.quarts);
+      tuile(ctx, jeuDe(convoyeur)[o.tuile], chemin[i].cx, chemin[i].cy, o.quarts);
     }
   }
   // Les chevrons passent après toutes les tuiles : un chevron ne doit jamais
   // se retrouver sous la bande du tapis voisin.
-  for (const convoyeur of scene.convoyeurs) dessinerChevrons(ctx, convoyeur, spriteChevron);
+  for (const convoyeur of scene.convoyeurs) dessinerChevrons(ctx, convoyeur, chevronsDe(convoyeur));
   for (const convoyeur of scene.convoyeurs) {
     parcourirItems(convoyeur, (item, p) => {
       ctx.drawImage(

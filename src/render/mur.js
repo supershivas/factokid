@@ -6,8 +6,10 @@
 //   — **on ne passe pas** : une rangée de blocs, en ardoise, de la couleur de
 //     ce qui est inerte. Rien qui ressemble à une machine, rien qui s'allume ;
 //   — **on est passé par là** : un mur ouvert reste debout, et les trois cases
-//     de son ancienne réception deviennent son passage, encadré de rouge. Ce
-//     sont ses connecteurs : c'est par là que la chaîne d'en bas monte ;
+//     de son ancienne réception deviennent ses connecteurs — des bouts de
+//     convoyeur rouges, dessinés comme tous les tapis, par où la chaîne d'en
+//     bas monte. Le mur ne les dessine pas : il se contente de leur laisser
+//     leurs cases ;
 //   — **il y a quelque chose derrière** : au-dessus du mur, le monde est
 //     éteint. On voit qu'il y a un étage là sans savoir encore ce qu'il donne,
 //     exactement comme le livre des matières montre ses silhouettes ;
@@ -84,35 +86,10 @@ export function dessinerMur(ctx, monde, f) {
       const coin = coinCellule(cx, pose.cy);
       ctx.drawImage(tuileMur, coin.x, coin.y, CELLULE, CELLULE);
     }
-    if (pose.ouvert) dessinerPassage(ctx, pose.cy);
   }
 
   const recepteur = recepteurDuMur(monde);
   if (recepteur) dessinerRecepteur(ctx, monde, recepteur);
-}
-
-// --- le passage d'un mur ouvert ---------------------------------------------
-
-// Les connecteurs : deux montants rouges qui encadrent les trois cases par où
-// l'on franchit le mur. Le rouge parce que rien d'autre ne l'est dans une
-// rangée d'ardoise — on voit le passage de loin, et c'est tout ce qu'il a à
-// dire. Le sol et les tapis, eux, passent dessous sans être recouverts.
-const MONTANT = 4; // unités logiques, deux pixels d'art
-
-function dessinerPassage(ctx, cy) {
-  const cellules = [...cellulesPassage(cy)].sort((a, b) => a.cx - b.cx);
-  const gauche = coinCellule(cellules[0].cx, cy);
-  const droite = coinCellule(cellules[cellules.length - 1].cx, cy);
-  ctx.fillStyle = PALETTE.rouge;
-  ctx.fillRect(gauche.x - MONTANT, gauche.y, MONTANT, CELLULE);
-  ctx.fillRect(droite.x + CELLULE, droite.y, MONTANT, CELLULE);
-  // Le linteau et le seuil, en pointillé d'un pixel : le passage se lit comme
-  // une ouverture et non comme deux traits perdus.
-  const l = droite.x + CELLULE - gauche.x;
-  for (let x = 0; x < l; x += PIXEL * 2) {
-    ctx.fillRect(gauche.x + x, gauche.y, PIXEL, PIXEL);
-    ctx.fillRect(gauche.x + x, gauche.y + CELLULE - PIXEL, PIXEL, PIXEL);
-  }
 }
 
 // --- la réception ----------------------------------------------------------

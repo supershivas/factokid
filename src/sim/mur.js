@@ -16,8 +16,11 @@
 //
 // **Un mur ouvert reste debout.** Il ne redevient pas du sol ordinaire : sa
 // rangée de blocs demeure, et ce qui s'ouvre, ce sont les trois cases de sa
-// réception — elles redeviennent du sol, et les tapis passent par là. Ce sont
-// les connecteurs du mur : ils relient les deux étages.
+// réception. **Elles deviennent ses connecteurs** : trois bouts de convoyeur
+// d'une case, rouges, qui montent d'un étage à l'autre. Ce sont des tapis
+// comme les autres — on s'y branche par-dessous, on en repart par-dessus, ils
+// portent une file et s'accumulent — à ceci près qu'ils appartiennent au mur :
+// ils ne se détruisent pas, et rien ne les libère.
 //
 // C'est trois cases pour quarante-deux, donc un passage à viser, et c'est
 // voulu : un mur franchi doit rester visible, sinon rien ne dit ce qu'on a
@@ -30,6 +33,7 @@ import { MACHINES } from '../data/machines.js';
 import { rangeesDe } from './carte.js';
 import { poser } from './grid.js';
 import { ajouterMachine, retirerMachine, etendreMachine } from './scene.js';
+import { creerConvoyeur, majGeometrie } from './belt.js';
 
 // L'étage le plus haut qu'on ait ouvert, et donc celui dont le mur nous
 // arrête. Le dernier du monde en a un aussi, tout en haut : sans seuil, il ne
@@ -58,10 +62,16 @@ export function mursPoses(monde) {
   return liste;
 }
 
-// Les trois cases du passage d'un mur : sa réception tant qu'il est fermé, du
-// sol ordinaire une fois ouvert.
+// Les trois cases du passage d'un mur : sa réception tant qu'il est fermé, ses
+// connecteurs une fois ouvert.
 export function cellulesPassage(cy) {
   return cellulesRecepteur(cy);
+}
+
+// Les connecteurs déjà posés sur cette rangée : une partie relue les rend avec
+// le reste de la scène, et on ne lui en pose pas de seconds.
+export function connecteursDuMur(scene, cy) {
+  return scene.convoyeurs.filter((c) => c.connecteur && c.chemin[0].cy === cy);
 }
 
 // La rangée la plus haute qu'on puisse regarder : celle du mur. Elle doit
@@ -128,7 +138,7 @@ export function poserMur(monde) {
   // libre. C'est ce qui fait qu'un mur franchi se voit encore.
   for (const mur of mursPoses(monde)) {
     if (!mur.ouvert) continue;
-    poserRangee(monde, mur.cy);
+    poserConnecteurs(monde, poserRangee(monde, mur.cy));
   }
 
   const mur = murCourant(monde);
@@ -161,16 +171,35 @@ function poserRangee(monde, cy) {
   return cellules;
 }
 
+// Les connecteurs d'un mur ouvert : un bout de convoyeur par case du passage,
+// d'une seule cellule, qui monte. Un tapis d'une case n'a pas de direction à
+// lui — `sens` la lui donne, pour que ses chevrons disent où ça va avant même
+// qu'on y branche quoi que ce soit.
+function poserConnecteurs(monde, cellules) {
+  const deja = connecteursDuMur(monde.scene, cellules[0].cy);
+  for (const c of cellules) {
+    if (deja.some((x) => x.chemin[0].cx === c.cx)) continue;
+    const connecteur = creerConvoyeur([{ cx: c.cx, cy: c.cy }], null, null);
+    connecteur.connecteur = true;
+    connecteur.sens = { dx: 0, dy: -1 }; // on ne progresse que vers le haut
+    majGeometrie(connecteur);
+    monde.scene.convoyeurs.push(connecteur);
+    poser(monde.scene.grille, c.cx, c.cy, { genre: 'convoyeur', convoyeur: connecteur });
+  }
+}
+
 // Ouvrir un mur, c'est retirer sa réception : la rangée, elle, reste debout.
-// Les trois cases qu'elle occupait deviennent du sol ordinaire — ce sont les
-// connecteurs par où les tapis franchissent le mur.
+// Les trois cases qu'elle occupait deviennent ses connecteurs — trois bouts de
+// convoyeur rouges par où les tapis franchissent le mur.
 function ouvrirMur(monde) {
   const recepteur = recepteurDuMur(monde);
   if (!recepteur) return;
   // Les tapis qui la nourrissaient restent posés : ils perdent seulement où
   // ils allaient. Rien ne disparaît tout seul de la grille.
-  for (const c of recepteur.cellules || [recepteur]) poser(monde.scene.grille, c.cx, c.cy, null);
+  const cellules = [...(recepteur.cellules || [recepteur])];
+  for (const c of cellules) poser(monde.scene.grille, c.cx, c.cy, null);
   retirerMachine(monde.scene, recepteur);
+  poserConnecteurs(monde, cellules);
 }
 
 // Le mur tombe-t-il ? On regarde à chaque pas : c'est la réception qui décide,
