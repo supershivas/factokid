@@ -73,6 +73,9 @@ const LETTRES = {
   ',': [_, _, _, _, _, _, '..1..', '.1...'],
   '.': [_, _, _, _, _, _, '..1..'],
   '-': [_, _, _, _, '.111.', _, _],
+  // Le plus vient avec le moins : le prix qu'on paie s'écrit en rouge, celui
+  // qu'on récupère en vert, et ils se lisent l'un au-dessus de l'autre.
+  '+': [_, _, _, '..1..', '.111.', '..1..', _],
   '!': [_, _, '..1..', '..1..', '..1..', _, '..1..'],
   '?': [_, _, '.111.', '1...1', '...1.', _, '..1..'],
   ' ': [_],

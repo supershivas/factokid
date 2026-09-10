@@ -67,6 +67,10 @@ export function brancherPointeur(canvas, vue, jeu) {
     boutonsMenu: [],
     effets: [],                  // cellules qui viennent d'être construites
     debris: [],                  // cellules qui viennent d'être détruites
+    // Ce qu'un geste vient de coûter ou de rendre, case par case : la caisse
+    // est en haut de l'écran et la main en bas, le prix se dit donc là où le
+    // doigt vient de le dépenser.
+    couts: [],
     appuis: [],                  // touches sur lesquelles le doigt vient de se poser
     relaches: [],                // touches que le doigt vient de lâcher
     // L'écran des essais de la bêta : tant qu'il est là, rien du jeu ne se
@@ -127,14 +131,24 @@ export function brancherPointeur(canvas, vue, jeu) {
   // le droit de se tromper de case.
   const caisse = () => (jeu.monde ? jeu.monde.caisse : 0);
   const abordable = (id) => caisse() >= cout(id);
-  function payer(id) {
+  function payer(id, c) {
     if (!jeu.monde) return false;
     if (jeu.monde.caisse < cout(id)) return false;
     jeu.monde.caisse -= cout(id);
+    if (c) marquerCout(c, -cout(id));
     return true;
   }
-  function rembourser(id, combien = 1) {
-    if (jeu.monde) jeu.monde.caisse += cout(id) * combien;
+  function rembourser(id, combien = 1, c) {
+    if (!jeu.monde) return;
+    jeu.monde.caisse += cout(id) * combien;
+    if (c) marquerCout(c, cout(id) * combien);
+  }
+
+  // Le prix monte de la case, en rouge quand on paie, en vert quand on
+  // récupère. Le geste est ici, le dessin dans le rendu : main.js fait le
+  // lien, comme pour la gerbe d'étoiles de la pose.
+  function marquerCout(c, montant) {
+    etat.couts.push({ cx: c.cx, cy: c.cy, montant });
   }
 
   function majBoutons() {
@@ -706,7 +720,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     const g = gisementEn(monde(), c.cx, c.cy);
     if (!g || g.extracteur || !abordable('extracteur')) return false;
     if (!poserExtracteur(monde(), c.cx, c.cy)) return false;
-    payer('extracteur');
+    payer('extracteur', c);
     marquerConstruit([c]);
     etat.panneau = null;
     rendreLaMain();
@@ -718,7 +732,7 @@ export function brancherPointeur(canvas, vue, jeu) {
   function batirMachine(c, type) {
     if (!constructible(monde(), c.cy)) return false;
     if (!celluleLibre(scene(), c.cx, c.cy)) return false;
-    if (!payer(type)) return false;
+    if (!payer(type, c)) return false;
     ajouterMachine(scene(), type, c.cx, c.cy, {});
     marquerConstruit([c]);
     etat.panneau = null;
@@ -742,7 +756,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
     if (convoyeur) {
       couperConvoyeur(scene(), convoyeur, c.cx, c.cy);
-      rembourser('convoyeur');
+      rembourser('convoyeur', 1, c);
       marquerDetruit([c]);
       return;
     }
@@ -751,14 +765,14 @@ export function brancherPointeur(canvas, vue, jeu) {
     // téléporteur et la livraison restent en place quoi qu'il arrive.
     if (machine && MACHINES_CONSTRUCTIBLES.includes(machine.def.id)) {
       retirerMachine(scene(), machine);
-      rembourser(machine.def.id);
+      rembourser(machine.def.id, 1, c);
       marquerDetruit([c]);
       return;
     }
     const g = gisementEn(monde(), c.cx, c.cy);
     if (g && g.extracteur) {
       retirerExtracteur(monde(), c.cx, c.cy);
-      rembourser('extracteur');
+      rembourser('extracteur', 1, c);
       marquerDetruit([c]);
     }
   }
@@ -996,7 +1010,15 @@ export function brancherPointeur(canvas, vue, jeu) {
       marquerConstruit(trace.chemin);
       // Le tapis se paie à la tuile, au moment où il est posé : le tracé n'a
       // rien débité tant qu'il n'était qu'un doigt en l'air.
-      if (jeu.monde) jeu.monde.caisse -= cout('convoyeur') * trace.chemin.length;
+      if (jeu.monde && trace.chemin.length > 0) {
+        jeu.monde.caisse -= cout('convoyeur') * trace.chemin.length;
+        // Un prix par tuile ferait une pluie de « -1 » le long du tapis : le
+        // tracé est un geste, il a donc un prix, écrit au bout du doigt.
+        marquerCout(
+          trace.chemin[trace.chemin.length - 1],
+          -cout('convoyeur') * trace.chemin.length,
+        );
+      }
       let pose;
       if (trace.branche) {
         pose = brancherConvoyeur(scene(), trace.branche.tronc, trace.branche.cellule, trace.chemin, cible);

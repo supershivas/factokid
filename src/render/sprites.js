@@ -10,6 +10,7 @@ import { tuileSol } from './biome.js';
 import { ITEMS } from '../data/items.js';
 import { FORMES as formes } from './motifs.js';
 import { TUILES, peindreTuile } from './tuiles.js';
+import { dessinerCouts } from './cout.js';
 import { REPOUSSE_TICKS } from '../data/monde.js';
 import { TICKS_PAR_SECONDE } from '../data/machines.js';
 import { centreCellule, coinCellule } from '../sim/grid.js';
@@ -545,6 +546,8 @@ export function dessinerScene(ctx, monde, trace, dessinerParticules) {
   // Le mur passe au-dessus du monde : ce qu'il ferme est derrière lui.
   dessinerMur(ctx, monde, f);
   dessinerAlertes(ctx, scene, f);
+  // Le prix d'un geste, au-dessus de la case qui l'a coûté.
+  dessinerCouts(ctx);
   if (trace && trace.actif) dessinerTrace(ctx, trace);
 
   ctx.restore();

@@ -8,6 +8,7 @@ import {
   majParticules, dessinerParticules, fumee, pose, destruction, vapeur,
 } from './render/particules.js';
 import { marquerPose, majPoses } from './render/pose.js';
+import { marquerCout, majCouts, oublierCouts } from './render/cout.js';
 import { presser, relacher, majAppuis } from './render/bouton.js';
 import { majChevrons } from './render/chevron.js';
 import { dessinerHud } from './render/hud.js';
@@ -61,6 +62,7 @@ const jeu = {
     // celui de la partie précédente.
     oublierSol();
     oublierMiniCarte();
+    oublierCouts();
     jeu.tutoriel = scenario.tutoriel ? creerTutoriel() : null;
     // La caméra ne monte pas au-dessus du mur : c'est le monde qui dit
     // jusqu'où on peut regarder, elle ne le devine pas.
@@ -82,6 +84,7 @@ const jeu = {
     jeu.tutoriel = tutoriel;
     oublierSol();
     oublierMiniCarte();
+    oublierCouts();
     poserPlafond(plafond(monde));
     poserCamera(regard);
     if (interfaceJeu) interfaceJeu.choix = null;
@@ -170,6 +173,8 @@ function effetsDeConstruction() {
     destruction(GRILLE_X + c.cx * CELLULE + CELLULE / 2, GRILLE_Y + c.cy * CELLULE + CELLULE / 2);
   }
   interfaceJeu.debris.length = 0;
+  for (const c of interfaceJeu.couts) marquerCout(c.cx, c.cy, c.montant);
+  interfaceJeu.couts.length = 0;
   for (const cle of interfaceJeu.appuis) presser(cle);
   interfaceJeu.appuis.length = 0;
   for (const cle of interfaceJeu.relaches) relacher(cle);
@@ -267,6 +272,7 @@ demarrerBoucle(
     fumeeDesMines(dt);
     majParticules(dt);
     majPoses(dt);
+    majCouts(dt);
     // Les chevrons de la scène qu'on regarde : c'est du rendu, pas du jeu.
     majChevrons(jeu.monde.scene, dt);
 
