@@ -2,13 +2,19 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Usine — aperçu</title>
 <style>
   :root { --noir: #1a1c2c; --ardoise: #566c86; }
-  html, body { margin: 0; height: 100%; background: #0e0f1a; overflow: hidden; }
+  /* Mêmes refus que la cible mobile : un aperçu ouvert sur un téléphone se
+     joue au doigt lui aussi, et la souris a les mêmes mauvaises habitudes —
+     sélection, menu contextuel, tiré-lâché. */
+  html, body { margin: 0; height: 100%; background: #0e0f1a; overflow: hidden;
+               overscroll-behavior: none; touch-action: none; }
   body { display: flex; align-items: center; justify-content: center;
-         touch-action: none; -webkit-user-select: none; user-select: none; }
+         -webkit-user-select: none; user-select: none;
+         -webkit-touch-callout: none;
+         -webkit-tap-highlight-color: transparent; }
   /* Même jeu, même canvas : seuls le conteneur et le facteur d'échelle changent. */
   /* La coque se ferme sur l'écran : `data-epouse` demande au rendu de rendre
      au cadre la taille exacte du jeu, une fois l'échelle entière choisie.
@@ -20,7 +26,7 @@
   /* touch-action n'est pas héritée : sans ça le navigateur peut réclamer
      le geste pour lui (zoom, panoramique) et annuler nos événements. */
   canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block;
-           touch-action: none; }
+           touch-action: none; -webkit-user-drag: none; user-select: none; }
 </style>
 </head>
 <body>

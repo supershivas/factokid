@@ -799,6 +799,16 @@ export function brancherPointeur(canvas, vue, jeu) {
   // rester en mode « pose » faisait bâtir une confiserie au premier doigt
   // posé sur la carte. Le convoyeur, lui, ne rend pas la main : on en trace
   // dix de suite, c'est tout l'intérêt du geste.
+  // Un tracé qui part de ce qui est bâti prend le convoyeur : l'outil suit le
+  // doigt, comme pour un appui court. La touche s'enfonce donc au moment où le
+  // tapis naît — sans ça, on aurait tracé en main, et la barre aurait menti.
+  function prendreLeConvoyeur() {
+    if (etat.outil === 'convoyeur') return;
+    etat.outil = 'convoyeur';
+    fermerMenu();
+    majBoutons();
+  }
+
   function rendreLaMain() {
     etat.outil = 'main';
     fermerMenu();
@@ -943,9 +953,13 @@ export function brancherPointeur(canvas, vue, jeu) {
       }
     }
 
-    // Le tracé est le geste du convoyeur, et de lui seul. En main on regarde,
-    // en construction on pose : ni l'un ni l'autre ne tire un tapis.
-    if (etat.outil !== 'convoyeur') return;
+    // Le tracé est le geste du convoyeur — et de tout ce qui est bâti. Un
+    // doigt qui part d'une machine ou d'un tapis tire un tapis, même la main
+    // au repos : c'est la seule chose qu'on ait à faire d'une machine, et
+    // demander l'outil d'abord était un aller-retour de plus vers la barre du
+    // bas. **En main, le doigt ne tire donc le monde que depuis le sol nu.**
+    // Poser et détruire s'en tiennent à l'écart, comme toujours.
+    if (etat.outil !== 'convoyeur' && etat.outil !== 'main') return;
 
     const convoyeur = convoyeurEn(scene(), c.cx, c.cy);
     if (convoyeur) {
@@ -960,6 +974,7 @@ export function brancherPointeur(canvas, vue, jeu) {
       // arrêté. Sur un tapis qui distribue déjà, ou en plein milieu : on en
       // fait partir une branche de plus.
       if (auBout && !convoyeur.cible && convoyeur.sorties.length === 0) {
+        prendreLeConvoyeur();
         trace.actif = true;
         trace.source = convoyeur.source;
         trace.chemin = [];
@@ -971,6 +986,7 @@ export function brancherPointeur(canvas, vue, jeu) {
         return;
       }
       if (!auBout || convoyeur.sorties.length > 0) {
+        prendreLeConvoyeur();
         trace.actif = true;
         trace.source = convoyeur;
         trace.chemin = [];
@@ -984,6 +1000,7 @@ export function brancherPointeur(canvas, vue, jeu) {
 
     const machine = machineEn(scene(), c.cx, c.cy);
     if (!machine || !aUneSortie(machine)) return;
+    prendreLeConvoyeur();
     trace.actif = true;
     trace.source = machine;
     trace.chemin = [];
@@ -1158,19 +1175,55 @@ export function brancherPointeur(canvas, vue, jeu) {
 
   majBoutons();
   majMenuPause();
-  // iOS ignore `user-scalable=no` depuis dix ans : sans ça, deux doigts font
-  // grossir la page elle-même, et c'est ce qu'on prenait pour un zoom du jeu.
-  // Les événements de geste ne sont émis que là, et seulement sur le document.
-  for (const geste of ['gesturestart', 'gesturechange', 'gestureend']) {
-    document.addEventListener(geste, (e) => e.preventDefault(), { passive: false });
-  }
+  refuserLesGestesDuNavigateur();
 
   canvas.addEventListener('pointerdown', debut);
   canvas.addEventListener('pointermove', deplacement);
   canvas.addEventListener('pointerup', fin);
   canvas.addEventListener('pointercancel', fin);
   canvas.addEventListener('lostpointercapture', () => { lacherTouche(); relacher(); });
-  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   return etat;
+}
+
+// --- ce que le navigateur voudrait faire du doigt -------------------------
+//
+// Le jeu se joue au pouce, en plein écran, et **tout geste appartient au jeu**.
+// Or chaque navigateur en réclame quelques-uns pour lui, et ils tombent tous
+// au pire moment : un appui long qui devait ouvrir un panneau fait sortir la
+// loupe d'iOS ou le menu « copier » d'Android, une pince fait grossir la page
+// au lieu de reculer la vue, un doigt qui glisse vers le bas recharge la page,
+// une touche fait apparaître la recherche rapide de Firefox par-dessus le jeu.
+//
+// Aucun d'eux n'est utile ici : il n'y a pas un mot à sélectionner, pas un
+// lien à ouvrir, rien à chercher dans la page. On les refuse donc tous, et la
+// feuille de style refuse le reste — sélection, loupe, surlignage du toucher,
+// rebond du défilement (voir `index.html` et `preview.html`).
+//
+// C'est le seul endroit du jeu qui parle au navigateur.
+function refuserLesGestesDuNavigateur() {
+  const sans = (e) => e.preventDefault();
+  // La pince d'iOS, qui ignore `user-scalable=no` depuis dix ans. Ces
+  // événements-là ne sont émis que sur le document.
+  for (const geste of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(geste, sans, { passive: false });
+  }
+  // Le menu contextuel : appui long au doigt, clic droit à la souris.
+  document.addEventListener('contextmenu', sans);
+  // La sélection et le tiré-lâché : il n'y a ni texte à prendre ni image à
+  // déposer ailleurs, et c'est ce qui déclenche la loupe et « rechercher ».
+  document.addEventListener('selectstart', sans);
+  document.addEventListener('dragstart', sans);
+  // Le double-clic sélectionne un mot, et double-taper zoome.
+  document.addEventListener('dblclick', sans);
+  // La recherche rapide de Firefox — « / » et « ' » — et les touches qui font
+  // défiler une page. Le jeu n'écoute aucune touche : rien de ce qui est
+  // refusé ici ne lui manque. Les raccourcis du navigateur, eux, gardent leur
+  // modificateur : Ctrl+F et F12 restent à l'adulte qui regarde.
+  const volees = new Set(["/", "'", ' ', 'PageUp', 'PageDown', 'Home', 'End',
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (volees.has(e.key)) e.preventDefault();
+  });
 }

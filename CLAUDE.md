@@ -219,6 +219,13 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   glisser est le geste même. Tirer la carte n'est donc jamais un appui court,
   et c'est vrai aussi de la destruction : on retire une case au doigt posé,
   jamais une traînée sous un doigt qui promène la vue.
+  **Sauf s'il part de ce qui est bâti** : un glissé qui commence sur une
+  machine, un extracteur ou un tapis tire un tapis, la main au repos comme
+  l'outil convoyeur en poche — c'est la seule chose qu'on ait à faire d'une
+  machine, et demander l'outil d'abord était un aller-retour de plus vers la
+  barre du bas. L'outil suit alors le doigt : la touche du convoyeur s'enfonce
+  au moment où le tapis naît, sinon la barre mentirait. **La main ne tire donc
+  le monde que depuis le sol nu**, et poser et détruire restent à l'écart.
 - **Un bâtiment posé rend la main.** C'est l'inverse de ce qui était décidé —
   « l'élément choisi le reste », pour en poser dix d'affilée — et c'est une
   décision qui a changé : on pose un bâtiment, puis on tire ses tapis, et
@@ -420,10 +427,12 @@ neuf gestes sur dix, et il coûtait aussi cher qu'une plieuse — ouvrir le menu
 viser sa rangée, la toucher. Les six bâtiments restent derrière
 « construction », qui n'ouvre plus un menu que pour eux.
 
-**Le tracé est le geste du convoyeur, et de lui seul.** En main on regarde, en
-construction on pose : ni l'un ni l'autre ne tire un tapis. Pendant un tracé,
-arriver au bord de la fenêtre fait défiler tout seul, pour qu'un convoyeur
-traverse deux écrans sans que le doigt se lève.
+**Le tracé est le geste du convoyeur — et de tout ce qui est bâti.** En
+construction on pose, en destruction on retire : ni l'un ni l'autre ne tire un
+tapis. La main, elle, tire le monde depuis le sol nu et un tapis depuis une
+machine : c'est le même doigt, et c'est ce qu'il touche qui décide. Pendant un
+tracé, arriver au bord de la fenêtre fait défiler tout seul, pour qu'un
+convoyeur traverse deux écrans sans que le doigt se lève.
 
 **Un cran de recul, et un seul.** Une touche du second rang, à côté de la
 mini-carte, éloigne la vue : la cellule passe de 48 à 24 et la fenêtre montre
@@ -934,6 +943,18 @@ tient pas deux fois 640 de haut, l'aperçu est un vrai téléphone de 360 × 640
 
 Les événements pointeur sont unifiés (Pointer Events) : la souris produit
 exactement les mêmes gestes que le doigt, tracé de convoyeur compris.
+
+**Tout geste appartient au jeu, et le navigateur n'en prend aucun.** Chacun en
+réclame quelques-uns pour lui, et ils tombent tous au pire moment : un appui
+long qui devait ouvrir un panneau fait sortir la loupe d'iOS ou le menu
+« copier » d'Android, une pince fait grossir la page au lieu de reculer la vue,
+un doigt qui glisse vers le bas recharge la page, une touche fait apparaître la
+recherche rapide de Firefox par-dessus le jeu. Aucun n'est utile ici : il n'y a
+pas un mot à sélectionner, pas un lien à ouvrir, rien à chercher dans la page.
+Ils sont donc tous refusés — la feuille de style pour la sélection, la loupe,
+le surlignage du toucher et le rebond du défilement ; `input/pointer.js` pour
+le reste, en un seul endroit. Ce qui garde son modificateur reste à l'adulte :
+Ctrl+F et F12 ne sont pas volés.
 
 Six outils gardent le jeu, et ils tournent avant toute livraison :
 `outils/tapis.mjs` pour les convoyeurs, `outils/lisibilite.mjs` pour ce qui se
