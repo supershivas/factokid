@@ -8,6 +8,6 @@
 //   mineur    — quelque chose de plus à faire ou à voir dans le jeu ;
 //   majeur    — la partie d'avant ne se joue plus comme celle d'après.
 //
-// Il monte à chaque livraison. C'est ce que le joueur voit dans le menu pause,
+// Il monte à chaque version livrée. C'est ce que le joueur voit dans le menu pause,
 // et ce que le bandeau de mise à jour annonce.
 export const VERSION = '1.6.0';

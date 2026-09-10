@@ -34,7 +34,7 @@ export const CONSTRUCTIBLES = [
 ];
 
 // Les machines qu'on peut poser sont aussi les seules qu'on peut détruire :
-// un téléporteur ou la livraison restent en place.
+// la réception du mur reste en place.
 export const MACHINES_CONSTRUCTIBLES = CONSTRUCTIBLES
   .filter((c) => c.machine)
   .map((c) => c.machine);
@@ -42,7 +42,7 @@ export const MACHINES_CONSTRUCTIBLES = CONSTRUCTIBLES
 // Ce que coûte chaque élément, en caisse. C'est la boucle du jeu : on livre
 // pour bâtir, et bâtir fait livrer plus.
 //
-// L'échelle est réglée sur ce que la livraison paie — un caramel vaut 1, un
+// L'échelle est réglée sur ce que la réception paie — un caramel vaut 1, un
 // bonbon 10. Doubler une branche coûte donc une vingtaine de secondes de
 // production au début, et de moins en moins à mesure que l'usine grossit.
 // C'est l'intervalle qu'on cherche : assez long pour qu'on ait envie, assez

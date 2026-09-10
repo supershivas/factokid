@@ -34,12 +34,12 @@ export const ITEMS = {
 // plieuse sait emballer.
 export const BONBONS = ['bonbon', 'coeur', 'berlingot'];
 
-// Ce que la livraison accepte, et ce que ça vaut.
+// Ce que la réception du mur achète, et ce que ça vaut.
 //
 // Elle ne prenait que les bonbons finis, et la plus petite chaîne qui
 // rapportait quelque chose faisait donc quatre extracteurs et quatre machines :
 // huit poses avant le premier retour. Elle prend maintenant le caramel et la
-// pastille aussi, pour bien moins. Extracteur → chaufferie → livraison : trois
+// pastille aussi, pour bien moins. Extracteur → chaufferie → réception : trois
 // éléments, et ça rapporte. C'est le noyau du jeu, et le bonbon devient ce
 // qu'on fait pour gagner plus, pas le péage d'entrée.
 //

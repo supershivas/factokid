@@ -254,7 +254,7 @@ const partieDe = (monde, camera, tutoriel) => ({
       if (geste === 0) {
         const cx = 1 + alea(14); const cy = 1 + alea(20);
         if (lire(scene.grille, cx, cy) || scene.machines.length > 10) continue;
-        ajouterMachine(scene, ['chaufferie', 'trieur', 'livraison', 'confiserie'][alea(4)], cx, cy);
+        ajouterMachine(scene, ['chaufferie', 'trieur', 'recepteur', 'confiserie'][alea(4)], cx, cy);
       } else if (geste <= 3) {
         if (alea(2) && scene.convoyeurs.length) {
           const c = scene.convoyeurs[alea(scene.convoyeurs.length)];

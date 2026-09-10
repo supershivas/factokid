@@ -9,7 +9,7 @@ import { DEPART } from '../data/depart.js';
 import { creerScene, ajouterMachine, poserConvoyeur, majScene, itemsDeScene } from './scene.js';
 import { creerGisements, majGisements, gisementEn, poserExtracteur } from './gisement.js';
 import { creerCarte } from './carte.js';
-import { poserMur, majMur } from './mur.js';
+import { poserMur, majMur, recepteurDuMur } from './mur.js';
 
 // `disposition` dit ce qui est déjà posé au premier instant : l'usine qui
 // tourne, ou la carte nue. C'est le scénario choisi qui l'apporte, avec la
@@ -31,9 +31,9 @@ export function creerMonde(disposition = DEPART, graine = 1, etageOuvert = 1) {
     // matières s'en sert, et rien d'autre. C'est de l'état de partie — une
     // nouvelle partie repart d'un livre vide.
     decouvertes: {},
-    // La caisse : ce que la livraison a payé. C'est le seul compteur de
+    // La caisse : ce que la réception a payé. C'est le seul compteur de
     // l'écran, et il ne compte plus des bonbons mais ce qu'ils valent — la
-    // livraison achète aussi le caramel et la pastille, pour bien moins.
+    // réception achète aussi le caramel et la pastille, pour bien moins.
     caisse: disposition.caisse || 0,
     gisements: creerGisements(carte),
     // On ne progresse que vers le haut : au premier instant, seul l'étage du
@@ -61,9 +61,13 @@ export function creerMonde(disposition = DEPART, graine = 1, etageOuvert = 1) {
     ? gisementEn(monde, c.extracteur.cx, c.extracteur.cy).extracteur
     : machines[c.source]);
 
+  // Une disposition peut viser la réception du mur : elle n'est pas une de ses
+  // machines, c'est le mur qui l'apporte, et c'est là qu'on vend.
+  const cible = (c) => (c.cible === 'recepteur' ? recepteurDuMur(monde) : machines[c.cible]);
+
   for (const c of disposition.convoyeurs) {
     poserConvoyeur(
-      monde.scene, c.chemin.map((p) => ({ ...p })), source(c), machines[c.cible],
+      monde.scene, c.chemin.map((p) => ({ ...p })), source(c), cible(c),
     );
   }
   return monde;
@@ -77,7 +81,7 @@ export function majMonde(monde, dt) {
   majMur(monde);
 }
 
-// Ce que la livraison a payé depuis la dernière image. La machine met de côté,
+// Ce que la réception a payé depuis la dernière image. La machine met de côté,
 // le monde relève et efface : elle n'a jamais besoin de connaître la caisse,
 // comme elle n'a jamais besoin de connaître le livre.
 function releverCaisse(monde) {

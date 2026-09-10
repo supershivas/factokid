@@ -130,7 +130,7 @@ export function reconstruire(convoyeur, chemin, cible, itemsImposes) {
 }
 
 // Où va ce tapis : sa machine, puis ses branches. Le tout dans l'ordre du tour
-// de rôle, pour que la géométrie et la livraison désignent toujours la même.
+// de rôle, pour que la géométrie et le déversement désignent toujours la même.
 export function destinations(convoyeur) {
   const liste = convoyeur.cible ? [convoyeur.cible] : [];
   return liste.concat(convoyeur.sorties);
@@ -176,7 +176,7 @@ export function majGeometrie(convoyeur) {
 
   // Sortie : quand le bout distribue entre plusieurs destinations, il vise
   // celle à qui le prochain item revient — pas la première de la liste. Sinon
-  // l'item file dans une direction puis saute dans une autre à la livraison.
+  // l'item file dans une direction puis saute dans une autre en arrivant.
   const dests = destinations(convoyeur);
   const visees = dests.map((d) => celluleVisee(d, derniere)).filter(Boolean);
   const tour = dests.length > 0 ? convoyeur.tour % dests.length : 0;

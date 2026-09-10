@@ -31,7 +31,7 @@ export const REPOUSSE_TICKS = 90; // 1,5 s à 60 Hz
 // Il a remplacé la clairière du centre du monde, qui avait un peu de tout : on
 // ne commence plus au milieu mais en bas, et l'étage 1 est le monde du sucre.
 // Il n'y a donc qu'une matière ici, et c'est tout ce qu'il faut — sucre,
-// chaufferie, livraison est déjà une usine qui rapporte.
+// chaufferie, réception du mur est déjà une usine qui rapporte.
 export const PIED_DU_MONDE = { cx: 21, cy: 55 };
 
 // Les gisements du départ. Ils sont à trois ou cinq cases de leurs machines :

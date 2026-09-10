@@ -4,7 +4,7 @@
 //   `mine`    — l'extracteur : se remplit du gisement qu'il occupe ;
 //   `tri`     — le trieur : reçoit mélangé, range, une sortie par matière ;
 //   `recette` — l'assembleur : plusieurs ingrédients, un produit ;
-//   `entree`  — la livraison : consomme et fait disparaître.
+//   `entree`  — la réception : achète, compte, et fait disparaître.
 
 import { MACHINES, TICKS_PAR_SECONDE } from '../data/machines.js';
 import { RECETTES } from '../data/recipes.js';
@@ -34,8 +34,8 @@ export function creerMachine(type, cx, cy, { item } = {}) {
     tour: 0,       // pour verser à tour de rôle
     produits: 0,
     consommes: 0,
-    verse: 0,     // ce que la livraison a payé et que le monde n'a pas encore pris
-    // Ce qu'une livraison a reçu, matière par matière : la vitrine du livre.
+    verse: 0,     // ce que la réception a payé et que le monde n'a pas encore pris
+    // Ce qu'une réception a reçu, matière par matière : la vitrine du livre.
     recus: {},
     // La dernière matière sortie, que le monde relève puis efface : c'est
     // ainsi qu'il sait ce que le joueur a déjà fabriqué, sans que la machine
@@ -52,13 +52,19 @@ export function creerMachine(type, cx, cy, { item } = {}) {
 // Ce que la machine accepte depuis un tapis, et jusqu'à combien.
 export function attendus(machine) {
   const { def, recette } = machine;
-  // La réception du mur n'attend qu'une chose, et elle change avec l'étage :
-  // c'est sa matière qui la dit, comme pour un extracteur.
-  if (def.recepteur) return machine.item ? [{ item: machine.item, capacite: def.capacite }] : [];
+  // La réception achète tout ce qui se vend, et prend en plus ce que son mur
+  // réclame quand celui-ci ne se vend pas — une fraise ne vaut rien à la
+  // caisse, mais un mur peut en vouloir. Sa matière change avec l'étage :
+  // c'est le mur qui la lui donne à la pose.
+  if (def.recepteur) {
+    const items = [...def.entrees];
+    if (machine.item && !items.includes(machine.item)) items.push(machine.item);
+    return items.map((item) => ({ item, capacite: def.capacite }));
+  }
   if (recette) return Object.keys(recette.entrees).map((item) => ({ item, capacite: def.capacite }));
   if (def.tri) return []; // un trieur prend tout : voir accepte()
-  // Une livraison attend plusieurs matières : les trois bonbons. Une seule
-  // rangée de jauge par matière, comme pour une recette.
+  // Une réception attend plusieurs matières : les trois bonbons, entre
+  // autres. Une seule rangée de jauge par matière, comme pour une recette.
   if (def.entrees) return def.entrees.map((item) => ({ item, capacite: def.capacite }));
   return [];
 }
@@ -83,7 +89,7 @@ const COTES = 4;
 export function maxEntrees(machine) {
   // Ce qui n'accepte rien — un extracteur — n'a pas d'entrée du tout.
   if (!machine.def.tri && attendus(machine).length === 0) return 0;
-  // Ce qui ne sort rien garde ses quatre côtés : la livraison ne repart nulle
+  // Ce qui ne sort rien garde ses quatre côtés : la réception ne repart nulle
   // part, et rien ne justifiait qu'elle réserve un côté à un tapis qu'elle
   // n'aura jamais.
   return COTES - (aUneSortie(machine) ? maxSorties(machine) : 0);
@@ -216,25 +222,6 @@ export function majMachine(machine, dt) {
   if (machine.def.tri) { majTrieur(machine, dt); return; }
   if (machine.def.mine) { verserAuTour(machine, dt); return; }
 
-  // La réception du mur : elle avale ce qu'on lui apporte et le compte. Elle
-  // ne paie rien et ne se plaint jamais — un mur qui crie n'aurait aucun sens,
-  // il attend, c'est tout.
-  if (machine.def.recepteur) {
-    machine.bloquee = false;
-    const item = machine.item;
-    if (!item || machine.stocks[item] === 0) {
-      machine.horloge = Math.min(machine.horloge, machine.periode);
-      return;
-    }
-    machine.horloge += dt;
-    if (machine.horloge < machine.periode) return;
-    machine.stocks[item]--;
-    machine.recus[item] = (machine.recus[item] || 0) + 1;
-    machine.consommes++;
-    machine.horloge -= machine.periode;
-    return;
-  }
-
   if (machine.recette) {
     const complet = Object.entries(machine.recette.entrees)
       .every(([item, n]) => machine.stocks[item] >= n);
@@ -263,11 +250,15 @@ export function majMachine(machine, dt) {
     return;
   }
 
-  // La livraison : elle prend les trois bonbons et les compte séparément —
-  // c'est cette vitrine que le livre montre. `consommes` reste le total, et
-  // c'est lui qu'affiche le seul compteur de l'écran.
+  // La réception : elle prend ce qu'on lui porte, le compte matière par
+  // matière — c'est cette vitrine que le livre montre, et c'est elle que le
+  // mur relit — et le paie. `consommes` reste le total.
+  //
+  // Elle ne se plaint jamais : un mur qui crie n'aurait aucun sens, il
+  // attend, c'est tout. Une réception pleine, en revanche, se signale comme
+  // n'importe quel bout de chaîne bouché.
   if (machine.def.entrees) {
-    const attend = machine.def.entrees;
+    const attend = attendus(machine).map((a) => a.item);
     const total = attend.reduce((n, item) => n + machine.stocks[item], 0);
     machine.bloquee = attend.every((item) => machine.stocks[item] >= machine.def.capacite);
     if (total === 0) {

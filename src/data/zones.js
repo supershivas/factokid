@@ -34,18 +34,15 @@ export const ETAGES = [
     biome: 'sucre',
     matiere: 'sucre',
     // De quoi faire tourner le noyau à trois éléments : un extracteur sur le
-    // sucre, une chaufferie qui le fond, la livraison qui l'achète.
+    // sucre, une chaufferie qui le fond, la réception du mur qui l'achète.
     ouvre: ['extracteur', 'chaufferie'],
-    // Le mur demande le produit de l'étage qu'il ferme. Le caramel vaut 1 à la
-    // livraison : le total livré au mur, lui, ne se dépense pas.
+    // Le mur demande le produit de l'étage qu'il ferme. Le caramel vaut 1 à
+    // la réception : le total porté au mur, lui, ne se dépense pas.
     //
-    // Cinquante, mesuré (`node outils/mur.mjs`) : un tapis détourné vers la
-    // réception ouvre le premier mur en deux minutes vingt, deux tapis en une
-    // minute dix. L'écart est le message — on n'attend pas, on double.
-    //
-    // Il en demandait cent quand la livraison comptait pour lui. Depuis qu'il
-    // a sa réception, ce qu'on lui porte n'est plus vendu : le seuil se paie
-    // deux fois, et le premier mur n'est pas l'endroit où faire attendre.
+    // Cinquante, mesuré (`node outils/mur.mjs`) : l'usine de départ et ses
+    // trois branches ouvrent le premier mur en cinquante secondes, une seule
+    // branche en deux minutes vingt. L'écart est le message — on n'attend
+    // pas, on élargit.
     mur: { item: 'caramel', combien: 50 },
   },
   {
@@ -65,7 +62,7 @@ export const ETAGES = [
   { n: 5, biome: 'terre', matiere: null, ouvre: [], mur: null },
 ];
 
-// Ce qui est là dès le premier instant, avant tout mur : le convoyeur et la
-// livraison. Le tapis est le geste du jeu, et la livraison n'est pas
-// constructible — elle ne peut donc pas manquer.
+// Ce qui est là dès le premier instant, avant tout mur : le convoyeur. Le
+// tapis est le geste du jeu. La réception, elle, n'est pas constructible : le
+// mur l'apporte, elle ne peut donc pas manquer.
 export const OUVERT_AU_DEPART = ['convoyeur'];

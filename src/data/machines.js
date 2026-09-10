@@ -53,34 +53,30 @@ export const MACHINES = {
     vapeur: true,       // souffle en sortant son bonbon
     capacite: 8,
   },
-  // La réception du mur : trois cases au milieu de sa rangée, qui prennent ce
-  // qu'il réclame. Elle ne se construit pas et ne se détruit pas — elle
-  // appartient au mur, elle arrive et repart avec lui.
+  // La réception du mur : trois cases au milieu de sa rangée. Elle ne se
+  // construit pas et ne se détruit pas — elle appartient au mur, elle arrive
+  // et repart avec lui.
   //
-  // Elle n'est pas la livraison : celle-ci achète et remplit la caisse, la
-  // réception avale et ne paie rien. Deux endroits, deux rôles — c'est ce qui
-  // fait qu'ouvrir un mur se décide, et se tire au tapis.
+  // **C'est elle qui achète, maintenant.** Il y avait deux endroits où porter
+  // ce qu'on produisait — la livraison, qui payait, et la réception, qui
+  // comptait pour le mur — et un enfant devait choisir entre les deux sans
+  // qu'on lui ait jamais dit pourquoi. Il n'y a plus qu'une adresse : elle
+  // paie ce qu'elle prend, et ce qui intéresse le mur monte sa jauge au
+  // passage. Un seul geste, deux effets.
+  //
+  // Elle prend donc tout ce que la table des livrables nomme, plus ce que son
+  // mur réclame quand ce n'est pas de la même famille — une fraise ne se vend
+  // pas, mais un mur peut en vouloir.
   recepteur: {
     id: 'recepteur',
-    description: 'le mur réclame {matiere}, et ne paie rien',
-    nom: 'réception du mur',
+    description: 'achète le {caramel}, la {pastille} et les {bonbon|bonbons}',
+    nom: 'réception',
     a: 'à la ',
     recepteur: true,
     largeur: 3,        // en cellules, à cheval sur le milieu du mur
+    entrees: Object.keys(LIVRABLES),
     capacite: 8,
     ticksParItem: 6,   // elle avale vite : ce n'est pas elle le goulot
-  },
-  livraison: {
-    id: 'livraison',
-    description: 'achète le {caramel}, la {pastille} et les {bonbon|bonbons}',
-    nom: 'livraison',
-    a: 'à la ',
-    // Elle prend ce que la table des livrables nomme, et compte chaque chose à
-    // part : c'est elle la vitrine, et le livre lit ce qu'elle a reçu. Ce que
-    // ça vaut est dans la table, pas ici.
-    entrees: Object.keys(LIVRABLES),
-    ticksParItem: 60,
-    capacite: 8,
   },
   scierie: {
     id: 'scierie',

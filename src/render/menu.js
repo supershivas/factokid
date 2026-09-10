@@ -90,11 +90,11 @@ function dessinerCollection(ctx, monde) {
   const trouvees = items.filter((i) => monde && monde.decouvertes[i.id]).length;
   compte(ctx, trouvees, items.length);
 
-  // La vitrine : ce que la livraison a reçu, bonbon par bonbon. Il n'y a
+  // La vitrine : ce que la réception a acheté, bonbon par bonbon. Il n'y a
   // qu'un compteur à l'écran — le total des bonbons finis — et c'est ici, au
   // livre, que le détail se lit.
-  const livraison = monde && monde.scene.machines.find((m) => m.def.entrees);
-  const recus = (livraison && livraison.recus) || {};
+  const reception = monde && monde.scene.machines.find((m) => m.def.entrees);
+  const recus = (reception && reception.recus) || {};
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];

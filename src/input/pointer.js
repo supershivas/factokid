@@ -184,7 +184,7 @@ export function brancherPointeur(canvas, vue, jeu) {
       // tuile, les trois autres ne coûtent rien — regarder, ouvrir une liste
       // et détruire sont toujours permis. C'est le rendu qui compare ce prix à
       // la caisse, à chaque image : une touche éteinte se rallume au moment où
-      // la livraison paie, sans que rien ait à le lui dire.
+      // la réception paie, sans que rien ait à le lui dire.
       prix: cout(o.id),
     }));
     actionsBoutons = outils.map((o) => o.action);
@@ -761,8 +761,9 @@ export function brancherPointeur(canvas, vue, jeu) {
       return;
     }
     const machine = machineEn(scene(), c.cx, c.cy);
-    // Seules les machines qu'on peut poser peuvent être retirées : le
-    // téléporteur et la livraison restent en place quoi qu'il arrive.
+    // Seules les machines qu'on peut poser peuvent être retirées : la
+    // réception du mur reste en place quoi qu'il arrive — elle appartient au
+    // mur, elle arrive et repart avec lui.
     if (machine && MACHINES_CONSTRUCTIBLES.includes(machine.def.id)) {
       retirerMachine(scene(), machine);
       rembourser(machine.def.id, 1, c);

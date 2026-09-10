@@ -151,7 +151,7 @@ const convoyeurCroix = toile(TUILE_PX, (rect) => {
 });
 
 // Le téléporteur a disparu avec les cartes séparées : tout voyage sur des
-// tapis, du premier gisement à la livraison. Son sprite reviendra le jour où
+// tapis, du premier gisement au mur. Son sprite reviendra le jour où
 // il reviendra, en déblocage de fin.
 
 const trieur = toile(TUILE_PX, (rect) => {
@@ -217,15 +217,10 @@ const scierie = toile(TUILE_PX, (rect) => {
   rect(12, 10, 2, 2, PALETTE.noir);
 });
 
-// La livraison : un bocal ouvert où tombent les bonbons.
-const livraison = toile(TUILE_PX, (rect) => {
-  rect(0, 0, 24, 24, PALETTE.noir);
-  rect(2, 2, 21, 21, PALETTE.ardoise);
-  rect(5, 3, 15, 3, PALETTE.creme);
-  rect(6, 6, 12, 14, PALETTE.noir);
-  rect(8, 8, 9, 10, PALETTE.vert);
-  rect(8, 8, 9, 3, PALETTE.noir);
-});
+// La livraison a disparu : on vend au mur, et sa réception est dessinée par le
+// mur lui-même (render/mur.js), à cheval sur trois cases. Son bocal ouvert ne
+// servait plus rien — un sprite qu'aucune machine ne porte est un mensonge de
+// plus dans la planche.
 
 // --- cartes ---------------------------------------------------------------
 
@@ -268,7 +263,7 @@ const extracteur = toile(TUILE_PX, (rect) => {
 });
 
 export const ICONES = {
-  trieur, confiserie, plieuse, livraison, chaufferie, extracteur, scierie,
+  trieur, confiserie, plieuse, chaufferie, extracteur, scierie,
 };
 
 const spritesGisements = {};

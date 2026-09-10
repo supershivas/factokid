@@ -11,7 +11,7 @@
 //
 // **Le total livré ne se dépense pas.** Il monte pendant que la caisse, elle,
 // se dépense — deux nombres, deux rôles, aucun arbitrage à expliquer. Rien
-// n'est compté à part pour autant : c'est la livraison qui sait ce qu'elle a
+// n'est compté à part pour autant : c'est la réception qui sait ce qu'elle a
 // reçu, matière par matière, et le mur ne fait que le lire.
 //
 // **Un mur ouvert redevient du sol ordinaire.** Pas de porte, pas de goulot
@@ -50,12 +50,17 @@ export function constructible(monde, cy) {
 }
 
 // La réception du mur : trois cases au milieu de sa rangée, où l'on apporte ce
-// qu'il réclame. C'est une machine de la scène comme une autre — on y trace un
+// qu'on produit. C'est une machine de la scène comme une autre — on y trace un
 // tapis, elle a un stock, elle se remplit — et c'est ce qui fait qu'ouvrir un
 // mur est un geste et non une attente.
 //
-// Elle n'est pas la livraison. Celle-ci achète et remplit la caisse ; la
-// réception avale et ne paie rien. Deux endroits, deux rôles.
+// **C'est la seule adresse du jeu.** Elle achète ce qu'on lui porte et remplit
+// la caisse ; ce qui intéresse son mur monte sa jauge au passage. Il y avait
+// deux endroits — la livraison qui payait, la réception qui comptait — et un
+// enfant devait choisir entre les deux sans qu'on lui ait dit pourquoi.
+//
+// Tout mur en a une, même celui qu'on ne sait pas encore ouvrir : sans elle,
+// le dernier étage atteint n'aurait plus où vendre.
 export function recepteurDuMur(monde) {
   return monde.scene.machines.find((m) => m.def.recepteur) || null;
 }
@@ -90,23 +95,23 @@ export function avancementMur(monde) {
 export function poserMur(monde) {
   const mur = murCourant(monde);
   if (!mur) return;
-  const cellules = mur.etage.mur ? cellulesRecepteur(mur.cy) : [];
+  const cellules = cellulesRecepteur(mur.cy);
   const prise = new Set(cellules.map((c) => c.cx));
   for (let cx = 0; cx < COLONNES; cx++) {
     if (prise.has(cx)) continue;
     poser(monde.scene.grille, cx, mur.cy, { genre: 'mur' });
   }
-  // Un mur sans seuil ne réclame rien : il n'a pas de réception, et il est
-  // plein sur toute sa longueur. C'est le cas des étages qu'on n'a pas encore
-  // décidés — le jeu s'arrête là, et ça se voit.
-  if (cellules.length === 0) return;
   const milieu = cellules[Math.floor(cellules.length / 2)];
   // Une partie relue a déjà sa réception : elle est une machine de la scène,
   // et la sauvegarde l'a rendue comme les autres. On ne lui en pose pas une
   // seconde — on lui redonne seulement ses cellules, que la grille ne garde
   // pas.
   const recepteur = recepteurDuMur(monde) || ajouterMachine(
-    monde.scene, 'recepteur', milieu.cx, milieu.cy, { item: mur.etage.mur.item },
+    // Un mur sans seuil ne réclame rien : sa réception n'a pas de matière, pas
+    // de jauge, et ne s'ouvrira pas. Elle achète quand même — c'est là qu'on
+    // vend, au dernier étage atteint comme aux autres.
+    monde.scene, 'recepteur', milieu.cx, milieu.cy,
+    { item: mur.etage.mur ? mur.etage.mur.item : null },
   );
   etendreMachine(monde.scene, recepteur, cellules.filter((c) => c.cx !== recepteur.cx));
 }
@@ -125,7 +130,7 @@ function retirerMur(monde, cy) {
   }
 }
 
-// Le mur tombe-t-il ? On regarde à chaque pas : c'est la livraison qui décide,
+// Le mur tombe-t-il ? On regarde à chaque pas : c'est la réception qui décide,
 // et elle ne prévient personne.
 //
 // L'étage ouvert est relevé par le monde, comme la caisse et le livre : la

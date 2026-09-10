@@ -247,6 +247,12 @@ export function deserialiserPartie(brut) {
   // de ce qui est posé dessus, et sans lui sa rangée serait libre.
   poserMur(monde);
 
+  // Puis la géométrie, une seconde fois. Une machine à plusieurs cases — la
+  // réception — ne retrouve les siennes qu'ici : ce qu'un tapis vise est la
+  // case qu'il touche, et tant que la machine n'a qu'une ancre, il vise
+  // l'ancre. Un tapis relu pointait donc à côté de sa réception.
+  for (const convoyeur of monde.scene.convoyeurs) majGeometrie(convoyeur);
+
   // Un gisement retrouve son extracteur par sa case : c'est la machine posée
   // dessus, et il n'y en a jamais deux.
   for (const g of monde.gisements) {

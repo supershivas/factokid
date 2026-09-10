@@ -104,10 +104,10 @@ for (let i = 0; i < GESTES.length; i++) {
   }
 }
 
-const livraison = monde.scene.machines.find((m) => m.def.entrees);
-console.log('livré :', livraison.consommes, 'pièces, soit', ''
-  + Object.entries(livraison.recus).map(([k, n]) => `${n} ${k}`).join(', '));
+const reception = monde.scene.machines.find((m) => m.def.entrees);
+console.log('vendu :', reception.consommes, 'pièces, soit', ''
+  + Object.entries(reception.recus).map(([k, n]) => `${n} ${k}`).join(', '));
 console.log('tutoriel fini :', tuto.etape >= TUTORIEL.length);
-if (livraison.consommes === 0) { echecs++; console.log('  ✗ l’usine ne livre pas'); }
+if (reception.consommes === 0) { echecs++; console.log('  ✗ l’usine ne vend rien'); }
 console.log(echecs === 0 ? '\n✓ le tutoriel mène à une usine qui tourne' : `\n✗ ${echecs} problème(s)`);
 process.exit(echecs === 0 ? 0 : 1);

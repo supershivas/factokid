@@ -37,7 +37,7 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
 {
   const s = creerScene();
   const mine = ajouterMachine(s, 'extracteur', 2, 5, { item: 'sucre' });
-  const bout = ajouterMachine(s, 'livraison', 8, 5);
+  const bout = ajouterMachine(s, 'recepteur', 8, 5);
   const t = poserConvoyeur(s, ligne(3, 5, 5, 1, 0), mine, bout);
   verifier(s, 'tapis droit');
   veut(t.longueur === 5 * CELLULE, 'longueur du tapis droit');
@@ -49,7 +49,7 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   const s = creerScene();
   const a = ajouterMachine(s, 'extracteur', 1, 4, { item: 'sucre' });
   const b = ajouterMachine(s, 'extracteur', 5, 8, { item: 'sucre' });
-  const bout = ajouterMachine(s, 'livraison', 9, 4);
+  const bout = ajouterMachine(s, 'recepteur', 9, 4);
   const hote = poserConvoyeur(s, ligne(2, 4, 7, 1, 0), a, bout);
   // le second monte : 5,7 -> 5,5, et bute sur la cellule 5,4 de l'hôte
   const montant = raccorderConvoyeur(s, ligne(5, 7, 3, 0, -1), b, hote, { cx: 5, cy: 4 });
@@ -222,7 +222,7 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   const s = creerScene();
   const a = ajouterMachine(s, 'extracteur', 1, 4, { item: 'sucre' });
   const b = ajouterMachine(s, 'extracteur', 5, 8, { item: 'sucre' });
-  const bout = ajouterMachine(s, 'livraison', 9, 4);
+  const bout = ajouterMachine(s, 'recepteur', 9, 4);
   const hote = poserConvoyeur(s, ligne(2, 4, 7, 1, 0), a, bout);
   raccorderConvoyeur(s, ligne(5, 7, 3, 0, -1), b, hote, { cx: 5, cy: 4 });
   const suite = convoyeurEn(s, 5, 4);
@@ -379,7 +379,7 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
         // poser une machine sur une case libre
         const cx = 1 + alea(14); const cy = 1 + alea(20);
         if (lire(s.grille, cx, cy) || s.machines.length > 10) continue;
-        ajouterMachine(s, ['chaufferie', 'trieur', 'livraison', 'confiserie'][alea(4)], cx, cy);
+        ajouterMachine(s, ['chaufferie', 'trieur', 'recepteur', 'confiserie'][alea(4)], cx, cy);
       } else if (geste <= 3) {
         // détruire un élément au hasard
         if (alea(2) && s.convoyeurs.length) {

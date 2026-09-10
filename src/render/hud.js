@@ -70,7 +70,7 @@ export function dessinerHud(ctx, monde, fps, interfaceJeu) {
   voile(ctx, BANDEAU_BAS, BANDEAU_BAS.y);
 
   // Un seul compteur : la caisse. Elle ne compte plus des bonbons mais ce
-  // qu'ils valent — la livraison achète aussi le caramel et la pastille, pour
+  // qu'ils valent — la réception achète aussi le caramel et la pastille, pour
   // bien moins. Tout le reste se lit sur la grille,
   // dans les jauges des machines et dans ce qui circule.
   //

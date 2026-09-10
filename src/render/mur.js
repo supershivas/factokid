@@ -102,16 +102,20 @@ function dessinerRecepteur(ctx, monde, recepteur) {
   ctx.fillRect(coin.x, coin.y, l, PIXEL);
   ctx.fillRect(coin.x, coin.y + CELLULE - PIXEL, l, PIXEL);
 
+  // Un mur sans seuil ne réclame rien : sa réception n'a ni matière ni jauge.
+  // Elle achète, et c'est tout ce qu'elle a à dire — le jeu s'arrête là, et ça
+  // se voit à ce qu'elle ne demande rien.
   const image = spriteItem(recepteur.item);
-  if (image) ctx.drawImage(image, coin.x + MARGE, coin.y + (CELLULE - IMAGE) / 2, IMAGE, IMAGE);
-
-  const jx = coin.x + MARGE + IMAGE + MARGE;
-  const jl = l - (jx - coin.x) - MARGE;
-  const jy = coin.y + (CELLULE - JAUGE.h) / 2;
-  ctx.fillStyle = PALETTE.profond;
-  ctx.fillRect(jx, jy, jl, JAUGE.h);
-  ctx.fillStyle = PALETTE.vert;
-  ctx.fillRect(jx, jy, Math.round(jl * avancementMur(monde) / PIXEL) * PIXEL, JAUGE.h);
+  if (image) {
+    ctx.drawImage(image, coin.x + MARGE, coin.y + (CELLULE - IMAGE) / 2, IMAGE, IMAGE);
+    const jx = coin.x + MARGE + IMAGE + MARGE;
+    const jl = l - (jx - coin.x) - MARGE;
+    const jy = coin.y + (CELLULE - JAUGE.h) / 2;
+    ctx.fillStyle = PALETTE.profond;
+    ctx.fillRect(jx, jy, jl, JAUGE.h);
+    ctx.fillStyle = PALETTE.vert;
+    ctx.fillRect(jx, jy, Math.round(jl * avancementMur(monde) / PIXEL) * PIXEL, JAUGE.h);
+  }
 
   // Par où ça entre : trois chevrons qui montent, sur le bord du bas.
   ctx.fillStyle = PALETTE.brume;
