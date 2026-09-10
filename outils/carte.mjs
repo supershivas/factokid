@@ -15,13 +15,18 @@
 //   4. la rangée du mur ne porte rien — un gisement qu'on ne peut pas
 //      atteindre est un gisement qu'on regarde ;
 //   5. la carte est saine — pas deux gisements sur la même case, rien hors de
-//      la grille, et une graine donne toujours la même carte.
+//      la grille, et une graine donne toujours la même carte ;
+//   6. le premier contact reste jouable — aucun gisement tiré ne tombe sur une
+//      case que le tutoriel demande d'occuper. C'est la promesse qui a coûté
+//      le plus cher le jour où la graine d'une nouvelle partie est devenue
+//      aléatoire : une carte sur deux posait du sucre sous une chaufferie.
 
 import { COLONNES, LIGNES } from '../src/design.js';
 import { creerCarte, etageDe, rangeesDe } from '../src/sim/carte.js';
 import { GISEMENTS, PIED_DU_MONDE } from '../src/data/monde.js';
 import { ETAGES } from '../src/data/zones.js';
 import { RAYON_DEPART } from '../src/data/biomes.js';
+import { TUTORIEL } from '../src/data/tutoriel.js';
 
 // Ce qu'un étage doit porter au minimum pour qu'on y bâtisse quelque chose.
 // Un tapis porte la récolte de dix extracteurs : bien en dessous de ça, un
@@ -35,6 +40,12 @@ const cle = (g) => g.cx + ',' + g.cy;
 const distance = (a, b) => Math.abs(a.cx - b.cx) + Math.abs(a.cy - b.cy);
 
 const depart = GISEMENTS.map((g) => cle(g) + ':' + g.item).join(' ');
+// Les cases du premier contact, moins celles qui sont justement des gisements
+// écrits : ce sont elles qu'un tirage ne doit jamais occuper.
+const ecritsLa = new Set(GISEMENTS.map(cle));
+const reserve = new Set(
+  TUTORIEL.flatMap((e) => e.cibles).map(cle).filter((k) => !ecritsLa.has(k)),
+);
 // Le plus pauvre des étages, toutes graines confondues : c'est lui qui dit si
 // une partie peut tourner court quelque part.
 const pires = {};
@@ -72,6 +83,13 @@ for (let graine = 1; graine <= COMBIEN; graine++) {
     const n = compte[e.n] || 0;
     pires[e.n] = Math.min(pires[e.n], n);
     if (n < MINIMUM_PAR_ETAGE) echec(`graine ${graine} : ${n} gisement(s) à l'étage ${e.n}`);
+  }
+
+  // 6. le premier contact garde ses cases
+  for (const g of carte.gisements.slice(GISEMENTS.length)) {
+    if (reserve.has(cle(g))) {
+      echec(`graine ${graine} : un gisement en ${cle(g)}, sur une case du tutoriel`);
+    }
   }
 
   // 5. la carte est saine

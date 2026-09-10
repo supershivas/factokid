@@ -27,6 +27,22 @@ import {
 } from '../data/biomes.js';
 import { ETAGES, HAUTEUR_ETAGE } from '../data/zones.js';
 import { GISEMENTS, PIED_DU_MONDE } from '../data/monde.js';
+import { TUTORIEL } from '../data/tutoriel.js';
+
+// Les cases que le premier contact occupe : ses machines, ses tapis, et la
+// remontée au mur. Rien n'y est tiré.
+//
+// Le rayon du départ ne suffisait plus. Il tenait tant que la graine de la
+// nouvelle partie était fixe — on vérifiait une fois que la carte laissait le
+// tutoriel tranquille. Depuis que **la carte de chaque étage est tirée à
+// chaque partie**, un gisement tombait sous une chaufferie qu'on demande de
+// poser : une carte sur deux, mesuré sur trois cents.
+//
+// Les cases où le tutoriel demande justement un extracteur sont, elles, des
+// gisements écrits : elles se posent avant, et se retrouvent donc prises.
+const RESERVE = new Set(
+  TUTORIEL.flatMap((etape) => etape.cibles).map((c) => c.cx + ',' + c.cy),
+);
 
 // Un générateur reproductible et correctement mélangé : les bits de poids
 // faible d'un LCG naïf ne le sont pas, et la carte y ferait des rayures.
@@ -126,7 +142,10 @@ export function biomeEn(cx, cy) {
 // Ceux du pied du monde tels quels, puis des bouquets dans chaque étage qui
 // porte une matière. Un bouquet ne déborde jamais de sa bande : c'est ce qui
 // fait qu'on sait où chercher quoi rien qu'à la hauteur où l'on est.
-function semerGisements(tirer) {
+function semerGisements(graine) {
+  // Une graine par étage, tirée de celle du monde : à graine égale, carte
+  // égale, et deux étages ne se dérangent pas l'un l'autre.
+  const etageur = (n) => hasard((graine + n * 0x9e3779b1) >>> 0);
   const pris = new Set();
   const gisements = [];
   // Le pied du monde se refuse ici, et pas seulement au cœur du bouquet : un
@@ -135,8 +154,9 @@ function semerGisements(tirer) {
   // la promesse du premier écran.
   const poser = (cx, cy, item, ecrit = false) => {
     if (cx < 0 || cy < 0 || cx >= COLONNES || cy >= LIGNES) return;
-    if (!ecrit && distance({ cx, cy }, PIED_DU_MONDE) < RAYON_DEPART) return;
     const cle = cx + ',' + cy;
+    if (!ecrit && distance({ cx, cy }, PIED_DU_MONDE) < RAYON_DEPART) return;
+    if (!ecrit && RESERVE.has(cle)) return;
     if (pris.has(cle)) return;
     pris.add(cle);
     gisements.push({ cx, cy, item });
@@ -145,6 +165,11 @@ function semerGisements(tirer) {
 
   for (const etage of ETAGES) {
     if (!etage.matiere) continue;
+    // **La carte de chaque étage est tirée à part.** Un seul générateur pour
+    // tout le monde liait les étages entre eux : changer un bouquet du sucre
+    // déplaçait toute la forêt. Chaque bande a donc sa propre suite, tirée de
+    // la graine du monde — un étage est une carte, et il s'invente seul.
+    const tirer = etageur(etage.n);
     const { haut, bas } = rangeesDe(etage.n);
     // La rangée du mur ne porte rien : on ne peut pas y bâtir, un gisement y
     // serait un gisement qu'on regarde sans jamais le récolter.
@@ -172,5 +197,5 @@ function bouquet(tirer, cx, cy, item, premiere, derniere, poser) {
 }
 
 export function creerCarte(graine) {
-  return { gisements: semerGisements(hasard(graine)) };
+  return { gisements: semerGisements(graine) };
 }
