@@ -8,8 +8,9 @@
 //   1. on ne bâtit pas derrière un mur — ni sa rangée, ni celles du dessus ;
 //   2. un tapis ne le traverse pas ;
 //   3. il tombe quand sa réception a reçu son dû, et pas avant ;
-//   4. tombé, il redevient du sol ordinaire : on bâtit sur sa rangée, et le
-//      mur suivant a pris sa place plus haut ;
+//   4. ouvert, il reste debout : seules les trois cases de sa réception
+//      deviennent du sol — ce sont ses connecteurs — et le mur suivant a pris
+//      sa place plus haut ;
 //   5. ce qu'il coûte en temps, mesuré : c'est le seul chiffre qui dise si le
 //      seuil est juste, et il change à chaque fois qu'on touche à l'économie.
 
@@ -110,8 +111,12 @@ function jusquAuMur(monde, item, plafondSecondes = 1800) {
     veut(fin.caisse > 0, 'et la réception a payé au passage');
     veut(monde.etageOuvert === 2, 'l’étage 2 s’ouvre');
     veut(monde.murTombe === ETAGES[1], 'le monde dit ce qui vient de s’ouvrir');
-    veut(celluleLibre(monde.scene, 21, avant.cy), 'sa rangée redevient libre');
-    veut(constructible(monde, avant.cy), 'on y bâtit');
+    // Un mur ouvert reste debout : seules les trois cases de son passage
+    // deviennent du sol, et c'est par là que la chaîne franchit le mur.
+    veut(celluleLibre(monde.scene, 21, avant.cy), 'son passage s’ouvre');
+    veut(!celluleLibre(monde.scene, 0, avant.cy), 'mais sa rangée reste debout');
+    veut(!celluleLibre(monde.scene, 41, avant.cy), 'd’un bout à l’autre');
+    veut(constructible(monde, avant.cy), 'on bâtit sur ce qui s’est libéré');
     const apres = murCourant(monde);
     veut(apres && apres.cy === rangeesDe(2).mur, 'le mur suivant ferme l’étage 2');
     veut(!celluleLibre(monde.scene, 21, apres.cy), 'et sa rangée occupe la grille');
