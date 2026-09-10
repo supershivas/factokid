@@ -85,7 +85,8 @@ export function couperConvoyeur(scene, convoyeur, cx, cy) {
       if (suite.source === convoyeur) suite.source = suite.sources[0] || null;
       // Elle n'est plus alimentée par personne : sa géométrie change avec ses
       // sources, et sans ça elle gardait l'entrée d'un tapis qui ne la touche
-      // plus — ses items entraient par un bord qui n'existait plus.
+      // plus — ses items entraient par un bord qui n'existait plus. Elle
+      // ressort donc ailleurs, et alimente ce qu'elle vise désormais.
       majGeometrie(suite);
     }
   }
@@ -96,7 +97,7 @@ export function couperConvoyeur(scene, convoyeur, cx, cy) {
   detacherCible(convoyeur);
   reconstruire(convoyeur, convoyeur.chemin.slice(0, -1), null);
   elaguerSorties(convoyeur);
-  raccorderLeBout(scene, convoyeur);
+  reconcilier(scene);
 }
 
 // Ce tapis vise-t-il cette cellule ? C'est la même question des deux côtés :
@@ -150,6 +151,46 @@ export function etendreMachine(scene, machine, cellules) {
   raccorderCeQuiVise(scene, machine, machine.cellules);
 }
 
+// **Ce qu'un tapis vise, il l'alimente, quel que soit l'ordre des gestes.**
+//
+// La règle est décidée depuis longtemps ; elle était appliquée geste par
+// geste, à chaque endroit où un tapis change de bout — et il en manquait la
+// moitié. Un tapis qui perd sa destination ressort ailleurs ; un tapis qu'on
+// vient de poser est parfois coupé en deux par un amont qui butait déjà en
+// son milieu ; une machine retirée laisse ses entrées viser une case vide.
+// Chacun de ces cas laissait derrière lui un tapis **branché pour l'œil et
+// mort pour la simulation** : le rendu déduit la jonction de la géométrie, si
+// bien qu'on voyait une chaîne là où une file s'accumulait en silence. Le
+// juge des invariants en trouve un tous les deux cents gestes.
+//
+// La règle s'applique donc une fois, à la fin du geste, sur toute la scène :
+// c'est le seul endroit où elle est vraie sans exception. Les gardes ne
+// changent pas — on ne détourne pas un tapis qui travaille, on ne détruit
+// jamais pour faire de la place, et jamais un tapis ne se nourrit de
+// lui-même. Un raccord coupe un hôte en deux et fait donc naître un tapis de
+// plus : on repasse tant que quelque chose a bougé, sans jamais boucler.
+let reconciliant = false;
+
+function reconcilier(scene) {
+  // Un raccord passe lui-même par ici : on ne repart pas en arrière au milieu
+  // d'une passe, la boucle des passes s'en charge.
+  if (reconciliant) return;
+  reconciliant = true;
+  try { passesDeReconciliation(scene); } finally { reconciliant = false; }
+}
+
+function passesDeReconciliation(scene) {
+  for (let passe = 0; passe < 4; passe++) {
+    let bouge = false;
+    for (const convoyeur of [...scene.convoyeurs]) {
+      if (!scene.convoyeurs.includes(convoyeur)) continue;
+      if (destinations(convoyeur).length > 0) continue;
+      if (raccorderLeBout(scene, convoyeur)) bouge = true;
+    }
+    if (!bouge) return;
+  }
+}
+
 // Un tapis raccourci se raccorde à la machine qu'il vise désormais.
 //
 // Sans ça il en avait seulement l'air : le rendu déduit la jonction de la
@@ -165,15 +206,17 @@ export function etendreMachine(scene, machine, cellules) {
 // buter dessus.
 function raccorderLeBout(scene, convoyeur) {
   const bout = convoyeur.celluleSortie;
-  if (!bout) return;
+  if (!bout) return false;
   const machine = machineEn(scene, bout.cx, bout.cy);
   if (peutPrendre(machine, convoyeur)) {
     machine.entrees.push(convoyeur);
     reconstruire(convoyeur, convoyeur.chemin, machine);
-    return;
+    return true;
   }
   const hote = convoyeurEn(scene, bout.cx, bout.cy);
-  if (peutSeDeverserDans(convoyeur, hote)) raccorderA(scene, convoyeur, hote, bout);
+  if (!peutSeDeverserDans(convoyeur, hote)) return false;
+  raccorderA(scene, convoyeur, hote, bout);
+  return destinations(convoyeur).length > 0;
 }
 
 // Ce tapis peut-il se déverser tout seul dans celui-là ?
@@ -245,6 +288,7 @@ export function prolongerConvoyeur(scene, convoyeur, cellules, cible) {
   }
   reconstruire(convoyeur, convoyeur.chemin.concat(cellules), cible);
   elaguerSorties(convoyeur);
+  reconcilier(scene);
 }
 
 function estMachine(x) { return Boolean(x && x.def); }
@@ -294,6 +338,7 @@ export function retirerConvoyeur(scene, convoyeur) {
     const i = convoyeur.cible.entrees.indexOf(convoyeur);
     if (i >= 0) convoyeur.cible.entrees.splice(i, 1);
   }
+  reconcilier(scene);
 }
 
 // Retirer une machine construite : ses tapis restent posés, ils perdent
@@ -303,7 +348,12 @@ export function retirerMachine(scene, machine) {
   const i = scene.machines.indexOf(machine);
   if (i < 0) return;
   scene.machines.splice(i, 1);
-  poser(scene.grille, machine.cx, machine.cy, null);
+  // Toutes ses cases, et seulement les siennes : une machine large en occupe
+  // plusieurs, et la case qu'elle rend a pu changer de mains entre-temps —
+  // la réception d'un mur laisse la sienne à un connecteur.
+  for (const c of (machine.cellules || [machine])) {
+    if (machineEn(scene, c.cx, c.cy) === machine) poser(scene.grille, c.cx, c.cy, null);
+  }
   for (const amont of [...machine.entrees]) {
     amont.cible = null;
     majGeometrie(amont);
@@ -316,6 +366,7 @@ export function retirerMachine(scene, machine) {
     majGeometrie(aval);
   }
   machine.sorties.length = 0;
+  reconcilier(scene);
 }
 
 // Une sortie, un convoyeur, une entrée : chaque machine n'a qu'une sortie, et
@@ -363,7 +414,12 @@ export function poserConvoyeur(scene, chemin, source, cible) {
   // Le nouveau venu, lui aussi, vise peut-être quelque chose : un doigt qui
   // s'arrête une case avant l'autre tapis dessine exactement la même image
   // qu'un doigt qui va jusqu'à lui.
-  raccorderLeBout(scene, convoyeur);
+  //
+  // On demande à la grille à qui appartient la dernière case du tracé : le
+  // tapis qu'on vient de poser a pu être coupé en deux au passage, par un
+  // amont qui butait déjà en son milieu, et c'est la portion de la fin qui
+  // vise ce qu'il y a devant.
+  reconcilier(scene);
   return convoyeur;
 }
 
@@ -460,7 +516,27 @@ export function raccorderConvoyeur(scene, chemin, source, hote, cellule) {
 // que pour une machine posée le long d'un tapis, et elle a la même vertu : le
 // nouveau venu déverse dans une cellule qu'il touche, si bien que ses items
 // n'ont aucune case à sauter au passage de la jonction.
+// La portion d'un tapis qui touche cette cellule. Poser un tapis le coupe
+// parfois en deux — un autre venait déjà buter en plein milieu, et le raccord
+// sépare —, si bien que ce qu'on croyait poser n'est plus que l'amont. C'est
+// sa dernière portion qui touche ce qu'il vise, et c'est elle qu'il faut
+// brancher : sans ça le bout du tracé restait muet, plein et branché pour
+// l'œil seulement.
+function portionQuiTouche(convoyeur, cellule) {
+  const vus = new Set();
+  const file = [convoyeur];
+  while (file.length) {
+    const c = file.pop();
+    if (!c || vus.has(c)) continue;
+    vus.add(c);
+    if (adjacentes(c.chemin[c.chemin.length - 1], cellule)) return c;
+    for (const s of c.sorties) file.push(s);
+  }
+  return null;
+}
+
 export function raccorderA(scene, nouveau, hote, cellule) {
+  nouveau = portionQuiTouche(nouveau, cellule) || nouveau;
   if (!nouveau || nouveau === hote) return;
   // Ni l'un ni l'autre ne doit avoir disparu entre-temps. Poser un tapis en
   // détruit parfois un autre — une machine n'a qu'une sortie, et retracer
@@ -480,6 +556,9 @@ export function raccorderA(scene, nouveau, hote, cellule) {
   suite.sources.push(nouveau);
   majGeometrie(nouveau);
   majGeometrie(suite);
+  // La coupure vient de faire naître un tapis : c'est un geste comme un autre,
+  // et ce qu'il vise, il l'alimente.
+  reconcilier(scene);
 }
 
 // Une machine posée devant un tapis s'y raccorde toute seule. Le tapis est
@@ -549,6 +628,17 @@ const BRANCHES_MAX = 3;
 // sont une seule liste de destinations, prises à tour de rôle : un tapis qui
 // nourrit une machine peut donc aussi se diviser, sans que la branche reste
 // affamée.
+// À partir de cet indice, la première destination qui a de la place. Un tapis
+// plein n'en a pas ; une machine n'est jamais sautée — ce qu'elle accepte
+// dépend de sa recette, et un tapis ne la lit pas.
+function disponible(dests, depart) {
+  for (let k = 0; k < dests.length; k++) {
+    const i = (depart + k) % dests.length;
+    if (estMachine(dests[i]) || peutAccepter(dests[i])) return i;
+  }
+  return depart;
+}
+
 function livrerDepuis(convoyeur, type) {
   const dests = destinations(convoyeur);
   const n = dests.length;
@@ -558,7 +648,12 @@ function livrerDepuis(convoyeur, type) {
       ? deposer(suivante, type)
       : peutAccepter(suivante) && pousser(suivante, type, convoyeur);
     if (!pris) continue;
-    convoyeur.tour = (convoyeur.tour + k + 1) % n;
+    // Le tour passe à la suivante — en sautant celles qui ne peuvent rien
+    // prendre. Une branche pleine garde sa place dans la ronde, mais le bout
+    // ne la vise pas : sans ce saut, l'item glissait une demi-case vers un
+    // tapis bouché, puis sautait en travers dans la branche voisine au moment
+    // d'être livré. Trois branches vers un mur, et c'était un item sur deux.
+    convoyeur.tour = disponible(dests, (convoyeur.tour + k + 1) % n);
     // Le bout vise maintenant la destination du prochain item : celui-ci part
     // dans la bonne direction dès le premier pixel.
     majGeometrie(convoyeur);
@@ -567,8 +662,28 @@ function livrerDepuis(convoyeur, type) {
   return false;
 }
 
+// Le bout ne regarde pas une branche bouchée. Tant qu'aucun item n'est entré
+// dans sa dernière demi-cellule, il se tourne vers la première destination qui
+// a de la place ; passé ce point il ne bouge plus, parce qu'un item déjà
+// engagé ne doit pas changer de direction sous les yeux du joueur.
+//
+// C'est la moitié visible du saut de tour de `livrerDepuis` : sans elle, le
+// premier item d'une file glisse vers une branche pleine avant de partir dans
+// la voisine.
+function viserCeQuiPeutPrendre(convoyeur) {
+  const dests = destinations(convoyeur);
+  if (dests.length < 2) return;
+  if (convoyeur.items.length > 0 && convoyeur.items[0].ecart < CELLULE / 2) return;
+  const tour = convoyeur.tour % dests.length;
+  const vers = disponible(dests, tour);
+  if (vers === tour) return;
+  convoyeur.tour = vers;
+  majGeometrie(convoyeur);
+}
+
 export function majScene(scene, dt) {
   for (const convoyeur of scene.convoyeurs) {
+    viserCeQuiPeutPrendre(convoyeur);
     avancer(convoyeur, dt, (type) => livrerDepuis(convoyeur, type));
   }
   for (const machine of scene.machines) majMachine(machine, dt);

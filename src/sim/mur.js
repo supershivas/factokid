@@ -211,9 +211,14 @@ function ouvrirMur(monde) {
   // place : on retient donc qui la nourrissait, avant qu'elle ne parte.
   const nourrissaient = [...recepteur.entrees];
   for (const c of cellules) poser(monde.scene.grille, c.cx, c.cy, null);
-  retirerMachine(monde.scene, recepteur);
+  // Les connecteurs d'abord, et les tapis branchés dessus tant que la
+  // réception les tient encore : une machine retirée rend ses tapis libres,
+  // et un tapis libre se raccorde à ce qu'il vise — c'est-à-dire, pour une
+  // branche qui arrive de côté, au tapis d'à côté. Branchés avant, ils ont
+  // déjà où aller et rien ne les détourne.
   poserConnecteurs(monde, cellules);
   brancherCeQuiMontait(monde, cellules[0].cy, nourrissaient);
+  retirerMachine(monde.scene, recepteur);
 }
 
 // Les tapis qui nourrissaient la réception se déversent maintenant dans le
@@ -228,7 +233,9 @@ function ouvrirMur(monde) {
 function brancherCeQuiMontait(monde, cy, tapis) {
   const connecteurs = connecteursDuMur(monde.scene, cy);
   for (const t of tapis) {
-    if (t.cible || t.sorties.length > 0) continue;
+    // Sa cible est la réception, qui s'en va : c'est une sortie de plus qu'on
+    // lui donne, pas un détournement.
+    if (t.sorties.length > 0) continue;
     const bout = t.chemin[t.chemin.length - 1];
     const conn = connecteurs.find((c) => adjacentes(c.chemin[0], bout));
     if (conn) raccorderA(monde.scene, t, conn, conn.chemin[0]);

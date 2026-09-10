@@ -199,6 +199,9 @@ export function majGeometrie(convoyeur) {
   // Sortie : quand le bout distribue entre plusieurs destinations, il vise
   // celle à qui le prochain item revient — pas la première de la liste. Sinon
   // l'item file dans une direction puis saute dans une autre en arrivant.
+  //
+  // Le tour lui-même saute les branches bouchées (voir `livrerDepuis`) : la
+  // géométrie n'a donc rien à savoir de ce qui est plein, elle suit le tour.
   const dests = destinations(convoyeur);
   const visees = dests.map((d) => celluleVisee(d, derniere)).filter(Boolean);
   const tour = dests.length > 0 ? convoyeur.tour % dests.length : 0;

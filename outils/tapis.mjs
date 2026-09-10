@@ -355,6 +355,43 @@ const ligne = (cx, cy, n, dx, dy) => Array.from({ length: n }, (_, i) => ({ cx: 
   veut(neuf.sorties.length === 0, 'il ne se déverse pas dans un tapis détruit');
 }
 
+// ————— 12 bis. le bout regarde là où l'item va partir
+//
+// Un tronc, trois branches, l'une bouchée : le bout ne doit jamais montrer la
+// branche pleine. Sinon l'item glisse une demi-case vers elle, puis saute en
+// travers dans la voisine au moment d'être livré — c'est ce qu'on voit sous
+// un mur, où trois branches montent vers trois connecteurs et où la moindre
+// file pleine renvoie tout le monde à côté.
+{
+  const s = creerScene();
+  const mine = ajouterMachine(s, 'extracteur', 5, 10, { item: 'sucre' });
+  const tronc = poserConvoyeur(s, ligne(5, 9, 2, 0, -1), mine, null);
+  const branches = [
+    brancherConvoyeur(s, tronc, { cx: 5, cy: 8 }, [{ cx: 4, cy: 8 }, { cx: 4, cy: 7 }], null),
+    brancherConvoyeur(s, tronc, { cx: 5, cy: 8 }, [{ cx: 5, cy: 7 }], null),
+    brancherConvoyeur(s, tronc, { cx: 5, cy: 8 }, [{ cx: 6, cy: 8 }, { cx: 6, cy: 7 }], null),
+  ];
+  veut(tronc.sorties.length === 3, 'le tronc porte ses trois branches');
+  while (peutAccepter(branches[0])) pousser(branches[0], 'sucre');
+
+  let livraisons = 0;
+  let ailleurs = 0;
+  for (let k = 0; k < 60 * 30; k++) {
+    if (k % 20 === 0) pousser(tronc, 'sucre');
+    const visait = cle(tronc.celluleSortie);
+    const avant = branches.map((b) => b.items.length);
+    majScene(s, 1 / 60);
+    branches.forEach((b, i) => {
+      if (b.items.length <= avant[i]) return;
+      livraisons++;
+      if (cle(b.chemin[0]) !== visait) ailleurs++;
+    });
+  }
+  veut(livraisons > 0, 'les items passent malgré la branche bouchée');
+  veut(ailleurs === 0, `aucun item ne part en travers de ce que le bout montre (${ailleurs} sur ${livraisons})`);
+  verifier(s, 'jonction à trois branches');
+}
+
 // ————— 13. martelage : on construit et on détruit au hasard, en vérifiant
 // tous les invariants après chaque geste.
 {

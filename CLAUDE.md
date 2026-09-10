@@ -25,6 +25,14 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   la barre de progression du jeu entier (voir la section des étages).
 - **Grille avec convoyeurs.** Les objets transportés sont discrets et visibles :
   ils défilent un par un et s'accumulent quand l'aval est saturé.
+  **Le bout d'un tapis montre où part le prochain item**, et il ne montre
+  jamais une branche pleine : le tour de rôle saute celles qui ne peuvent rien
+  prendre, et la géométrie suit le tour. Sans ce saut, l'item glissait une
+  demi-case vers une branche bouchée puis sautait en travers dans la voisine au
+  moment d'être livré — sous un mur, où trois branches montent vers trois
+  connecteurs, c'était un item sur deux. Le tour ne change plus dès qu'un item
+  est entré dans la dernière demi-cellule : ce qui est engagé ne se retourne
+  pas sous les yeux du joueur.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.
   Le joueur ne pose jamais une cellule à la fois.
 - **Séparation et fusion, jamais au milieu d'une file.** Un convoyeur peut se
@@ -110,6 +118,15 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   de jonction — la coupure sépare, elle n'insère pas. Deux gardes, parce que la
   règle agit sans qu'on le lui demande : un tapis qui a déjà où aller n'est
   jamais détourné, et jamais un tapis ne se nourrit de lui-même.
+  **La règle s'applique une fois, à la fin du geste, sur toute la scène.**
+  Elle était posée tapis par tapis, à chaque endroit où un bout change — et il
+  en manquait la moitié : un tapis qui perd sa destination ressort ailleurs,
+  un tapis qu'on vient de tracer est parfois coupé en deux par un amont qui
+  butait déjà en son milieu, une machine retirée laisse ses entrées viser une
+  case vide. Chacun de ces cas laissait un tapis **branché pour l'œil et mort
+  pour la simulation** : la panne la plus difficile à voir, parce qu'elle ne se
+  voit pas. Le juge des invariants la nomme maintenant, et le martelage en
+  trouvait une tous les deux cents gestes.
 - **Le héros n'existe plus.** On pose un extracteur sur un gisement et on le
   relie : c'est tout ce qu'il y a à y faire.
 - **Tout bâtiment se met en pause**, depuis son panneau d'appui long. Il cesse
@@ -928,6 +945,12 @@ promettent — pied du monde intact, cases du premier contact libres, chaque
 gisement dans son étage, aucun sur une rangée de mur —, `outils/mur.mjs` qui
 joue les deux murs jusqu'à ce qu'ils tombent et mesure ce qu'ils coûtent, et
 `outils/sauvegarde.mjs`, qui écrit des parties et les relit.
+
+Le juge des invariants (`outils/invariants.mjs`) tient aussi la règle des
+visées : **un tapis dont la sortie tombe sur une machine qui a de la place, ou
+sur un autre tapis, et qui pourtant ne va nulle part, est un échec.** C'est
+« branché pour l'œil, mort pour la simulation », et c'est la seule panne qu'on
+ne voit pas en jouant.
 
 Ce dernier exige trois choses d'une partie relue : qu'elle soit **saine** — les
 mêmes invariants que l'originale, relus par le même juge (`outils/invariants.mjs`,

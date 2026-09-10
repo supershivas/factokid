@@ -10,12 +10,29 @@
 
 import { lire } from '../src/sim/grid.js';
 import { destinations, majGeometrie, celluleVisee } from '../src/sim/belt.js';
+import { maxEntrees } from '../src/sim/machine.js';
 import { CELLULE } from '../src/design.js';
 import { MACHINES } from '../src/data/machines.js';
 
 const ESPACEMENT = MACHINES.convoyeur.espacement;
 const cle = (c) => c.cx + ',' + c.cy;
 const adj = (a, b) => Math.abs(a.cx - b.cx) + Math.abs(a.cy - b.cy) === 1;
+
+// L'aval d'un tapis mène-t-il jusqu'à celui-là ? Même question que dans la
+// simulation, et pour la même raison : un tapis qui reviendrait à lui-même
+// n'est pas un raccord qui manque.
+function mene(depart, cherche) {
+  const vus = new Set();
+  const file = [depart];
+  while (file.length) {
+    const c = file.pop();
+    if (c === cherche) return true;
+    if (vus.has(c)) continue;
+    vus.add(c);
+    for (const s of c.sorties) file.push(s);
+  }
+  return false;
+}
 
 // Tout ce qui ne va pas dans cette scène, en clair. Une liste vide veut dire
 // qu'elle est saine — pour le rendu comme pour la simulation.
@@ -68,6 +85,27 @@ export function problemes(scene) {
       pbs.push('géométrie périmée ' + q + ' : ' + avant + ' au lieu de '
         + cle(c.celluleEntree) + '>' + cle(c.celluleSortie));
     }
+    // **Ce qu'un tapis vise, il l'alimente.** Un tapis dont la sortie tombe sur
+    // une machine qui a de la place, ou sur un autre tapis, et qui pourtant ne
+    // va nulle part, est branché pour l'œil et mort pour la simulation : le
+    // rendu déduit la jonction de la géométrie, et le joueur voit une chaîne
+    // là où il n'y a qu'une file qui s'accumule. C'est la panne la plus
+    // difficile à voir en jouant, et la seule qui ne se voie pas du tout.
+    if (destinations(c).length === 0) {
+      const sortie = lire(scene.grille, c.celluleSortie.cx, c.celluleSortie.cy);
+      if (sortie && sortie.genre === 'machine'
+        && sortie.machine.entrees.length < maxEntrees(sortie.machine)
+        && !(c.source === sortie.machine)) {
+        pbs.push('tapis muet devant une machine ' + q);
+      }
+      // Un tapis ne se nourrit pas de lui-même : celui qui reviendrait jusqu'à
+      // lui n'est pas un raccord manquant, c'est une boucle évitée.
+      if (sortie && sortie.genre === 'convoyeur' && sortie.convoyeur !== c
+        && !mene(sortie.convoyeur, c)) {
+        pbs.push('tapis muet devant un tapis ' + q + ' -> ' + cle(c.celluleSortie));
+      }
+    }
+
     let somme = 0;
     for (const it of c.items) somme += it.ecart;
     if (Math.abs(somme - c.queue) > 1e-6) pbs.push('queue fausse ' + q);
