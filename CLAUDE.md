@@ -17,10 +17,12 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   Rien ne progresse en revanche quand l'app est fermée : pas d'idle, pas de
   production hors ligne. **Seule exception : le menu pause**, où le temps
   s'arrête parce que le joueur l'a demandé.
-- **Une mini-carte, toujours visible**, dans le voile du haut : le monde entier
-  à une unité par cellule, avec le cadre de la fenêtre. La toucher y emmène
-  la vue — un geste, pas deux. Elle en occupait deux quand le monde était
-  quatre fois plus petit : la carte a grandi, la vignette non.
+- **Une mini-carte, toujours visible**, dans le voile du haut : le monde
+  ouvert à une unité par cellule, avec le cadre de la fenêtre. La toucher y
+  emmène la vue — un geste, pas deux. Elle en occupait deux quand le monde
+  était quatre fois plus petit : la carte a grandi, la vignette non. Elle ne
+  montre que ce qui est franchi et **grandit à chaque mur qui tombe** — c'est
+  la barre de progression du jeu entier (voir la section des étages).
 - **Grille avec convoyeurs.** Les objets transportés sont discrets et visibles :
   ils défilent un par un et s'accumulent quand l'aval est saturé.
 - **Tracé au doigt.** Un glissé d'une machine à l'autre crée le chemin entier.
@@ -155,7 +157,8 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   pas non plus : il cesse de grandir sous le doigt, et ce qu'on a tiré reste.
   Une touche trop chère **s'éteint et porte son prix en rouge** : c'est le seul
   « non » du jeu, et il ne gronde pas. La carte nue commence avec 120 ; le
-  tutoriel en coûte 51, et `outils/tutoriel.mjs` relit ce compte pour qu'une
+  tutoriel en coûte 63 — il a grandi le jour où ses trois branches sont montées
+  au mur —, et `outils/tutoriel.mjs` relit ce compte pour qu'une
   étape de plus reste payable. L'économie vit dans le geste, jamais dans la
   simulation : une machine ne sait pas ce qu'elle a coûté.
 - **Le livre des matières.** Une page du menu pause montre les dix matières —
@@ -195,7 +198,7 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   change tant qu'elle ne l'est pas.
 - **La partie se sauvegarde toute seule.** Elle s'écrit toutes les cinq
   secondes et à chaque fois que l'onglet part à l'arrière-plan ; au lancement,
-  l'écran des essais gagne une quatrième touche en tête, *reprendre*, quand une
+  l'écran des essais gagne une troisième touche en tête, *reprendre*, quand une
   partie attend. Rien n'est demandé à l'enfant : il n'y a ni bouton
   « sauvegarder », ni emplacements, ni question à la fermeture. Ce qui est
   écrit, c'est la partie en cours (`save/run.js`) ; l'état permanent est une
@@ -257,8 +260,8 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   remontée vers la réception du mur : c'est exactement ce que le jeu demandera
   à chaque étage, et ça s'apprend là.
   Quatre épreuves seulement — un extracteur posé, une machine à sa case, des
-  tapis qui relient deux machines, un bonbon livré — et une étape de plus est
-  une entrée de plus. **Un bouton le passe** : on ne guide plus, et rien n'est
+  tapis qui relient deux machines, une première vente — et une étape de plus
+  est une entrée de plus. **Un bouton le passe** : on ne guide plus, et rien n'est
   posé à la place du joueur.
 
 ### Une seule carte, plus grande que l'écran
@@ -582,7 +585,7 @@ jeu. La mise à l'échelle vers le conteneur se fait en un seul endroit, au rend
 | Cellule de grille | 48 unités logiques |
 | Niveaux de zoom | cellule à 48 (bâtir) ou 24 (regarder), rien d'autre |
 | Fenêtre | l'écran entier : 7,5 × 13,3 cellules, 15 × 26,7 en reculant |
-| Monde | 42 × 60 cellules, soit trente-six fenêtres |
+| Monde | 42 × 60 cellules, soit vingt-cinq fenêtres |
 | Cible tactile minimale | 48 unités logiques |
 | Mise à l'échelle | entière uniquement (×1, ×2, ×3), jamais fractionnaire |
 | Rendu | `image-rendering: pixelated`, pas d'interpolation |
@@ -602,9 +605,9 @@ aucune couleur étrangère. Ajouter une dix-septième demande mon accord.
 | Nom | Hex | Usage |
 |---|---|---|
 | `--noir` | `#1a1c2c` | fond, contours |
-| `--prune` | `#5d275d` | ombre du rouge |
-| `--rouge` | `#b13e53` | ressource A, état bloqué, destruction |
-| `--orange` | `#ef7d57` | ressource B, refermer |
+| `--prune` | `#5d275d` | ombre du rouge, chevrons des connecteurs |
+| `--rouge` | `#b13e53` | ressource A, état bloqué, destruction, connecteurs |
+| `--orange` | `#ef7d57` | ressource B, refermer, crans des connecteurs |
 | `--jaune` | `#ffcd75` | ressource C, énergie, pause |
 | `--anis` | `#a7f070` | clarté du vert |
 | `--vert` | `#38b764` | ressource D, validation, construction |
@@ -868,9 +871,10 @@ lit, `outils/tutoriel.mjs` qui joue les treize étapes du premier contact,
 vérifie qu'au bout l'usine livre, que le tutoriel reste payable avec la mise de
 départ et qu'aucune étape ne demande une machine que l'étage ouvert ne donne
 pas, `outils/carte.mjs` qui tire trois cents cartes et relit ce qu'elles
-promettent — pied du monde intact, chaque gisement dans son étage, aucun sur
-une rangée de mur —, `outils/mur.mjs` qui bâtit l'usine de l'étage 1 et regarde
-le mur tomber, et `outils/sauvegarde.mjs`, qui écrit des parties et les relit.
+promettent — pied du monde intact, cases du premier contact libres, chaque
+gisement dans son étage, aucun sur une rangée de mur —, `outils/mur.mjs` qui
+joue les deux murs jusqu'à ce qu'ils tombent et mesure ce qu'ils coûtent, et
+`outils/sauvegarde.mjs`, qui écrit des parties et les relit.
 
 Ce dernier exige trois choses d'une partie relue : qu'elle soit **saine** — les
 mêmes invariants que l'originale, relus par le même juge (`outils/invariants.mjs`,
@@ -906,6 +910,7 @@ preview.html        aperçu desktop (même bundle, cadre différent)
 vendor/             Motion, rangé tel quel, jamais modifié
 src/
   main.js           point d'entrée, sélection du conteneur
+  design.js         le design system : palette, tailles, places — la section 2
   camera.js         quelle partie du monde la fenêtre montre, et à quelle échelle
   tutoriel.js       où en est le premier contact
   maj.js            la veille : le jeu se recharge quand le serveur a mieux
@@ -938,8 +943,8 @@ src/
   render/
     canvas.js       mise à l'échelle
     biome.js        la teinte de chaque cellule
-    minicarte.js    le monde entier, dans le voile du haut
-    mur.js          la rangée du mur, sa réception, et la flèche qui l'indique
+    minicarte.js    le monde ouvert, dans le voile du haut
+    mur.js          les rangées des murs, la réception, et la flèche qui l'indique
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
@@ -1017,8 +1022,8 @@ Depuis, le lot a grossi sur décision : deuxième matière et première recette
 construction des trieurs et des transformateurs, puis la carte générale — une
 seule grille de 42 × 60 cellules, où l'on mine et où l'on construit au même
 endroit. La bêta y ajoute ses deux essais et le tutoriel du premier contact,
-et l'économie ses prix : la réception du mur achète, et bâtir coûte. Ces ajouts sont
-décrits en section 1.
+et l'économie ses prix : la réception du mur achète, et bâtir coûte. Ces ajouts
+sont décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**
 Remesuré depuis, avec l'espacement à 27, le cran de recul et la carte qui
