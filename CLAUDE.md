@@ -55,15 +55,16 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   — un enfant peut changer d'avis. Ils ne coûtent pour l'instant pas plus l'un
   que l'autre : leur donner chacun son fruit demanderait un troisième tapis
   jusqu'à la plieuse, et donc de réécrire le tutoriel.
-- **La livraison les reçoit tous les trois** et les compte séparément : c'est
-  la vitrine. L'écran garde son unique compteur — la caisse — et c'est au livre
-  des matières que le détail se lit, sous chaque chose qu'elle achète. Elle en accepte
-  **quatre tapis** et non trois : une machine réserve un côté à sa sortie, et
-  la livraison ne sort nulle part.
+- **La réception du mur les reçoit tous les trois** et les compte séparément :
+  c'est la vitrine. L'écran garde son unique compteur — la caisse — et c'est au
+  livre des matières que le détail se lit, sous chaque chose qu'elle achète.
+  Elle en accepte **quatre tapis** et non trois : une machine réserve un côté à
+  sa sortie, et la réception ne sort nulle part.
 - **Les trieurs et les transformateurs se construisent.** Trieur, chaufferie,
   confiserie et plieuse sont des éléments constructibles comme le convoyeur :
   on les pose sur une cellule libre, et l'outil destruction les retire. La
-  livraison, elle, reste en place.
+  réception du mur, elle, reste en place : elle appartient au mur, elle arrive
+  et repart avec lui.
 - **Le tri se fait dans une machine, jamais sur un tapis.** Un trieur a deux
   branches : la matière que le joueur a choisie, et tout le reste. Le premier
   convoyeur tracé prend la matière choisie, le second ramasse le reste. La
@@ -117,14 +118,28 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   convoyeur n'enlève que celle-là : l'amont et l'aval restent posés. Rien ne
   disparaît tout seul de la grille, même un tapis que plus rien n'alimente.
 - **Un seul compteur à l'écran** : la caisse. Il ne compte plus des bonbons
-  mais ce qu'ils valent — la livraison achète aussi le caramel et la pastille.
+  mais ce qu'ils valent — la réception achète aussi le caramel et la pastille.
   Le reste se lit sur la grille, dans les jauges des machines et dans ce qui
   circule.
-- **La livraison achète, elle ne collectionne pas.** Elle prend le caramel (1),
-  la pastille (3) et les trois bonbons (10). La plus petite chaîne qui
-  rapportait quelque chose faisait quatre extracteurs et quatre machines : huit
-  poses avant le premier retour. C'est maintenant extracteur → chaufferie →
-  livraison, trois éléments, et ça rapporte. Le bonbon est ce qu'on fait pour
+- **Il n'y a qu'une adresse, et c'est la réception du mur.** Le bâtiment
+  « livraison » n'existe plus. Il y avait deux endroits où porter ce qu'on
+  produisait — la livraison, qui payait, et la réception, qui comptait pour le
+  mur — et un enfant devait choisir entre les deux sans qu'on lui ait jamais
+  dit pourquoi. La réception paie ce qu'elle prend, et ce qui intéresse son mur
+  monte sa jauge au passage : **un seul geste, deux effets**. C'est ce qui
+  remplace « deux endroits, deux rôles », et c'est une décision qui a changé.
+  La chaîne doit donc monter jusqu'au mur pour rapporter — ce qui est
+  exactement ce que le jeu demande à chaque étage.
+  **Tout mur a sa réception**, même celui qu'on ne sait pas encore ouvrir :
+  sans elle, le dernier étage atteint n'aurait plus où vendre. Le dernier étage
+  du monde a donc lui aussi son mur, tout en haut, sans seuil.
+- **Elle achète, elle ne collectionne pas.** Elle prend le caramel (1),
+  la pastille (3) et les trois bonbons (10), plus ce que son mur réclame quand
+  ce n'est pas de la même famille — une fraise ne se vend pas, mais un mur peut
+  en vouloir. La plus petite chaîne qui rapportait quelque chose faisait quatre
+  extracteurs et quatre machines : huit poses avant le premier retour. C'est
+  maintenant extracteur → chaufferie → réception, trois éléments, et ça
+  rapporte. Le bonbon est ce qu'on fait pour
   gagner plus, pas le péage d'entrée. L'écart est franc — un, trois, dix —
   parce que c'est lui qui dit qu'il vaut mieux aller au bout de la chaîne :
   mesuré sur cinq minutes, le noyau rapporte 108. La chaîne complète rapportait
@@ -207,34 +222,40 @@ Ne pas rediscuter ces points sans me le demander explicitement.
 - **La satisfaction vient du rythme des déblocages**, pas de la taille des
   nombres.
 - **Cible : jouable au pouce par un enfant, sans lecture, sans urgence.**
-- **La bêta s'ouvre sur trois essais.** Au lancement, on choisit par quoi
-  commencer : *nouvelle partie* (carte nue, tutoriel), *usine qui tourne*
-  (la chaîne complète déjà posée), *bac à sable* (carte nue, sans tutoriel).
-  Un essai n'est qu'une disposition de départ plus le tutoriel ou non — c'est
-  une entrée de `data/scenarios.js`. Le menu pause y ramène, le temps de la
-  bêta.
-  **Une quatrième touche s'y ajoute, en tête, quand une partie attend** :
+- **La bêta s'ouvre sur deux essais.** Au lancement, on choisit par quoi
+  commencer : *nouvelle partie* — le jeu, avec ses murs et son premier contact
+  — ou *jeu ouvert*, l'ancien jeu : tous les étages franchis, une carte neuve à
+  chaque fois, et de quoi bâtir sans compter. Un essai n'est qu'une disposition
+  de départ plus le tutoriel ou non — c'est une entrée de `data/scenarios.js`.
+  Le menu pause y ramène, le temps de la bêta.
+  Il y en avait trois : *usine qui tourne* est exactement ce que le tutoriel
+  bâtit, et la proposer toute faite à côté de lui offrait deux portes pour la
+  même pièce. Elle reste dans `data/depart.js`, où les outils la jouent — c'est
+  la mesure de l'économie, plus un essai.
+  **Une troisième touche s'y ajoute, en tête, quand une partie attend** :
   *reprendre*. Ce n'est pas un essai de plus — elle ne bâtit rien, elle
   retrouve — et elle n'est pas là quand il n'y a rien à reprendre. L'écran
-  s'ouvre donc toujours sur ses trois essais, et reprendre reste un geste
+  s'ouvre donc toujours sur ses deux essais, et reprendre reste un geste
   demandé : commencer un essai efface la partie en cours, et l'enfant l'a
   voulu.
-  **Le bac à sable ouvre tous les étages** : c'est ce qu'un bac à sable veut
+  **Le jeu ouvert ouvre tous les étages** : c'est ce qu'un bac à sable veut
   dire, et on n'y fait pas attendre pour essayer une plieuse. C'est une entrée
   de `data/scenarios.js`, pas une exception dans le code.
 - **Le tutoriel mène jusqu'à une usine qui tourne.** C'est un système de plus,
   assumé : il ne sert qu'à la première partie et ne connaît que le résultat
   d'un geste, jamais le geste. Treize étapes dans `data/tutoriel.js`, un halo
   sur les cellules à toucher, l'image de ce qu'il y a à poser, et une barre qui
-  dit ce qu'il en reste. Ce qu'on obtient au bout est exactement la chaîne de
-  l'essai « usine qui tourne ». La fenêtre suit l'étape quand elle sort du
-  cadre.
+  dit ce qu'il en reste. Ce qu'on obtient au bout est exactement l'usine de
+  référence de `data/depart.js`, celle dont sortent tous les chiffres de
+  l'économie. La fenêtre suit l'étape quand elle sort du cadre.
   **Il se joue au pied du monde**, à l'étage 1 : il n'a plus à enseigner les
   quatre matières d'un coup — ce sont les murs qui les présentent une par une —
   et il a rétréci d'autant. Ce qu'il montre tient en une phrase : *une branche,
-  puis la même deux fois de plus.* Extracteur, chaufferie, livraison, et le
-  premier caramel vendu à la cinquième étape ; le reste du jeu n'est que ça, en
-  plus grand.
+  puis la même deux fois de plus.* Extracteur, chaufferie, et le tapis qui
+  monte au mur ; le premier caramel vendu à la cinquième étape, et le reste du
+  jeu n'est que ça, en plus grand. La deuxième moitié de chaque branche est une
+  remontée vers la réception du mur : c'est exactement ce que le jeu demandera
+  à chaque étage, et ça s'apprend là.
   Quatre épreuves seulement — un extracteur posé, une machine à sa case, des
   tapis qui relient deux machines, un bonbon livré — et une étape de plus est
   une entrée de plus. **Un bouton le passe** : on ne guide plus, et rien n'est
@@ -308,8 +329,8 @@ dans l'étage où il naît, et il en porte donc la matière.
 gisements de sucre écrits dans `data/monde.js`, et rien de tiré dans son rayon.
 C'est ce qui permet au tutoriel de nommer des cellules précises et à l'usine de
 départ d'être posée d'avance — la carte change autour d'eux, jamais sous eux.
-Un scénario porte sa graine : fixe pour le tutoriel et l'usine qui tourne,
-tirée pour le bac à sable.
+Un scénario porte sa graine : fixe pour la nouvelle partie, tirée pour le jeu
+ouvert.
 
 Un biome est une **couleur posée sur le noir à une transparence basse**, en
 trois nuances — de seize à vingt-huit pour cent. Elles ont doublé : à huit pour
@@ -375,13 +396,13 @@ dépend jamais de ce qu'on regarde. Un seul endroit du rendu connaît l'échelle
 
 ### Les étages, et les murs qui les séparent
 
-**Écrit, et jouable sur deux étages.** La forme est arrêtée depuis longtemps ;
+**Écrit, et jouable sur trois étages.** La forme est arrêtée depuis longtemps ;
 elle est maintenant dans le code — `data/zones.js`, `sim/mur.js`,
-`render/mur.js`. **Deux étages sont jouables**, le temps de voir si la
-mécanique tient : le monde du sucre et celui des fraises. Les trois du dessus
-existent — le monde fait toujours soixante rangées, et son sol se peint jusqu'en
-haut — mais leur mur ne s'ouvre pas, et ce qu'ils contiennent reste à décider.
-Ce qui manque encore est dit en fin de section.
+`render/mur.js`. **Trois étages sont jouables**, le temps de voir si la
+mécanique tient : le monde du sucre, celui des fraises, celui de la menthe. Les
+deux du dessus existent — le monde fait toujours soixante rangées, et son sol se
+peint jusqu'en haut — mais leur mur ne s'ouvre pas, et ce qu'ils contiennent
+reste à décider. Ce qui manque encore est dit en fin de section.
 
 **On ne progresse que vers le haut.** Le monde se lit en **étages**, des bandes
 horizontales de douze rangées sur les quarante-deux de large. Cinq étages
@@ -401,23 +422,28 @@ ouvrir un mur, voir l'étage 1 étouffer, redescendre l'élargir. Redescendre
 n'est pas une corvée de réparation, c'est le jeu.
 
 C'est le sucre et non la fraise parce qu'il y a du sucre dans tous les bonbons,
-qu'un enfant le sait, et que `sucre → chaufferie → livraison` est exactement le
+qu'un enfant le sait, et que `sucre → chaufferie → réception` est exactement le
 noyau à trois machines qui existe déjà : l'étage 1 ne coûte pas une donnée.
 
 **Un mur demande le produit de l'étage qu'il ferme** — du caramel pour le
-premier, le bonbon à la fraise pour le deuxième. On ne réclame jamais ce qu'on
+premier, de la fraise pour le deuxième. On ne réclame jamais ce qu'on
 ne sait pas encore faire, et le but est toujours « fais ce que tu viens
 d'apprendre, en plus grand ». Le total porté au mur ne se dépense pas : il
 monte pendant que la caisse, elle, se dépense.
 
 **On le lui porte : le mur a sa réception.** Trois cases creusées au milieu de
 sa rangée, une machine de la scène comme une autre, où l'on trace un tapis.
-Elle n'est pas la livraison — celle-ci achète et remplit la caisse, la
-réception avale et ne paie rien. Deux endroits, deux rôles : ouvrir un mur,
-c'est cesser de vendre une partie de ce qu'on produit, et ce choix se tire au
-tapis. Sans elle, il n'y avait rien à faire pour ouvrir un mur qu'attendre.
-Elle n'accepte que ce que le mur réclame ; le reste s'accumule sur le tapis et
-le joueur le voit — on ne jette rien en silence.
+**C'est la seule adresse du jeu** : elle achète ce qu'on lui porte et remplit
+la caisse, et ce qui intéresse son mur monte sa jauge au passage. Sans elle, il
+n'y avait rien à faire pour ouvrir un mur qu'attendre.
+Elle accepte ce que la table des livrables nomme, plus ce que son mur réclame
+quand ce n'est pas de la même famille ; le reste s'accumule sur le tapis et le
+joueur le voit — on ne jette rien en silence.
+Un mur dont le seuil porte sur une matière qui ne se vend pas — la fraise du
+deuxième — se choisit donc vraiment : on cesse de tout vendre pour en porter
+une part au mur. Un mur dont le seuil porte sur une chose qui se vend tombe en
+même temps qu'on gagne, et c'est bien : le premier mur ne doit rien demander
+de plus que de jouer.
 
 **Une flèche au bord de la zone sûre** dit de quel côté elle est quand elle
 sort du cadre, avec la matière qu'elle attend : le mur fait quarante-deux cases
@@ -430,22 +456,30 @@ chacune de ses cases, si bien que le tracé, le raccord et le rendu n'ont rien
 appris de neuf ; ce qu'un tapis vise est alors **la case qu'il touche**, jamais
 l'ancre de la machine.
 
-**Un mur ouvert redevient du sol ordinaire.** Pas de porte, pas de goulot d'une
-case où les tapis s'étranglent : ouvert veut dire franchi, on n'y pense plus.
+**Un mur ouvert reste debout, et laisse passer par ses connecteurs.** Il ne
+redevient pas du sol ordinaire — c'était la décision d'avant, et elle a
+changé : un mur qui disparaît ne dit plus ce qu'on a gagné, et un étage franchi
+s'oublie. Sa rangée de blocs demeure ; ce qui s'ouvre, ce sont les trois cases
+de sa réception, encadrées de rouge. **Ce sont ses connecteurs** : c'est par là
+que la chaîne d'en bas monte à l'étage du dessus, et l'usine du dessous
+continue de tourner pour toujours. Trois cases pour quarante-deux, donc un
+passage à viser, et c'est voulu.
 
 **Ce qu'un mur montre, et pas un mot** : une rangée de blocs en ardoise, ce
 qu'il y a derrière éteint, et sa réception au milieu — la matière réclamée, une
 jauge qui se remplit, et trois chevrons qui disent par où ça entre.
 
 **Le premier mur demande cinquante caramels**, et c'est mesuré (`node
-outils/mur.mjs`) : un tapis détourné vers la réception l'ouvre en deux minutes
-vingt, deux tapis en une minute treize. L'écart est le message — on n'attend
-pas, on double. Il en demandait cent quand la livraison comptait pour lui ;
-depuis qu'il a sa réception, ce qu'on lui porte n'est plus vendu, et le seuil
-se paie deux fois.
+outils/mur.mjs`) : l'usine de départ et ses trois branches l'ouvrent en
+cinquante secondes, une seule branche en deux minutes vingt. **Le deuxième
+demande soixante fraises** : un extracteur relié au mur l'ouvre en deux minutes
+cinquante, trois en cinquante-six secondes. L'écart est le message — on
+n'attend pas, on élargit.
 
-**Un mur sans seuil n'a pas de réception** : il est plein sur toute sa
-longueur, et c'est ce qui dit que le jeu s'arrête là.
+**Un mur sans seuil a quand même sa réception** : il ne s'ouvre pas — c'est ce
+qui dit que le jeu s'arrête là — mais on y vend, sans quoi le dernier étage
+atteint n'aurait plus où porter ce qu'il produit. Le dernier étage du monde
+porte lui aussi un mur, tout en haut, et c'est celui-là.
 
 **Ce que le mur coûte vraiment**, et c'est peu : une rangée où l'on ne peut pas
 bâtir, un plafond sur les bornes de la caméra qui remonte quand il tombe, et un
@@ -454,7 +488,8 @@ atteindre qui grandit, et le scroll s'allonge tout seul.
 
 **Chaque étage apporte une mécanique**, pas seulement une matière : l'étage 1
 ouvre l'extracteur et la chaufferie, l'étage 2 le trieur — deux matières sur la
-carte, donc une raison d'en avoir un. C'est ce qui donne à un mur une
+carte, donc une raison d'en avoir un — et l'étage 3 la confiserie, la menthe
+achevant enfin la pastille. C'est ce qui donne à un mur une
 récompense au-delà de « une case de plus à récolter », et c'est là que le jeu
 grossira sans grossir en systèmes — un étage est une entrée de table.
 
@@ -464,10 +499,13 @@ chaufferie, et c'est tout ce qu'il y a à comprendre. Une touche éteinte dirait
 qu'il y a autre chose, et c'est déjà ce que dit le mur — il n'y a pas deux
 façons de dire la même chose à un enfant.
 
-**La mini-carte montre les étages fermés en éteint**, comme le livre des
-matières montre les silhouettes de ce qu'on n'a pas trouvé : on voit qu'il y a
-quelque chose là sans savoir encore quoi. Elle devient la barre de progression
-du jeu entier.
+**La mini-carte ne montre que le monde ouvert.** Elle éteignait les étages
+fermés pour en garder la silhouette ; une silhouette dit « il y a quelque chose
+là », et c'est déjà ce que dit le mur, qu'on a sous les yeux — deux façons de
+dire la même chose à un enfant, c'est une de trop. Elle commence donc à la
+taille d'un étage et **grandit à chaque mur qui tombe** : c'est elle, la barre
+de progression du jeu entier, non plus un voile qui se retire mais une carte
+qui s'allonge.
 
 **Ce que cela a retiré.** La clairière du centre : son rôle — un peu de tout au
 milieu, pour faire un bonbon sans traverser quoi que ce soit — est repris par
@@ -493,14 +531,13 @@ est intolérable. Elle est faite : la partie s'écrit et se reprend (section 1,
 
 À décider, et rien n'est codé dans ce sens :
 
-- **ce que réclame le mur de l'étage 2.** La fraise seule ne fabrique rien — la
-  pastille demande aussi la menthe —, et on ne réclame jamais ce qu'on ne sait
-  pas encore faire. Son mur ne s'ouvre donc pas : le jeu s'arrête là.
+- **ce que réclame le mur de l'étage 3.** La pastille est enfin faisable là —
+  caramel, fraise et menthe — mais le bonbon demande le papier, donc la forêt.
+  Son mur ne s'ouvre donc pas : le jeu s'arrête là.
 - **ce qu'est le cinquième étage.** Il y a quatre matières et cinq bandes. La
   cinquième porte pour l'instant le biome de terre et aucun gisement.
-- **les trois bonbons et le papier**, qui demandent la forêt et la menthe :
-  l'étage 3 ouvre la confiserie et l'étage 4 la scierie et la plieuse, mais
-  aucun des deux murs n'a de seuil.
+- **les trois bonbons et le papier**, qui demandent la forêt : l'étage 4 ouvre
+  la scierie et la plieuse, mais son mur n'a pas de seuil.
 
 ### Règle de croissance
 
@@ -727,6 +764,12 @@ Toute action produit un retour dans la même frame : surbrillance de la cellule,
 déformation courte de l'icône, ou changement de couleur. Aucune action ne doit
 pouvoir sembler ignorée.
 
+**Ce qu'un geste coûte s'écrit sur la case.** La caisse est en haut de l'écran
+et la main en bas : un enfant qui pose un extracteur ne voyait pas le nombre
+bouger. Le prix monte donc de la case elle-même — en rouge ce qu'on paie, en
+vert ce que la destruction rend — puis s'efface. Un tracé dit son total au bout
+du doigt : un « -1 » par tuile ferait une pluie le long du tapis.
+
 Un bouchon qui dure se signale par une bulle de bande dessinée en éclats,
 avec ses « !!! », qui sort de l'endroit bloqué. **Une bulle ne sort que là où
 la chaîne s'arrête pour de bon** — tout le reste se tait :
@@ -808,9 +851,9 @@ une partie qui se relit puis dérive n'est pas sauvegardée.
 Toute vérification visuelle passe d'abord par `node outils/lisibilite.mjs`,
 puis produit **les deux captures, systématiquement** :
 la cible mobile et l'aperçu desktop. Jamais l'une sans l'autre. `outils/captures.mjs`
-les génère toutes les deux ; il choisit l'essai « usine qui tourne » par la
+les génère toutes les deux ; il choisit l'essai « nouvelle partie » par la
 sonde, sinon il ne montrerait que l'écran des essais (`ESSAI=choix` pour le
-voir, `ESSAI=nouvelle` pour le tutoriel).
+voir, `ESSAI=ouvert` pour le jeu ouvert).
 
 Toute livraison fournit aussi **les deux URL à essayer**, jamais les captures
 seules :
@@ -853,8 +896,8 @@ src/
     monde.js        les gisements du pied du monde, cadences d'extraction
     biomes.js       biomes, bouquets, fondu
     zones.js        les étages : biome, matière, ce qu'ils ouvrent, leur mur
-    depart.js       dispositions de départ : usine qui tourne, carte nue
-    scenarios.js    les trois essais de la bêta
+    depart.js       dispositions de départ : l'usine de référence, carte nue
+    scenarios.js    les deux essais de la bêta
     tutoriel.js     étapes du premier contact
     version.js      le numéro de version, et rien d'autre
     outils.js       outils, éléments constructibles, et ce qu'ils coûtent
@@ -878,6 +921,7 @@ src/
     particules.js   fumée et étoiles
     vapeurs.js      les souffles des machines, table de formes
     pose.js         la cellule qu'on vient de poser, et son éclat
+    cout.js         le prix d'un geste, qui monte de la case et s'efface
     chevron.js      les chevrons qui défilent le long d'un tapis
     alerte.js       la bulle « !!! » d'un bouchon qui dure
     sprites.js      atlas, dessin des tuiles
@@ -939,8 +983,8 @@ Depuis, le lot a grossi sur décision : deuxième matière et première recette
 (a + b = c), gisements et trieur, la chaîne complète du bonbon, la
 construction des trieurs et des transformateurs, puis la carte générale — une
 seule grille de 42 × 60 cellules, où l'on mine et où l'on construit au même
-endroit. La bêta y ajoute ses trois essais et le tutoriel du premier contact,
-et l'économie ses prix : la livraison achète, et bâtir coûte. Ces ajouts sont
+endroit. La bêta y ajoute ses deux essais et le tutoriel du premier contact,
+et l'économie ses prix : la réception du mur achète, et bâtir coûte. Ces ajouts sont
 décrits en section 1.
 
 **Critère de validation : 200 items à l'écran à 60 fps sur téléphone.**

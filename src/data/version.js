@@ -10,4 +10,4 @@
 //
 // Il monte à chaque version livrée. C'est ce que le joueur voit dans le menu pause,
 // et ce que le bandeau de mise à jour annonce.
-export const VERSION = '1.6.0';
+export const VERSION = '1.7.0';
