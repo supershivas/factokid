@@ -23,6 +23,7 @@ import {
 } from '../src/sim/mur.js';
 import { rangeesDe } from '../src/sim/carte.js';
 import { celluleLibre, ajouterMachine, poserConvoyeur, machineEn } from '../src/sim/scene.js';
+import { poserExtracteur } from '../src/sim/gisement.js';
 import { peutAccepter, pousser } from '../src/sim/belt.js';
 import { problemes } from './invariants.mjs';
 
@@ -157,7 +158,56 @@ function jusquAuMur(monde, item, plafondSecondes = 1800) {
   if (fin !== null) console.log(`  une seule branche : ${fin.secondes.toFixed(0)} s`);
 }
 
-// ————— 4. la réception ne prend que ce qui se vend, et ce que son mur veut
+// ————— 4. le second mur, et ce qu'il coûte
+//
+// L'étage 2 est celui de la fraise, et son mur réclame de la fraise : « récolte
+// ce que tu viens de trouver ». Elle ne se vend pas — c'est là toute la
+// différence avec le premier mur, qui tombait tout seul pendant qu'on vendait
+// son caramel. Celui-ci se choisit : on tire des tapis pour lui.
+{
+  const monde = creerMonde(DEPART_NU, 1, 2);
+  const mur = murCourant(monde);
+  veut(mur.cy === rangeesDe(2).mur, 'le second mur ferme l’étage 2');
+  veut(mur.etage.mur.item === 'fraise', 'et il réclame de la fraise');
+
+  // Un gisement de fraise relié à sa réception, en L. Un seul : c'est la
+  // cadence d'un extracteur qu'on mesure, et trois branches n'en font que le
+  // tiers du temps — ce qui compte, c'est de savoir laquelle des deux choses
+  // le joueur devra faire, attendre ou élargir.
+  const recepteur = recepteurDuMur(monde);
+  const g = monde.gisements
+    .filter((x) => x.item === 'fraise' && x.cy > mur.cy + 1)
+    .sort((a, b) => (Math.abs(a.cx - 21) + a.cy) - (Math.abs(b.cx - 21) + b.cy))[0];
+  veut(Boolean(g), 'l’étage 2 porte de la fraise');
+
+  const arrivee = recepteur.cx;
+  const chemin = [];
+  for (let cy = g.cy - 1; cy >= mur.cy + 1; cy--) chemin.push({ cx: g.cx, cy });
+  const pas = Math.sign(arrivee - g.cx);
+  for (let cx = g.cx + pas; pas !== 0 && cx !== arrivee + pas; cx += pas) {
+    chemin.push({ cx, cy: mur.cy + 1 });
+  }
+  veut(chemin.every((c) => celluleLibre(monde.scene, c.cx, c.cy)), 'le chemin est libre');
+  veut(poserExtracteur(monde, g.cx, g.cy), 'un extracteur se pose sur la fraise');
+  const tapis = poserConvoyeur(monde.scene, chemin, g.extracteur, recepteur);
+  veut(tapis && tapis.cible === recepteur, 'et son tapis vise la réception');
+  veut(problemes(monde.scene).length === 0, 'la scène reste saine');
+
+  const fin = jusquAuMur(monde, mur.etage.mur.item);
+  veut(fin !== null, 'le second mur finit par tomber');
+  if (fin !== null) {
+    veut(monde.etageOuvert === 3, 'l’étage 3 s’ouvre');
+    veut(ouverts(monde).has('confiserie'), 'et il ouvre la confiserie');
+    veut(monde.caisse === DEPART_NU.caisse, 'la fraise portée au mur ne rapporte rien');
+    veut(problemes(monde.scene).length === 0, 'la scène reste saine, second mur tombé');
+    console.log(
+      `  un extracteur de fraise ouvre le second mur en ${fin.secondes.toFixed(0)} s `
+      + `(${mur.etage.mur.combien} fraise), trois en ${(fin.secondes / 3).toFixed(0)} s`,
+    );
+  }
+}
+
+// ————— 5. la réception ne prend que ce qui se vend, et ce que son mur veut
 {
   const monde = creerMonde(DEPART_NU, 1);
   const recepteur = recepteurDuMur(monde);

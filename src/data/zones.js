@@ -18,11 +18,11 @@
 //               qui ne s'ouvre pas encore : l'étage au-dessus est écrit, mais
 //               le jeu s'arrête là.
 //
-// **Deux étages seulement sont jouables pour l'instant**, le temps de voir si
-// la mécanique tient. Les trois du dessus existent — le monde fait toujours
-// soixante rangées, et son sol se peint jusqu'en haut — mais leur mur ne
-// s'ouvre pas, et leur contenu reste à décider. Le cinquième, en particulier,
-// n'a pas encore d'identité : il n'y a que quatre matières.
+// **Trois étages sont jouables**, le temps de voir si la mécanique tient. Les
+// deux du dessus existent — le monde fait toujours soixante rangées, et son
+// sol se peint jusqu'en haut — mais leur mur ne s'ouvre pas, et leur contenu
+// reste à décider. Le cinquième, en particulier, n'a pas encore d'identité :
+// il n'y a que quatre matières.
 
 // Un étage fait presque un écran de haut : quand on est à son pied, on voit le
 // mur qui le ferme.
@@ -52,11 +52,31 @@ export const ETAGES = [
     // Deux matières sur la carte, donc une raison d'avoir un trieur : c'est la
     // mécanique de cet étage, pas seulement sa matière.
     ouvre: ['trieur'],
-    // À décider : la fraise seule ne fabrique rien — la pastille demande aussi
-    // la menthe. Le mur du dessus attendra qu'on sache quoi lui réclamer.
+    // La fraise seule ne fabrique rien — la pastille demande aussi la menthe,
+    // qui est justement ce que l'étage du dessus apporte. Son mur réclame donc
+    // la matière de son étage, telle qu'elle sort du sol : « récolte ce que tu
+    // viens de trouver », et c'est tout ce qu'on sait encore faire ici.
+    //
+    // Elle ne se vend pas — la réception l'avale sans payer —, et c'est le
+    // sens de ce mur : on cesse de tout vendre pour en porter une part au
+    // mur. Le premier mur, lui, était gratuit ; le second se choisit.
+    //
+    // Soixante, mesuré (`node outils/mur.mjs`) : un extracteur de fraise relié
+    // au mur l'ouvre en deux minutes cinquante, trois en cinquante-six
+    // secondes. C'est le même message que le premier mur — on n'attend pas,
+    // on élargit — et le même ordre de grandeur.
+    mur: { item: 'fraise', combien: 60 },
+  },
+  {
+    n: 3,
+    biome: 'menthe',
+    matiere: 'menthe',
+    ouvre: ['confiserie'],
+    // À décider : la pastille est enfin faisable ici — caramel, fraise et
+    // menthe —, mais le bonbon demande le papier, donc la forêt. Le mur du
+    // dessus attendra qu'on sache quoi lui réclamer.
     mur: null,
   },
-  { n: 3, biome: 'menthe', matiere: 'menthe', ouvre: ['confiserie'], mur: null },
   { n: 4, biome: 'terre', matiere: 'bois', ouvre: ['scierie', 'plieuse'], mur: null },
   // Le sommet : pas de matière neuve. Ce qu'il devient reste à décider.
   { n: 5, biome: 'terre', matiere: null, ouvre: [], mur: null },
