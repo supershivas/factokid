@@ -325,12 +325,22 @@ semés à la graine (`sim/carte.js`) par **bouquets** — un arbre seul n'est pa
 une forêt, et c'est un bosquet qu'on veut trouver au bout d'un tapis —, chacun
 dans l'étage où il naît, et il en porte donc la matière.
 
+**La carte de chaque étage est tirée à part, et à chaque partie.** Un seul
+générateur pour tout le monde liait les étages entre eux — changer un bouquet
+du sucre déplaçait toute la forêt : chaque bande a maintenant sa propre suite,
+tirée de la graine du monde. Et **aucun essai ne porte plus de graine fixe** :
+deux parties ne se ressemblent pas, et un mur qu'on ouvre donne un étage qu'on
+n'a jamais vu. Les outils, eux, passent la leur — ce qu'ils mesurent reste
+reproductible.
+
 **Le pied du monde, lui, ne change jamais** : le centre de l'étage 1, ses trois
 gisements de sucre écrits dans `data/monde.js`, et rien de tiré dans son rayon.
 C'est ce qui permet au tutoriel de nommer des cellules précises et à l'usine de
 départ d'être posée d'avance — la carte change autour d'eux, jamais sous eux.
-Un scénario porte sa graine : fixe pour la nouvelle partie, tirée pour le jeu
-ouvert.
+**Les cases du premier contact sont réservées elles aussi** : le rayon ne
+suffisait plus dès lors que la graine est tirée, et une carte sur deux posait
+du sucre sous une chaufferie que le tutoriel demande de bâtir.
+`outils/carte.mjs` tient la promesse.
 
 Un biome est une **couleur posée sur le noir à une transparence basse**, en
 trois nuances — de seize à vingt-huit pour cent. Elles ont doublé : à huit pour
@@ -460,10 +470,19 @@ l'ancre de la machine.
 redevient pas du sol ordinaire — c'était la décision d'avant, et elle a
 changé : un mur qui disparaît ne dit plus ce qu'on a gagné, et un étage franchi
 s'oublie. Sa rangée de blocs demeure ; ce qui s'ouvre, ce sont les trois cases
-de sa réception, encadrées de rouge. **Ce sont ses connecteurs** : c'est par là
-que la chaîne d'en bas monte à l'étage du dessus, et l'usine du dessous
-continue de tourner pour toujours. Trois cases pour quarante-deux, donc un
-passage à viser, et c'est voulu.
+de sa réception.
+
+**Ses connecteurs sont trois bouts de convoyeur, rouges.** Pas un décor : de
+vrais tapis d'une case, qui appartiennent au mur. On s'y branche par-dessous,
+on en repart par-dessus, ils portent une file et s'accumulent — ils réagissent
+en tout point comme un tapis. Deux choses seulement les distinguent : ils sont
+peints dans la famille du rouge (bande rouge, crans orange, chevrons prune,
+`TAPIS_CONNECTEUR` dans le design system), et **ils ne se détruisent pas** — ni
+à la croix, ni par le jeu de place qu'un tracé fait parfois pour se brancher.
+Un tapis d'une seule case n'a pas de direction à lui : `sens` la lui donne, et
+un connecteur monte, comme le jeu. C'est par là que la chaîne d'en bas rejoint
+l'étage du dessus, et l'usine du dessous continue de tourner pour toujours.
+Trois cases pour quarante-deux, donc un passage à viser, et c'est voulu.
 
 **Ce qu'un mur montre, et pas un mot** : une rangée de blocs en ardoise, ce
 qu'il y a derrière éteint, et sa réception au milieu — la matière réclamée, une
@@ -612,6 +631,12 @@ mesuré, pas choisi : ce qui détache une matière du tapis n'est pas sa couleur
 mais le noir qui la cerne, et ce noir tranche à 6,43 : 1 sur le bleu contre
 2,88 : 1 sur l'outremer. Cinq matières sur dix n'y tiennent plus que par leur
 contour, et c'est le prix assumé d'une bande vive — leur forme les nomme.
+
+**Les connecteurs du mur sont le même tapis, en rouge** : bande rouge, crans
+orange, chevrons prune. C'est la même rampe, prise dans une autre famille — le
+corps, sa clarté aux crans, son ombre aux chevrons — et rien n'y est mélangé.
+Ce sont des tapis qui appartiennent au mur, et la couleur est tout ce qui le
+dit.
 
 Chaque type d'item doit être identifiable **par sa forme seule**, en niveaux de
 gris. La couleur est une confirmation, jamais l'unique porteuse d'information.
@@ -764,6 +789,14 @@ Toute action produit un retour dans la même frame : surbrillance de la cellule,
 déformation courte de l'icône, ou changement de couleur. Aucune action ne doit
 pouvoir sembler ignorée.
 
+**Le bandeau sort du bas.** Il descendait du voile du haut, où il couvrait le
+compteur et la mini-carte, et il passait par-dessus le menu pause. Il sort
+maintenant du voile du bas et s'arrête juste au-dessus de la barre d'outils,
+sans jamais la toucher — et il ne se montre pas du tout quand le menu pause est
+ouvert : on ne parle pas par-dessus ce que le joueur est en train de lire. Il a
+maigri d'autant, de trente-quatre unités à vingt-quatre : une nouvelle n'a pas
+à peser.
+
 **Ce qu'un geste coûte s'écrit sur la case.** La caisse est en haut de l'écran
 et la main en bas : un enfant qui pose un extracteur ne voyait pas le nombre
 bouger. Le prix monte donc de la case elle-même — en rouge ce qu'on paie, en
@@ -910,7 +943,7 @@ src/
     choix.js        l'écran des essais
     tutoriel.js     halo des cellules à toucher, bandeau de l'étape
     menu.js         menu pause et page des recettes
-    toast.js        le bandeau qui annonce et s'en va
+    toast.js        le bandeau qui sort du bas et s'en va
     texte.js        fonte bitmap 5 × 7, texte explicable
     motifs.js       les matières en pixels d'art, table pure
     tuiles.js       les machines en pixels d'art, table pure
