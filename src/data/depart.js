@@ -12,6 +12,11 @@
 // **Il n'y a plus de livraison à poser.** On vend au mur, et le mur est déjà
 // là : `cible: 'recepteur'` désigne sa réception, la seule adresse du jeu.
 
+// L'usine de référence : ce que le tutoriel bâtit, case par case, et ce que
+// les outils jouent pour éprouver le mur, la sauvegarde et les tapis. Elle
+// n'est plus un essai du menu — la bêta n'en propose que deux — mais elle
+// reste la mesure du jeu : tout chiffre de l'économie sort d'elle.
+//
 // Trois branches identiques qui montent au mur : c'est la même chose faite
 // trois fois, et c'est exactement ce que le jeu demandera de faire en plus
 // grand à chaque mur ouvert. Rien n'est à comprendre de neuf entre la première
@@ -100,4 +105,15 @@ export const DEPART_NU = {
   extracteurs: [],
   machines: [],
   convoyeurs: [],
+};
+
+// Le jeu ouvert : la même carte nue, mais tous les étages franchis et de quoi
+// bâtir sans compter. C'est l'ancien jeu, celui d'avant les murs — on essaie
+// une plieuse sans avoir à la mériter.
+//
+// La mise est large parce que la seule réception y est celle du mur du sommet,
+// tout en haut du monde : on peut y vendre, mais on n'y va pas pour ça.
+export const DEPART_LIBRE = {
+  ...DEPART_NU,
+  caisse: 500,
 };

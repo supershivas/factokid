@@ -1,7 +1,7 @@
 // Capture les deux cibles d'affichage, toujours ensemble.
 // Usage : node outils/captures.mjs <dossier> [secondes] [base]
 //
-// On ne trace rien : l'essai « usine qui tourne » s'ouvre sur une chaîne
+// On ne trace rien : l'essai « nouvelle partie » s'ouvre sur une carte
 // complète, et c'est elle qu'il faut voir. Pour éprouver un geste précis, on
 // écrit un script à part — celui-ci ne sert qu'à montrer le jeu tel qu'on le
 // trouve, aux deux cibles.
@@ -21,7 +21,7 @@ const RACINE = new URL('..', import.meta.url).pathname;
 const SORTIE = process.argv[2] || '.';
 const ATTENTE = Number(process.argv[3] || 3) * 1000;
 const PORT = 8123;
-const ESSAI = process.env.ESSAI || 'usine';
+const ESSAI = process.env.ESSAI || 'nouvelle';
 const BASE = process.argv[4] || `http://127.0.0.1:${PORT}/`;
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
