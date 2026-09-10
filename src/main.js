@@ -67,7 +67,12 @@ const jeu = {
     // La caméra ne monte pas au-dessus du mur : c'est le monde qui dit
     // jusqu'où on peut regarder, elle ne le devine pas.
     poserPlafond(plafond(jeu.monde));
-    centrerCamera(scenario.disposition.regard.cx, scenario.disposition.regard.cy);
+    // Le tutoriel emmène le regard à chaque étape qui sort du cadre ; la
+    // première n'y avait pas droit, et son halo battait hors de l'écran dès
+    // le premier instant. On s'y pose d'emblée.
+    const debut = jeu.tutoriel && etapeCourante(jeu.tutoriel);
+    const ou = (debut && debut.cibles[0]) || scenario.disposition.regard;
+    centrerCamera(ou.cx, ou.cy);
     // L'écran des essais se referme, même quand l'essai est choisi d'ailleurs
     // que par le doigt — la sonde des outils de capture passe par ici aussi,
     // et l'entrée resterait sinon prise par un écran qu'on ne voit plus.
