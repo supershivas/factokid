@@ -54,6 +54,11 @@ async function capturer(nom, page, url) {
   await page.waitForTimeout(400);
   // L'essai est choisi par la sonde : la capture montre le jeu, pas le menu.
   if (ESSAI !== 'choix') await page.evaluate((id) => globalThis.sonde.choisir(id), ESSAI);
+  // `TOAST=...` fait sortir le bandeau : il ne se montre autrement qu'au
+  // moment où un mur tombe ou qu'une version arrive.
+  if (process.env.TOAST) {
+    await page.evaluate((t) => globalThis.sonde.annoncer(t, 'vert'), process.env.TOAST);
+  }
   const geo = await page.evaluate(() => {
     const c = document.getElementById('jeu');
     const r = c.getBoundingClientRect();

@@ -163,6 +163,9 @@ globalThis.sonde = {
   // Regarder tout de suite, sans attendre l'intervalle : c'est ainsi que
   // outils éprouve la mise à jour.
   veille: () => majVeille(1e9),
+  // Faire sortir un bandeau sans attendre qu'un mur tombe ou qu'une version
+  // arrive : c'est ainsi qu'on le regarde en capture.
+  annoncer: (t, c) => annoncer(t, c),
 };
 
 // Ce qui vient d'être construit lance sa gerbe d'étoiles, ce qui vient d'être
@@ -290,8 +293,9 @@ demarrerBoucle(
     dessinerHalo(ctx, etape, jeu.tutoriel ? jeu.tutoriel.age : 0);
     dessinerBandeau(ctx, etape, avancement(jeu.tutoriel));
     dessinerHud(ctx, jeu.monde, fps, interfaceJeu);
-    // Le bandeau passe au-dessus de tout, menu pause compris : c'est une
-    // nouvelle, et elle ne se cache derrière rien.
-    dessinerToast(ctx);
+    // Le bandeau se pose au-dessus de la barre d'outils, jamais sur elle — et
+    // pas du tout quand le menu pause est ouvert : on ne parle pas par-dessus
+    // ce que le joueur est en train de lire.
+    if (!interfaceJeu.menuPause) dessinerToast(ctx);
   },
 );
