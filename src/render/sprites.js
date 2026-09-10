@@ -315,12 +315,11 @@ const bulleTrieur = toile(TUILE_PX, (rect) => {
   rect(17, 14, 3, 6, PALETTE.creme);
 });
 
-const bulleChaufferie = toile(TUILE_PX, (rect) => {
-  rect(5, 5, 15, 9, PALETTE.noir);
-  rect(6, 6, 12, 2, PALETTE.creme);
-  rect(6, 8, 12, 4, PALETTE.jaune);
-  for (let i = 0; i < 3; i++) rect(6 + i * 5, 17, 3, 4, PALETTE.orange);
-});
+// La bulle de la chaufferie, c'est la chaufferie. Elle avait son propre
+// dessin, écrit en rectangles, du temps où la machine aussi : deux vérités
+// pour une seule chose, et la seconde a dérivé le jour où la première a été
+// repeinte. Une touche montre ce qu'on va poser, à l'identique.
+const bulleChaufferie = toile(TUILE_PX, peindreTuile(TUILES.chaufferie));
 
 const bulleScierie = toile(TUILE_PX, (rect) => {
   rect(3, 15, 18, 7, PALETTE.noir);
