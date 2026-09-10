@@ -176,6 +176,21 @@ Ne pas rediscuter ces points sans me le demander explicitement.
   filtre. Un appui long ouvre les informations et les réglages. Le panneau
   montre en grand **ce dont il parle** : sur un gisement, c'est la matière,
   pas la machine qu'on propose d'y bâtir.
+  **Un tapis dit ce qu'il porte** : sa description nomme les matières posées
+  dessus, soulignées comme partout — on remonte de ce qui bloque à ce qui le
+  fait sans quitter le tapis. Rien n'est compté : un enfant voit sur la carte
+  qu'un tapis est plein, le panneau ne fait que nommer ce qu'il y a dessus
+  quand c'est trop petit ou trop loin pour se lire.
+- **L'outil suit le doigt.** Un appui court change aussi d'outil, parce qu'il
+  n'y a que deux suites possibles : ce qu'on touche est bâti — machine, tapis,
+  extracteur — et le geste d'après est de lui tirer un tapis, donc on passe au
+  convoyeur ; c'est du sol nu, et il n'y a rien à y faire que regarder, donc on
+  revient à la main. C'est un aller et retour de moins entre la barre du bas et
+  la case qu'on vise. **Poser et détruire s'en tiennent à l'écart** : ce sont
+  des outils qu'on garde le temps d'en poser dix ou d'en retirer trois. Un
+  bâtiment posé rend toujours la main, et non le convoyeur : c'est le geste
+  d'après qui décide de la suite. Et tirer la carte n'est pas un appui court —
+  un doigt qui a glissé n'a rien touché.
 - **Un bâtiment posé rend la main.** C'est l'inverse de ce qui était décidé —
   « l'élément choisi le reste », pour en poser dix d'affilée — et c'est une
   décision qui a changé : on pose un bâtiment, puis on tire ses tapis, et
@@ -486,6 +501,16 @@ Un tapis d'une seule case n'a pas de direction à lui : `sens` la lui donne, et
 un connecteur monte, comme le jeu. C'est par là que la chaîne d'en bas rejoint
 l'étage du dessus, et l'usine du dessous continue de tourner pour toujours.
 Trois cases pour quarante-deux, donc un passage à viser, et c'est voulu.
+
+**Ils se voient avant de s'ouvrir.** Un mur fermé laisse dépasser ses trois
+amorces rouges de quelques pixels, sous sa rangée : le passage existe avant
+qu'on l'ouvre, et rien n'oblige à le cacher — sa réception occupe les trois
+cases, les connecteurs n'avaient nulle part où se montrer. C'est par en dessous
+et non par-dessus : la caméra s'arrête au mur, et la rangée de derrière reste
+sous le voile du haut quoi qu'on fasse. Donc du côté où le joueur se tient, et
+exactement là où son tapis viendra buter. Ce n'est qu'un dessin
+(`amorceConnecteur`, dans `render/sprites.js`) : la simulation ne pose les
+connecteurs qu'au moment où le mur cède.
 
 **Ce qu'un mur montre, et pas un mot** : une rangée de blocs en ardoise, ce
 qu'il y a derrière éteint, et sa réception au milieu — la matière réclamée, une

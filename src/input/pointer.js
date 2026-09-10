@@ -90,6 +90,10 @@ export function brancherPointeur(canvas, vue, jeu) {
   let departPoint = null;
   let minuterie = null;
   let appuiLongFait = false;
+  // Le doigt a-t-il glissé ? Un appui qui promène la vue n'est pas un appui
+  // court : sans ce drapeau, tirer la carte depuis une machine passerait pour
+  // l'avoir touchée, et changerait d'outil au relâchement.
+  let glisse = false;
   let dernierPoint = null;
   let actionsMenu = [];
   let animMenu = null;
@@ -340,6 +344,28 @@ export function brancherPointeur(canvas, vue, jeu) {
     etat.surmodale = null;
   }
 
+  // Les matières posées sur un tapis, dans l'ordre où on les y rencontre, une
+  // fois chacune. Chaque matière porte son article — « de la fraise », jamais
+  // « du fraise » — et son nom reste entre accolades : souligné dans le
+  // panneau, il s'explique d'un doigt comme partout ailleurs.
+  //
+  // Rien n'est compté : un enfant n'a pas à lire « 7 » pour voir qu'un tapis
+  // est plein, il le voit sur la carte. Ce que le panneau ajoute, c'est le nom
+  // de ce qui est dessus quand c'est trop petit ou trop loin pour se lire.
+  function matieresPortees(convoyeur, sauf) {
+    const vus = [];
+    for (const item of convoyeur.items) {
+      // La branche d'un trieur nomme déjà sa matière : la répéter ferait
+      // « emporte le sucre que le trieur range, et porte du sucre ».
+      if (item.type === sauf || vus.includes(item.type)) continue;
+      vus.push(item.type);
+    }
+    const mots = vus.map((id) => ITEMS[id].du + ' {' + id + '}');
+    if (mots.length === 0) return '';
+    if (mots.length === 1) return mots[0];
+    return mots.slice(0, -1).join(', ') + ' et ' + mots[mots.length - 1];
+  }
+
   function ouvrirPanneau(machine, convoyeur) {
     if (machine) {
       // Un extracteur posé dit ce qu'il récolte : sa description porte la
@@ -360,6 +386,13 @@ export function brancherPointeur(canvas, vue, jeu) {
       const role = convoyeur.role;
       const trieur = convoyeur.source && convoyeur.source.def && convoyeur.source.def.tri
         ? convoyeur.source : null;
+      // Ce qu'il porte en ce moment. Un tapis plein est la première chose
+      // qu'on regarde quand la chaîne cale : le panneau le dit avec des mots
+      // soulignés, donc explicables — on remonte de la matière à ce qui la
+      // fait sans quitter le tapis.
+      const porte = matieresPortees(
+        convoyeur, role === 'triee' && trieur ? trieur.matiereTriee : null,
+      );
       poserPanneau(
         {
           nom: role === 'triee' && trieur ? ITEMS[trieur.matiereTriee].nom
@@ -369,8 +402,10 @@ export function brancherPointeur(canvas, vue, jeu) {
         },
         role === 'triee' && trieur
           ? 'emporte le {' + trieur.matiereTriee + '} que le {trieur} range'
+            + (porte ? ', et porte ' + porte : '')
           : role === 'reste' ? 'emporte tout ce que le {trieur} ne range pas'
-            : MACHINES.convoyeur.description,
+            + (porte ? ', et porte ' + porte : '')
+            : porte ? 'transporte ' + porte : MACHINES.convoyeur.description,
         trieur ? optionsMachine(trieur) : [],
       );
     } else return;
@@ -837,6 +872,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     if (doigts.size === 2) { ouvrirPince(); return; }
     if (doigts.size > 1) return;
     appuiLongFait = false;
+    glisse = false;
     if (choixTouche(p)) { relacher(); return; }
     // La surmodale passe avant le menu pause : le livre des matières en ouvre
     // une, elle se pose dessus, et c'est donc elle qu'on touche d'abord.
@@ -866,8 +902,14 @@ export function brancherPointeur(canvas, vue, jeu) {
 
     // Poser un extracteur, sur un gisement. Même règle : tant qu'il est
     // choisi, le doigt ne trace pas.
+    //
+    // La cellule de départ est oubliée : le doigt a bâti, il n'a pas touché.
+    // Sans cela, le relâchement croirait à un appui court sur ce qui vient
+    // d'apparaître et prendrait le convoyeur — or un bâtiment posé rend la
+    // main, et c'est le geste d'après qui décide de la suite.
     if (etat.outil === 'construction' && etat.constructible === 'extracteur') {
       batirExtracteur(c);
+      departCellule = null;
       return;
     }
 
@@ -876,7 +918,11 @@ export function brancherPointeur(canvas, vue, jeu) {
     // tracé reste le geste du convoyeur seul.
     if (etat.outil === 'construction') {
       const choisi = CONSTRUCTIBLES.find((x) => x.id === etat.constructible);
-      if (choisi && choisi.machine) { batirMachine(c, choisi.machine); return; }
+      if (choisi && choisi.machine) {
+        batirMachine(c, choisi.machine);
+        departCellule = null;
+        return;
+      }
     }
 
     // Le tracé est le geste du convoyeur, et de lui seul. En main on regarde,
@@ -934,6 +980,7 @@ export function brancherPointeur(canvas, vue, jeu) {
     // Le moindre déplacement fait d'un appui un tracé : on annule l'attente,
     // et on referme le panneau s'il avait déjà eu le temps de sortir.
     if (departPoint && Math.hypot(p.x - departPoint.x, p.y - departPoint.y) > SEUIL_GLISSE) {
+      glisse = true;
       clearTimeout(minuterie);
       minuterie = null;
       if (appuiLongFait) { etat.panneau = null; appuiLongFait = false; }
@@ -1038,12 +1085,34 @@ export function brancherPointeur(canvas, vue, jeu) {
       return;
     }
 
-    if (departCellule) actionPrincipale(departCellule);
+    if (departCellule && !glisse) actionPrincipale(departCellule);
     relacher();
+  }
+
+  // Un appui court dit aussi ce qu'on va faire ensuite, et il n'y a que deux
+  // suites : ce qu'on touche est bâti, et le geste d'après est de lui tirer un
+  // tapis ; c'est du sol nu, et il n'y a rien à y faire que regarder. L'outil
+  // suit donc le doigt au lieu de se choisir dans la barre — c'est un aller et
+  // retour de moins entre le bas de l'écran et la case qu'on vise.
+  //
+  // Poser et détruire s'en tiennent à l'écart : ce sont des outils qu'on garde
+  // le temps d'en poser dix ou d'en retirer trois, et le doigt y touche des
+  // cases sans arrêt. Un tapis rendrait la main au premier appui.
+  function outilApresAppui(c) {
+    if (etat.outil === 'construction' || etat.outil === 'destruction') return;
+    const g = gisementEn(monde(), c.cx, c.cy);
+    const bati = machineEn(scene(), c.cx, c.cy) || convoyeurEn(scene(), c.cx, c.cy)
+      || (g && g.extracteur);
+    const vise = bati ? 'convoyeur' : 'main';
+    if (etat.outil === vise) return;
+    etat.outil = vise;
+    fermerMenu();
+    majBoutons();
   }
 
   // Appui court : ce que l'élément fait de plus évident.
   function actionPrincipale(c) {
+    outilApresAppui(c);
     const machine = machineEn(scene(), c.cx, c.cy);
     if (!machine) {
       // Un gisement nu propose d'y bâtir : c'est la seule chose à y faire.

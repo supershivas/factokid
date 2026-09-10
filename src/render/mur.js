@@ -31,7 +31,7 @@ import {
   murCourant, mursPoses, cellulesPassage, avancementMur, recepteurDuMur,
 } from '../sim/mur.js';
 import { versEcran } from '../camera.js';
-import { spriteItem } from './sprites.js';
+import { spriteItem, amorceConnecteur } from './sprites.js';
 
 // Ce que le monde fermé garde de lumière. Assez pour qu'on distingue les
 // biomes de l'étage suivant — c'est ce qui donne envie d'y monter — et pas
@@ -86,10 +86,32 @@ export function dessinerMur(ctx, monde, f) {
       const coin = coinCellule(cx, pose.cy);
       ctx.drawImage(tuileMur, coin.x, coin.y, CELLULE, CELLULE);
     }
+    // Un mur fermé montre déjà ses connecteurs : ils dépassent de sa rangée,
+    // vers le bas. Sa réception occupe les trois cases du passage, et sans ce
+    // débord les tapis rouges n'auraient nulle part où se voir tant que le mur
+    // tient. On voit donc par où la chaîne montera avant même d'en avoir le
+    // droit — et ce n'est qu'un dessin : rien n'y circule.
+    if (!pose.ouvert) dessinerAmorces(ctx, pose.cy, f);
   }
 
   const recepteur = recepteurDuMur(monde);
   if (recepteur) dessinerRecepteur(ctx, monde, recepteur);
+}
+
+// Les amorces des connecteurs d'un mur fermé : un bout de tapis rouge par case
+// du passage, qui déborde sur la rangée d'en dessous — celle où le joueur se
+// tient, et la seule des deux qu'on puisse regarder : la caméra s'arrête au
+// mur, et ce qu'il y a derrière reste sous le voile du haut quoi qu'on fasse.
+//
+// C'est aussi la case où viendra buter le tapis qu'on monte : l'amorce est
+// exactement là où le raccord se fera.
+function dessinerAmorces(ctx, cy, f) {
+  const dessous = cy + 1;
+  if (dessous < f.cy0 || dessous > f.cy1) return;
+  for (const c of cellulesPassage(cy)) {
+    if (c.cx < f.cx0 || c.cx > f.cx1) continue;
+    amorceConnecteur(ctx, c.cx, dessous);
+  }
 }
 
 // --- la réception ----------------------------------------------------------

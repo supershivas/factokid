@@ -180,6 +180,32 @@ const chevronConnecteur = jeuDeChevrons(
 );
 const chevronsDe = (convoyeur) => (convoyeur.connecteur ? chevronConnecteur : spriteChevron);
 
+// L'amorce d'un connecteur : le bout de tapis rouge qui dépasse d'un mur
+// fermé, du côté où le joueur se tient.
+//
+// Le passage existe avant qu'on l'ouvre, et il n'y a aucune raison de le
+// cacher : la réception occupe les trois cases du mur, si bien que les
+// connecteurs n'avaient nulle part où se voir tant qu'il tenait — et la
+// rangée d'au-dessus ne se regarde pas, la caméra s'arrête au mur. Ils
+// sortent donc du mur par en dessous, de quelques pixels : on voit par où la
+// chaîne montera avant même d'en avoir le droit, et c'est la promesse du mur,
+// dessinée plutôt qu'écrite.
+//
+// C'est un dessin et rien d'autre : la simulation ne pose les connecteurs
+// qu'au moment où le mur cède, et rien ne circule là tant que ce n'est pas
+// fait.
+const AMORCE = 5 * PIXEL; // ce qui dépasse, en unités du monde
+
+export function amorceConnecteur(ctx, cx, cy) {
+  const coin = coinCellule(cx, cy);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(coin.x, coin.y, CELLULE, AMORCE);
+  ctx.clip();
+  tuile(ctx, TUILES_CONNECTEUR.droit, cx, cy, 1);
+  ctx.restore();
+}
+
 // Le téléporteur a disparu avec les cartes séparées : tout voyage sur des
 // tapis, du premier gisement au mur. Son sprite reviendra le jour où
 // il reviendra, en déblocage de fin.
